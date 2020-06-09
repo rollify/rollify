@@ -15,7 +15,8 @@ RUN wget https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI
     rm golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz && \
     \
     wget https://github.com/vektra/mockery/releases/download/v${MOCKERY_VERSION}/mockery_${MOCKERY_VERSION}_Linux_x86_64.tar.gz && \
-    tar zxvf mockery_${MOCKERY_VERSION}_Linux_x86_64.tar.gz --strip 1 -C /usr/local/bin/ && \
+    tar zxvf mockery_${MOCKERY_VERSION}_Linux_x86_64.tar.gz -C /tmp && \
+    mv /tmp/mockery /usr/local/bin/ && \
     rm mockery_${MOCKERY_VERSION}_Linux_x86_64.tar.gz
 
 # Create user.

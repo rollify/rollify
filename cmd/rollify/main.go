@@ -15,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
+	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/http/apiv1"
 	"github.com/rollify/rollify/internal/log"
 )
@@ -48,7 +49,15 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		"version": Version,
 	})
 
-	// Prepare our run entrypoints.
+	// Create dependencies.
+	appServiceDice, err := dice.NewService(dice.ServiceConfig{
+		Logger: logger,
+	})
+	if err != nil {
+		return fmt.Errorf("could not create dice application service")
+	}
+
+	// Prepare our main runner.
 	var g run.Group
 
 	// Serving API HTTP server.
@@ -59,7 +68,10 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		})
 
 		// API.
-		apiv1Handler, err := apiv1.New(apiv1.Config{Logger: logger})
+		apiv1Handler, err := apiv1.New(apiv1.Config{
+			DiceAppService: appServiceDice,
+			Logger:         logger,
+		})
 		if err != nil {
 			return fmt.Errorf("could not create apiv1 handler: %w", err)
 		}

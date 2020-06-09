@@ -6,16 +6,22 @@ import (
 
 	"github.com/emicklei/go-restful"
 
+	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/log"
 )
 
 // Config is the configuration to serve the API.
 type Config struct {
-	ServePefix string
-	Logger     log.Logger
+	DiceAppService dice.Service
+	ServePefix     string
+	Logger         log.Logger
 }
 
 func (c *Config) defaults() error {
+	if c.DiceAppService == nil {
+		return fmt.Errorf("dice.Service application service is required")
+	}
+
 	if c.ServePefix == "" {
 		c.ServePefix = "/api/v1"
 	}
@@ -32,6 +38,7 @@ func (c *Config) defaults() error {
 }
 
 type apiv1 struct {
+	diceAppSvc    dice.Service
 	logger        log.Logger
 	apiws         *restful.WebService
 	restContainer *restful.Container
@@ -45,7 +52,8 @@ func New(cfg Config) (http.Handler, error) {
 	}
 
 	a := apiv1{
-		logger: cfg.Logger,
+		diceAppSvc: cfg.DiceAppService,
+		logger:     cfg.Logger,
 	}
 
 	// Create router.

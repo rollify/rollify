@@ -12,9 +12,16 @@ func (a apiv1) registerRoutes(prefix string) {
 	a.apiws.Route(a.wrapWSGet("/ping").
 		To(a.pong()).
 		Metadata(restfulspec.KeyOpenAPITags, []string{"check"}).
-		Doc("ping pong check handler").
+		Doc("ping pong check").
 		Writes("").
 		Returns(http.StatusOK, "OK", ""))
+
+	a.apiws.Route(a.wrapWSGet("/dice/types").
+		To(a.listDiceTypes()).
+		Metadata(restfulspec.KeyOpenAPITags, []string{"dice"}).
+		Doc("lists available dice types").
+		Writes(listDiceTypesResponse{}).
+		Returns(http.StatusOK, "OK", listDiceTypesResponse{}))
 
 	// Register docs.
 	// Important: Needs to be the last route registed, because it needs to know what were

@@ -51,6 +51,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 
 	// Create dependencies.
 	appServiceDice, err := dice.NewService(dice.ServiceConfig{
+		Roller: dice.NewRandomRoller(),
 		Logger: logger,
 	})
 	if err != nil {

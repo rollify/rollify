@@ -42,6 +42,7 @@ func TestServiceListDiceTypes(t *testing.T) {
 			require := require.New(t)
 
 			test.config.Roller = &dicemock.Roller{}
+			test.config.DiceRepository = &dicemock.Repository{}
 			svc, err := dice.NewService(test.config)
 			require.NoError(err)
 
@@ -59,13 +60,13 @@ func TestServiceListDiceTypes(t *testing.T) {
 func TestServiceCreateDiceRoll(t *testing.T) {
 	tests := map[string]struct {
 		config  dice.ServiceConfig
-		mock    func(r *dicemock.Roller)
+		mock    func(roller *dicemock.Roller, repo *dicemock.Repository)
 		req     func() dice.CreateDiceRollRequest
 		expResp func() *dice.CreateDiceRollResponse
 		expErr  bool
 	}{
 		"Having a dice roll request without room should fail.": {
-			mock: func(r *dicemock.Roller) {},
+			mock: func(roller *dicemock.Roller, repo *dicemock.Repository) {},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
 					RoomID: "",
@@ -77,7 +78,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request without user should fail.": {
-			mock: func(r *dicemock.Roller) {},
+			mock: func(roller *dicemock.Roller, repo *dicemock.Repository) {},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
 					RoomID: "room-id",
@@ -89,7 +90,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request without dice should fail.": {
-			mock: func(r *dicemock.Roller) {},
+			mock: func(roller *dicemock.Roller, repo *dicemock.Repository) {},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
 					RoomID: "room-id",
@@ -100,8 +101,8 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			expErr: true,
 		},
 
-		"Having a dice roll request it should create a dice roll and roll them.": {
-			mock: func(r *dicemock.Roller) {
+		"Having a dice roll request it should create a dice roll, roll them and store.": {
+			mock: func(roller *dicemock.Roller, repo *dicemock.Repository) {
 				// Expexted dice roll call.
 				exp := &model.DiceRoll{
 					ID: "test",
@@ -111,7 +112,8 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 						{ID: "test", Type: model.DieTypeD10},
 					},
 				}
-				r.On("Roll", mock.Anything, exp).Once().Return(nil)
+				roller.On("Roll", mock.Anything, exp).Once().Return(nil)
+				repo.On("CreateDiceRoll", mock.Anything, *exp).Once().Return(nil)
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -139,8 +141,8 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request and failing the dice roll process, it should fail..": {
-			mock: func(r *dicemock.Roller) {
-				r.On("Roll", mock.Anything, mock.Anything).Once().Return(fmt.Errorf("wanted error"))
+			mock: func(roller *dicemock.Roller, repo *dicemock.Repository) {
+				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(fmt.Errorf("wanted error"))
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -159,10 +161,12 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			require := require.New(t)
 
 			// Mocks
-			mr := &dicemock.Roller{}
-			test.mock(mr)
+			mrol := &dicemock.Roller{}
+			mrep := &dicemock.Repository{}
+			test.mock(mrol, mrep)
 
-			test.config.Roller = mr
+			test.config.Roller = mrol
+			test.config.DiceRepository = mrep
 			test.config.IDGenerator = func() string { return "test" }
 
 			svc, err := dice.NewService(test.config)

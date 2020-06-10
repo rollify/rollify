@@ -23,12 +23,17 @@ type Service interface {
 
 // ServiceConfig is the service configuration.
 type ServiceConfig struct {
-	Roller      Roller
-	Logger      log.Logger
-	IDGenerator func() string
+	DiceRepository Repository
+	Roller         Roller
+	Logger         log.Logger
+	IDGenerator    func() string
 }
 
 func (c *ServiceConfig) defaults() error {
+	if c.DiceRepository == nil {
+		return fmt.Errorf("dice.DiceRepository is required")
+	}
+
 	if c.Roller == nil {
 		return fmt.Errorf("dice.Roller is required")
 	}
@@ -46,9 +51,10 @@ func (c *ServiceConfig) defaults() error {
 }
 
 type service struct {
-	roller Roller
-	logger log.Logger
-	idGen  func() string
+	diceRepository Repository
+	roller         Roller
+	logger         log.Logger
+	idGen          func() string
 }
 
 // NewService returns a new dice.Service.
@@ -59,9 +65,10 @@ func NewService(cfg ServiceConfig) (Service, error) {
 	}
 
 	return service{
-		roller: cfg.Roller,
-		logger: cfg.Logger,
-		idGen:  cfg.IDGenerator,
+		diceRepository: cfg.DiceRepository,
+		roller:         cfg.Roller,
+		logger:         cfg.Logger,
+		idGen:          cfg.IDGenerator,
 	}, nil
 }
 
@@ -137,7 +144,11 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 		return nil, fmt.Errorf("could not roll the dice: %w", err)
 	}
 
-	// TODO(slok): Store in the database.
+	err = s.diceRepository.CreateDiceRoll(ctx, *dr)
+	if err != nil {
+		return nil, fmt.Errorf("could not store dice roll: %w", err)
+	}
+
 	// TODO(slok): Notify the roll.
 
 	return &CreateDiceRollResponse{

@@ -6,7 +6,7 @@ import (
 
 	"github.com/emicklei/go-restful"
 
-	"github.com/rollify/rollify/internal/dice"
+	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/log"
 )
 
@@ -32,10 +32,7 @@ func (a *apiv1) listDiceTypes() restful.RouteFunction {
 		// Execute.
 		mResp, err := a.diceAppSvc.ListDiceTypes(req.Request.Context())
 		if err != nil {
-			err := resp.WriteError(errToStatusCode(err), err)
-			if err != nil {
-				logger.Errorf("could not write http response: %w", err)
-			}
+			writeResponseError(logger, resp, errToStatusCode(err), err)
 			return
 		}
 
@@ -58,28 +55,19 @@ func (a *apiv1) createDiceRoll() restful.RouteFunction {
 		entReq := &createDiceRollRequest{}
 		err := req.ReadEntity(entReq)
 		if err != nil {
-			err := resp.WriteError(http.StatusBadRequest, err)
-			if err != nil {
-				logger.Errorf("could not write http response: %w", err)
-			}
+			writeResponseError(logger, resp, http.StatusBadRequest, err)
 			return
 		}
 		mReq, err := mapAPIToModelcreateDiceRoll(*entReq)
 		if err != nil {
-			err := resp.WriteError(http.StatusBadRequest, err)
-			if err != nil {
-				logger.Errorf("could not write http response: %w", err)
-			}
+			writeResponseError(logger, resp, http.StatusBadRequest, err)
 			return
 		}
 
 		// Execute.
 		mResp, err := a.diceAppSvc.CreateDiceRoll(req.Request.Context(), *mReq)
 		if err != nil {
-			err := resp.WriteError(errToStatusCode(err), err)
-			if err != nil {
-				logger.Errorf("could not write http response: %w", err)
-			}
+			writeResponseError(logger, resp, errToStatusCode(err), err)
 			return
 		}
 
@@ -92,12 +80,56 @@ func (a *apiv1) createDiceRoll() restful.RouteFunction {
 	}
 }
 
+func (a *apiv1) createRoom() restful.RouteFunction {
+	logger := a.logger.WithKV(log.KV{"handler": "createRoom"})
+
+	return func(req *restful.Request, resp *restful.Response) {
+		logger.Debugf("handler called")
+
+		// Map request.
+		entReq := &createRoomRequest{}
+		err := req.ReadEntity(entReq)
+		if err != nil {
+			writeResponseError(logger, resp, http.StatusBadRequest, err)
+			return
+		}
+		mReq, err := mapAPIToModelCreateRoom(*entReq)
+		if err != nil {
+			writeResponseError(logger, resp, http.StatusBadRequest, err)
+			return
+		}
+
+		// Execute.
+		mResp, err := a.roomAppSvc.CreateRoom(req.Request.Context(), *mReq)
+		if err != nil {
+			writeResponseError(logger, resp, errToStatusCode(err), err)
+			return
+		}
+
+		// Map response.
+		r := mapModelToAPIcreateRoom(*mResp)
+		err = resp.WriteHeaderAndEntity(http.StatusCreated, r)
+		if err != nil {
+			logger.Errorf("could not write http response: %w", err)
+		}
+	}
+}
+
+func writeResponseError(logger log.Logger, resp *restful.Response, status int, err error) {
+	err = resp.WriteError(status, err)
+	if err != nil {
+		logger.Errorf("could not write http response: %w", err)
+	}
+}
+
 func errToStatusCode(err error) int {
 	switch {
 	case err == nil:
 		return http.StatusOK
-	case errors.Is(err, dice.ErrNotValid):
+	case errors.Is(err, internalerrors.ErrNotValid):
 		return http.StatusNotFound
+	case errors.Is(err, internalerrors.ErrAlreadyExists):
+		return http.StatusConflict
 	default:
 		return http.StatusInternalServerError
 	}

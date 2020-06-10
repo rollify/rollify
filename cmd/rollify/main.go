@@ -18,6 +18,7 @@ import (
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/http/apiv1"
 	"github.com/rollify/rollify/internal/log"
+	"github.com/rollify/rollify/internal/room"
 )
 
 var (
@@ -50,12 +51,19 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	})
 
 	// Create dependencies.
-	appServiceDice, err := dice.NewService(dice.ServiceConfig{
+	diceAppService, err := dice.NewService(dice.ServiceConfig{
 		Roller: dice.NewRandomRoller(),
 		Logger: logger,
 	})
 	if err != nil {
-		return fmt.Errorf("could not create dice application service")
+		return fmt.Errorf("could not create dice application service: %w", err)
+	}
+
+	roomAppService, err := room.NewService(room.ServiceConfig{
+		Logger: logger,
+	})
+	if err != nil {
+		return fmt.Errorf("could not create room application service: %w", err)
 	}
 
 	// Prepare our main runner.
@@ -70,7 +78,8 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 
 		// API.
 		apiv1Handler, err := apiv1.New(apiv1.Config{
-			DiceAppService: appServiceDice,
+			DiceAppService: diceAppService,
+			RoomAppService: roomAppService,
 			Logger:         logger,
 		})
 		if err != nil {

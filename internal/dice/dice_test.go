@@ -2,6 +2,7 @@ package dice_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -138,6 +139,21 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 					},
 				}
 			},
+		},
+
+		"Having a dice roll request if storage fails, it should fail.": {
+			mock: func(roller *dicemock.Roller, repo *dicemock.Repository) {
+				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(nil)
+				repo.On("CreateDiceRoll", mock.Anything, mock.Anything).Once().Return(errors.New("wanted error"))
+			},
+			req: func() dice.CreateDiceRollRequest {
+				return dice.CreateDiceRollRequest{
+					RoomID: "test-room",
+					UserID: "user-id",
+					Dice:   []model.DieType{model.DieTypeD6},
+				}
+			},
+			expErr: true,
 		},
 
 		"Having a dice roll request and failing the dice roll process, it should fail..": {

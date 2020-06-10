@@ -23,6 +23,15 @@ func (a apiv1) registerRoutes(prefix string) {
 		Writes(listDiceTypesResponse{}).
 		Returns(http.StatusOK, "OK", listDiceTypesResponse{}))
 
+	a.apiws.Route(a.wrapWSPost("/dice/roll").
+		To(a.createDiceRoll()).
+		Metadata(restfulspec.KeyOpenAPITags, []string{"dice"}).
+		Doc("create dice roll").
+		Writes(listDiceTypesResponse{}).
+		Reads(createDiceRollRequest{}).
+		Returns(http.StatusCreated, "Created", createDiceRollResponse{}).
+		Returns(http.StatusBadRequest, "Created", nil))
+
 	// Register docs.
 	// Important: Needs to be the last route registed, because it needs to know what were
 	// the registered endpoints.
@@ -35,6 +44,10 @@ func (a apiv1) registerRoutes(prefix string) {
 
 func (a *apiv1) wrapWSGet(route string) *restful.RouteBuilder {
 	return a.wrapMiddleware(route, a.apiws.GET(route))
+}
+
+func (a *apiv1) wrapWSPost(route string) *restful.RouteBuilder {
+	return a.wrapMiddleware(route, a.apiws.POST(route))
 }
 
 // wrapMiddleware wraps a routebuilder with filters/middlewares.

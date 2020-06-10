@@ -29,7 +29,8 @@ func (a *apiv1) listDiceTypes() restful.RouteFunction {
 	return func(req *restful.Request, resp *restful.Response) {
 		logger.Debugf("handler called")
 
-		mr, err := a.diceAppSvc.ListDiceTypes(req.Request.Context())
+		// Execute.
+		mResp, err := a.diceAppSvc.ListDiceTypes(req.Request.Context())
 		if err != nil {
 			err := resp.WriteError(errToStatusCode(err), err)
 			if err != nil {
@@ -38,9 +39,53 @@ func (a *apiv1) listDiceTypes() restful.RouteFunction {
 			return
 		}
 
-		r := mapModelToAPIListDiceTypes(*mr)
-
+		// Map request.
+		r := mapModelToAPIListDiceTypes(*mResp)
 		err = resp.WriteHeaderAndEntity(http.StatusOK, r)
+		if err != nil {
+			logger.Errorf("could not write http response: %w", err)
+		}
+	}
+}
+
+func (a *apiv1) createDiceRoll() restful.RouteFunction {
+	logger := a.logger.WithKV(log.KV{"handler": "createDiceRoll"})
+
+	return func(req *restful.Request, resp *restful.Response) {
+		logger.Debugf("handler called")
+
+		// Map request.
+		entReq := &createDiceRollRequest{}
+		err := req.ReadEntity(entReq)
+		if err != nil {
+			err := resp.WriteError(http.StatusBadRequest, err)
+			if err != nil {
+				logger.Errorf("could not write http response: %w", err)
+			}
+			return
+		}
+		mReq, err := mapAPIToModelcreateDiceRoll(*entReq)
+		if err != nil {
+			err := resp.WriteError(http.StatusBadRequest, err)
+			if err != nil {
+				logger.Errorf("could not write http response: %w", err)
+			}
+			return
+		}
+
+		// Execute.
+		mResp, err := a.diceAppSvc.CreateDiceRoll(req.Request.Context(), *mReq)
+		if err != nil {
+			err := resp.WriteError(errToStatusCode(err), err)
+			if err != nil {
+				logger.Errorf("could not write http response: %w", err)
+			}
+			return
+		}
+
+		// Map response.
+		r := mapModelToAPIcreateDiceRoll(*mResp)
+		err = resp.WriteHeaderAndEntity(http.StatusCreated, r)
 		if err != nil {
 			logger.Errorf("could not write http response: %w", err)
 		}

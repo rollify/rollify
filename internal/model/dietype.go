@@ -47,3 +47,13 @@ const (
 	DieTypeD12 = d12(0)
 	DieTypeD20 = d20(0)
 )
+
+// DiceTypes has all the dice type available.
+var DiceTypes = map[string]DieType{
+	DieTypeD4.ID():  DieTypeD4,
+	DieTypeD6.ID():  DieTypeD6,
+	DieTypeD8.ID():  DieTypeD8,
+	DieTypeD10.ID(): DieTypeD10,
+	DieTypeD12.ID(): DieTypeD12,
+	DieTypeD20.ID(): DieTypeD20,
+}

@@ -19,17 +19,24 @@ var (
 type Service interface {
 	// ListDiceTypes lists all the dice types supported by the app.
 	ListDiceTypes(ctx context.Context) (*ListDiceTypesResponse, error)
+	// CreateDiceRoll creates dice rolls.
+	CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*CreateDiceRollResponse, error)
 }
 
 //go:generate mockery -case underscore -output dicemock -outpkg dicemock -name Service
 
 // ServiceConfig is the service configuration.
 type ServiceConfig struct {
+	Roller      Roller
 	Logger      log.Logger
 	IDGenerator func() string
 }
 
 func (c *ServiceConfig) defaults() error {
+	if c.Roller == nil {
+		return fmt.Errorf("dice.Roller is required")
+	}
+
 	if c.Logger == nil {
 		c.Logger = log.Dummy
 	}
@@ -42,6 +49,7 @@ func (c *ServiceConfig) defaults() error {
 }
 
 type service struct {
+	roller Roller
 	logger log.Logger
 	idGen  func() string
 }
@@ -54,6 +62,7 @@ func NewService(cfg ServiceConfig) (Service, error) {
 	}
 
 	return service{
+		roller: cfg.Roller,
 		logger: cfg.Logger,
 		idGen:  cfg.IDGenerator,
 	}, nil
@@ -74,5 +83,67 @@ func (s service) ListDiceTypes(ctx context.Context) (*ListDiceTypesResponse, err
 			model.DieTypeD12,
 			model.DieTypeD20,
 		},
+	}, nil
+}
+
+// CreateDiceRollRequest is the request of the roll.
+type CreateDiceRollRequest struct {
+	UserID string
+	RoomID string
+	Dice   []model.DieType
+}
+
+func (r CreateDiceRollRequest) validate() error {
+	if r.RoomID == "" {
+		return fmt.Errorf("config.RoomID is required")
+	}
+
+	if r.UserID == "" {
+		return fmt.Errorf("config.UserID is required")
+	}
+
+	if len(r.Dice) == 0 {
+		return fmt.Errorf("minimum config.Dice quantity is 1")
+	}
+
+	return nil
+}
+
+// CreateDiceRollResponse is the response to the RollDice request.
+type CreateDiceRollResponse struct {
+	DiceRoll model.DiceRoll
+}
+
+func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*CreateDiceRollResponse, error) {
+	err := r.validate()
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrNotValid, err)
+	}
+
+	// Create a dice roll.
+	dice := []model.DieRoll{}
+	for _, d := range r.Dice {
+		dice = append(dice, model.DieRoll{
+			ID:   s.idGen(),
+			Type: d,
+		})
+	}
+
+	dr := &model.DiceRoll{
+		ID:   s.idGen(),
+		Dice: dice,
+	}
+
+	// Roll'em all!
+	err = s.roller.Roll(ctx, dr)
+	if err != nil {
+		return nil, fmt.Errorf("could not roll the dice: %w", err)
+	}
+
+	// TODO(slok): Store in the database.
+	// TODO(slok): Notify the roll.
+
+	return &CreateDiceRollResponse{
+		DiceRoll: *dr,
 	}, nil
 }

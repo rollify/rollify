@@ -26,11 +26,21 @@ func (a apiv1) registerRoutes(prefix string) {
 	a.apiws.Route(a.wrapWSPost("/dice/roll").
 		To(a.createDiceRoll()).
 		Metadata(restfulspec.KeyOpenAPITags, []string{"dice"}).
-		Doc("create dice roll").
-		Writes(listDiceTypesResponse{}).
+		Doc("creates a dice roll").
+		Writes(createDiceRollResponse{}).
 		Reads(createDiceRollRequest{}).
 		Returns(http.StatusCreated, "Created", createDiceRollResponse{}).
-		Returns(http.StatusBadRequest, "Created", nil))
+		Returns(http.StatusBadRequest, "", nil))
+
+	a.apiws.Route(a.wrapWSPost("/room").
+		To(a.createRoom()).
+		Metadata(restfulspec.KeyOpenAPITags, []string{"room"}).
+		Doc("creates a room").
+		Writes(createRoomResponse{}).
+		Reads(createRoomRequest{}).
+		Returns(http.StatusCreated, "Created", createRoomResponse{}).
+		Returns(http.StatusBadRequest, "", nil).
+		Returns(http.StatusConflict, "room already exists", nil))
 
 	// Register docs.
 	// Important: Needs to be the last route registed, because it needs to know what were

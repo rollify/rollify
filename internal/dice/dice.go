@@ -6,13 +6,9 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/log"
 	"github.com/rollify/rollify/internal/model"
-)
-
-var (
-	// ErrNotValid will be used when something is not valid.
-	ErrNotValid = fmt.Errorf("not valid")
 )
 
 // Service is the application service of dice logic.
@@ -40,6 +36,7 @@ func (c *ServiceConfig) defaults() error {
 	if c.Logger == nil {
 		c.Logger = log.Dummy
 	}
+	c.Logger = c.Logger.WithKV(log.KV{"svc": "dice.Service"})
 
 	if c.IDGenerator == nil {
 		c.IDGenerator = func() string { return uuid.New().String() }
@@ -117,7 +114,7 @@ type CreateDiceRollResponse struct {
 func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*CreateDiceRollResponse, error) {
 	err := r.validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrNotValid, err)
+		return nil, fmt.Errorf("%w: %s", internalerrors.ErrNotValid, err)
 	}
 
 	// Create a dice roll.

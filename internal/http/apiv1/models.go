@@ -5,6 +5,7 @@ import (
 
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/room"
 )
 
 type listDiceTypesResponse struct {
@@ -89,5 +90,30 @@ func mapAPIToModelcreateDiceRoll(r createDiceRollRequest) (*dice.CreateDiceRollR
 		UserID: r.UserID,
 		RoomID: r.RoomID,
 		Dice:   dts,
+	}, nil
+}
+
+type createRoomResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+type createRoomRequest struct {
+	Name string `json:"name"`
+}
+
+func mapModelToAPIcreateRoom(r room.CreateRoomResponse) createRoomResponse {
+	return createRoomResponse{
+		ID:   r.Room.ID,
+		Name: r.Room.Name,
+	}
+}
+
+func mapAPIToModelCreateRoom(r createRoomRequest) (*room.CreateRoomRequest, error) {
+	if r.Name == "" {
+		return nil, fmt.Errorf("name is required")
+	}
+
+	return &room.CreateRoomRequest{
+		Name: r.Name,
 	}, nil
 }

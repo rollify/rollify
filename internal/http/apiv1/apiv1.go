@@ -8,11 +8,13 @@ import (
 
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/log"
+	"github.com/rollify/rollify/internal/room"
 )
 
 // Config is the configuration to serve the API.
 type Config struct {
 	DiceAppService dice.Service
+	RoomAppService room.Service
 	ServePefix     string
 	Logger         log.Logger
 }
@@ -20,6 +22,10 @@ type Config struct {
 func (c *Config) defaults() error {
 	if c.DiceAppService == nil {
 		return fmt.Errorf("dice.Service application service is required")
+	}
+
+	if c.RoomAppService == nil {
+		return fmt.Errorf("room.Service application service is required")
 	}
 
 	if c.ServePefix == "" {
@@ -39,6 +45,7 @@ func (c *Config) defaults() error {
 
 type apiv1 struct {
 	diceAppSvc    dice.Service
+	roomAppSvc    room.Service
 	logger        log.Logger
 	apiws         *restful.WebService
 	restContainer *restful.Container
@@ -53,6 +60,7 @@ func New(cfg Config) (http.Handler, error) {
 
 	a := apiv1{
 		diceAppSvc: cfg.DiceAppService,
+		roomAppSvc: cfg.RoomAppService,
 		logger:     cfg.Logger,
 	}
 

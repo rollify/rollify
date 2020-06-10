@@ -56,7 +56,7 @@ func TestServiceListDiceTypes(t *testing.T) {
 	}
 }
 
-func TestServiceRollDice(t *testing.T) {
+func TestServiceCreateDiceRoll(t *testing.T) {
 	tests := map[string]struct {
 		config  dice.ServiceConfig
 		mock    func(r *dicemock.Roller)

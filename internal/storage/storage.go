@@ -24,6 +24,8 @@ type RoomRepository interface {
 	// If the room doesn't have an ID it returns a internalerrors.NotValid error kind.
 	// If the room already exists it returns a internalerrors.AlreadyExists error kind.
 	CreateRoom(ctx context.Context, r model.Room) error
+	// RoomExists returns true if the room exists.
+	RoomExists(ctx context.Context, id string) (exists bool, err error)
 }
 
 //go:generate mockery -case underscore -output storagemock -outpkg storagemock -name RoomRepository

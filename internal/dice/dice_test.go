@@ -45,6 +45,7 @@ func TestServiceListDiceTypes(t *testing.T) {
 
 			test.config.Roller = &dicemock.Roller{}
 			test.config.DiceRollRepository = &storagemock.DiceRollRepository{}
+			test.config.RoomRepository = &storagemock.RoomRepository{}
 			svc, err := dice.NewService(test.config)
 			require.NoError(err)
 
@@ -62,13 +63,14 @@ func TestServiceListDiceTypes(t *testing.T) {
 func TestServiceCreateDiceRoll(t *testing.T) {
 	tests := map[string]struct {
 		config  dice.ServiceConfig
-		mock    func(roller *dicemock.Roller, repo *storagemock.DiceRollRepository)
+		mock    func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository)
 		req     func() dice.CreateDiceRollRequest
 		expResp func() *dice.CreateDiceRollResponse
 		expErr  bool
 	}{
 		"Having a dice roll request without room should fail.": {
-			mock: func(roller *dicemock.Roller, repo *storagemock.DiceRollRepository) {},
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
 					RoomID: "",
@@ -80,7 +82,8 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request without user should fail.": {
-			mock: func(roller *dicemock.Roller, repo *storagemock.DiceRollRepository) {},
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
 					RoomID: "room-id",
@@ -92,7 +95,8 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request without dice should fail.": {
-			mock: func(roller *dicemock.Roller, repo *storagemock.DiceRollRepository) {},
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
 					RoomID: "room-id",
@@ -104,7 +108,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request it should create a dice roll, roll them and store.": {
-			mock: func(roller *dicemock.Roller, repo *storagemock.DiceRollRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
 				// Expexted dice roll call.
 				exp := &model.DiceRoll{
 					ID: "test",
@@ -114,8 +118,9 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 						{ID: "test", Type: model.DieTypeD10},
 					},
 				}
+				roomRepo.On("RoomExists", mock.Anything, "test-room").Once().Return(true, nil)
 				roller.On("Roll", mock.Anything, exp).Once().Return(nil)
-				repo.On("CreateDiceRoll", mock.Anything, *exp).Once().Return(nil)
+				diceRollRepo.On("CreateDiceRoll", mock.Anything, *exp).Once().Return(nil)
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -142,10 +147,39 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			},
 		},
 
+		"Having a dice roll request with a room that does not exists it should fail.": {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+				roomRepo.On("RoomExists", mock.Anything, "test-room").Once().Return(false, nil)
+			},
+			req: func() dice.CreateDiceRollRequest {
+				return dice.CreateDiceRollRequest{
+					RoomID: "test-room",
+					UserID: "user-id",
+					Dice:   []model.DieType{model.DieTypeD6},
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a dice roll request if checking if the room exists fail, it should fail.": {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+				roomRepo.On("RoomExists", mock.Anything, "test-room").Once().Return(false, fmt.Errorf("wanted error"))
+			},
+			req: func() dice.CreateDiceRollRequest {
+				return dice.CreateDiceRollRequest{
+					RoomID: "test-room",
+					UserID: "user-id",
+					Dice:   []model.DieType{model.DieTypeD6},
+				}
+			},
+			expErr: true,
+		},
+
 		"Having a dice roll request if storage fails, it should fail.": {
-			mock: func(roller *dicemock.Roller, repo *storagemock.DiceRollRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+				roomRepo.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
 				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(nil)
-				repo.On("CreateDiceRoll", mock.Anything, mock.Anything).Once().Return(errors.New("wanted error"))
+				diceRollRepo.On("CreateDiceRoll", mock.Anything, mock.Anything).Once().Return(errors.New("wanted error"))
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -158,7 +192,8 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request and failing the dice roll process, it should fail.": {
-			mock: func(roller *dicemock.Roller, repo *storagemock.DiceRollRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+				roomRepo.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
 				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(fmt.Errorf("wanted error"))
 			},
 			req: func() dice.CreateDiceRollRequest {
@@ -179,11 +214,13 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 
 			// Mocks
 			mrol := &dicemock.Roller{}
-			mrep := &storagemock.DiceRollRepository{}
-			test.mock(mrol, mrep)
+			mdrrep := &storagemock.DiceRollRepository{}
+			mrrep := &storagemock.RoomRepository{}
+			test.mock(mrol, mdrrep, mrrep)
 
 			test.config.Roller = mrol
-			test.config.DiceRollRepository = mrep
+			test.config.DiceRollRepository = mdrrep
+			test.config.RoomRepository = mrrep
 			test.config.IDGenerator = func() string { return "test" }
 
 			svc, err := dice.NewService(test.config)

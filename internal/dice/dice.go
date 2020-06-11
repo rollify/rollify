@@ -25,6 +25,7 @@ type Service interface {
 // ServiceConfig is the service configuration.
 type ServiceConfig struct {
 	DiceRollRepository storage.DiceRollRepository
+	RoomRepository     storage.RoomRepository
 	Roller             Roller
 	Logger             log.Logger
 	IDGenerator        func() string
@@ -32,7 +33,11 @@ type ServiceConfig struct {
 
 func (c *ServiceConfig) defaults() error {
 	if c.DiceRollRepository == nil {
-		return fmt.Errorf("dice.DiceRepository is required")
+		return fmt.Errorf("storage.DiceRepository is required")
+	}
+
+	if c.RoomRepository == nil {
+		return fmt.Errorf("storage.RoomRepository is required")
 	}
 
 	if c.Roller == nil {
@@ -53,6 +58,7 @@ func (c *ServiceConfig) defaults() error {
 
 type service struct {
 	diceRollRepository storage.DiceRollRepository
+	roomRepository     storage.RoomRepository
 	roller             Roller
 	logger             log.Logger
 	idGen              func() string
@@ -67,6 +73,7 @@ func NewService(cfg ServiceConfig) (Service, error) {
 
 	return service{
 		diceRollRepository: cfg.DiceRollRepository,
+		roomRepository:     cfg.RoomRepository,
 		roller:             cfg.Roller,
 		logger:             cfg.Logger,
 		idGen:              cfg.IDGenerator,
@@ -125,6 +132,15 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 		return nil, fmt.Errorf("%w: %s", internalerrors.ErrNotValid, err)
 	}
 
+	// Check the room exists.
+	roomExists, err := s.roomRepository.RoomExists(ctx, r.RoomID)
+	if err != nil {
+		return nil, fmt.Errorf("could not check if room exists: %w", err)
+	}
+	if !roomExists {
+		return nil, fmt.Errorf("room does not exists: %w", internalerrors.ErrNotValid)
+	}
+
 	// Create a dice roll.
 	dice := []model.DieRoll{}
 	for _, d := range r.Dice {
@@ -145,6 +161,7 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 		return nil, fmt.Errorf("could not roll the dice: %w", err)
 	}
 
+	// Store the dice roll.
 	err = s.diceRollRepository.CreateDiceRoll(ctx, *dr)
 	if err != nil {
 		return nil, fmt.Errorf("could not store dice roll: %w", err)

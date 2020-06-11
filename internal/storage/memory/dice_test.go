@@ -12,16 +12,16 @@ import (
 	"github.com/rollify/rollify/internal/storage/memory"
 )
 
-func TestDiceRepositoryCreateDiceRoll(t *testing.T) {
+func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 	tests := map[string]struct {
-		repo        func() *memory.DiceRepository
+		repo        func() *memory.DiceRollRepository
 		diceRoll    model.DiceRoll
 		expDiceRoll model.DiceRoll
 		expErr      error
 	}{
 		"Having a dice roll without ID should return a not valid error.": {
-			repo: func() *memory.DiceRepository {
-				return memory.NewDiceRepository()
+			repo: func() *memory.DiceRollRepository {
+				return memory.NewDiceRollRepository()
 			},
 			diceRoll: model.DiceRoll{
 				ID: "",
@@ -30,8 +30,8 @@ func TestDiceRepositoryCreateDiceRoll(t *testing.T) {
 		},
 
 		"Creating a dice roll that already exists should return an error.": {
-			repo: func() *memory.DiceRepository {
-				r := memory.NewDiceRepository()
+			repo: func() *memory.DiceRollRepository {
+				r := memory.NewDiceRollRepository()
 				r.SetDiceRollsByIDSeed(map[string]model.DiceRoll{
 					"test-id": model.DiceRoll{
 						ID: "test-id",
@@ -46,8 +46,8 @@ func TestDiceRepositoryCreateDiceRoll(t *testing.T) {
 		},
 
 		"Creating a dice roll should store the room.": {
-			repo: func() *memory.DiceRepository {
-				return memory.NewDiceRepository()
+			repo: func() *memory.DiceRollRepository {
+				return memory.NewDiceRollRepository()
 			},
 			diceRoll: model.DiceRoll{
 				ID: "test-id",

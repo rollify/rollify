@@ -11,19 +11,19 @@ import (
 
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/room"
-	"github.com/rollify/rollify/internal/room/roommock"
+	"github.com/rollify/rollify/internal/storage/storagemock"
 )
 
 func TestServiceCreateRoom(t *testing.T) {
 	tests := map[string]struct {
 		config  room.ServiceConfig
-		mock    func(r *roommock.Repository)
+		mock    func(r *storagemock.RoomRepository)
 		req     func() room.CreateRoomRequest
 		expResp func() *room.CreateRoomResponse
 		expErr  bool
 	}{
 		"Having a creation request without name, should fail.": {
-			mock: func(r *roommock.Repository) {},
+			mock: func(r *storagemock.RoomRepository) {},
 			req: func() room.CreateRoomRequest {
 				return room.CreateRoomRequest{Name: ""}
 			},
@@ -31,7 +31,7 @@ func TestServiceCreateRoom(t *testing.T) {
 		},
 
 		"Having a correct room creation it should store the room.": {
-			mock: func(r *roommock.Repository) {
+			mock: func(r *storagemock.RoomRepository) {
 				exp := model.Room{
 					ID:   "test",
 					Name: "test-room",
@@ -52,7 +52,7 @@ func TestServiceCreateRoom(t *testing.T) {
 		},
 
 		"Having a correct request and an error while storing, it should fail.": {
-			mock: func(r *roommock.Repository) {
+			mock: func(r *storagemock.RoomRepository) {
 				r.On("CreateRoom", mock.Anything, mock.Anything).Once().Return(errors.New("wanted error"))
 			},
 			req: func() room.CreateRoomRequest {
@@ -68,7 +68,7 @@ func TestServiceCreateRoom(t *testing.T) {
 			require := require.New(t)
 
 			// Mocks
-			mr := &roommock.Repository{}
+			mr := &storagemock.RoomRepository{}
 			test.mock(mr)
 
 			test.config.RoomRepository = mr

@@ -4,40 +4,40 @@ import (
 	"context"
 	"sync"
 
-	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/storage"
 )
 
-// DiceRepository is a memory based dice repository.
-type DiceRepository struct {
+// DiceRollRepository is a memory based dice rolls repository.
+type DiceRollRepository struct {
 	mu            sync.Mutex
 	diceRollsByID map[string]model.DiceRoll
 }
 
-// NewDiceRepository returns a new DiceRepository.
-func NewDiceRepository() *DiceRepository {
-	return &DiceRepository{
+// NewDiceRollRepository returns a new DiceRollRepository.
+func NewDiceRollRepository() *DiceRollRepository {
+	return &DiceRollRepository{
 		diceRollsByID: map[string]model.DiceRoll{},
 	}
 }
 
 // SetDiceRollsByIDSeed helper function to set the data we want at any point.
-func (r *DiceRepository) SetDiceRollsByIDSeed(data map[string]model.DiceRoll) {
+func (r *DiceRollRepository) SetDiceRollsByIDSeed(data map[string]model.DiceRoll) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.diceRollsByID = data
 }
 
 // DiceRollsByIDSeed helper function to get the data we want at any point.
-func (r *DiceRepository) DiceRollsByIDSeed() map[string]model.DiceRoll {
+func (r *DiceRollRepository) DiceRollsByIDSeed() map[string]model.DiceRoll {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return r.diceRollsByID
 }
 
 // CreateDiceRoll satisfies dice.Repository interface.
-func (r *DiceRepository) CreateDiceRoll(ctx context.Context, dr model.DiceRoll) error {
+func (r *DiceRollRepository) CreateDiceRoll(ctx context.Context, dr model.DiceRoll) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -56,4 +56,4 @@ func (r *DiceRepository) CreateDiceRoll(ctx context.Context, dr model.DiceRoll) 
 }
 
 // Implementation assertions.
-var _ dice.Repository = &DiceRepository{}
+var _ storage.DiceRollRepository = &DiceRollRepository{}

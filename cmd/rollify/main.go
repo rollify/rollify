@@ -19,6 +19,7 @@ import (
 	"github.com/rollify/rollify/internal/http/apiv1"
 	"github.com/rollify/rollify/internal/log"
 	"github.com/rollify/rollify/internal/room"
+	"github.com/rollify/rollify/internal/storage/memory"
 )
 
 var (
@@ -50,17 +51,32 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		"version": Version,
 	})
 
-	// Create dependencies.
+	// Create storage.
+	var (
+		roomRepo room.Repository
+		diceRepo dice.Repository
+	)
+	switch cmdCfg.StorageType {
+	case StorageTypeMemory:
+		roomRepo = memory.NewRoomRepository()
+		diceRepo = memory.NewDiceRepository()
+	default:
+		return fmt.Errorf("storage type '%s' unknown", cmdCfg.StorageType)
+	}
+
+	// Create app services.
 	diceAppService, err := dice.NewService(dice.ServiceConfig{
-		Roller: dice.NewRandomRoller(),
-		Logger: logger,
+		DiceRepository: diceRepo,
+		Roller:         dice.NewRandomRoller(),
+		Logger:         logger,
 	})
 	if err != nil {
 		return fmt.Errorf("could not create dice application service: %w", err)
 	}
 
 	roomAppService, err := room.NewService(room.ServiceConfig{
-		Logger: logger,
+		RoomRepository: roomRepo,
+		Logger:         logger,
 	})
 	if err != nil {
 		return fmt.Errorf("could not create room application service: %w", err)

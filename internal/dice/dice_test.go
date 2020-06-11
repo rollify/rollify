@@ -156,7 +156,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			expErr: true,
 		},
 
-		"Having a dice roll request and failing the dice roll process, it should fail..": {
+		"Having a dice roll request and failing the dice roll process, it should fail.": {
 			mock: func(roller *dicemock.Roller, repo *dicemock.Repository) {
 				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(fmt.Errorf("wanted error"))
 			},

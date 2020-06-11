@@ -37,7 +37,7 @@ func (r *RoomRepository) RoomsByIDSeed() map[string]model.Room {
 }
 
 // CreateRoom satisfies room.Repository interface.
-func (r *RoomRepository) CreateRoom(ctx context.Context, room model.Room) error {
+func (r *RoomRepository) CreateRoom(_ context.Context, room model.Room) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -53,6 +53,15 @@ func (r *RoomRepository) CreateRoom(ctx context.Context, room model.Room) error 
 	r.roomsByID[room.ID] = room
 
 	return nil
+}
+
+// RoomExists satisfies room.Repository interface.
+func (r *RoomRepository) RoomExists(_ context.Context, id string) (exists bool, err error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	_, ok := r.roomsByID[id]
+	return ok, nil
 }
 
 // Implementation assertions.

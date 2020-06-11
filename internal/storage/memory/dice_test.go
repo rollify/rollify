@@ -33,7 +33,7 @@ func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 			repo: func() *memory.DiceRollRepository {
 				r := memory.NewDiceRollRepository()
 				r.SetDiceRollsByIDSeed(map[string]model.DiceRoll{
-					"test-id": model.DiceRoll{
+					"test-id": {
 						ID: "test-id",
 					},
 				})

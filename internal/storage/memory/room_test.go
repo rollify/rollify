@@ -34,7 +34,7 @@ func TestRoomRepositoryCreateRoom(t *testing.T) {
 			repo: func() *memory.RoomRepository {
 				r := memory.NewRoomRepository()
 				r.SetRoomsByIDSeed(map[string]model.Room{
-					"test-id": model.Room{
+					"test-id": {
 						ID:   "test-id",
 						Name: "test",
 					},
@@ -77,6 +77,50 @@ func TestRoomRepositoryCreateRoom(t *testing.T) {
 				seed := r.RoomsByIDSeed()
 				gotRoom := seed[test.expRoom.ID]
 				assert.Equal(test.expRoom, gotRoom)
+			}
+		})
+	}
+}
+
+func TestRoomRepositoryRoomExists(t *testing.T) {
+	tests := map[string]struct {
+		repo      func() *memory.RoomRepository
+		roomID    string
+		expExists bool
+		expErr    bool
+	}{
+		"Having a room ID that does not exists in the repository, it should return no exists.": {
+			repo: func() *memory.RoomRepository {
+				return memory.NewRoomRepository()
+			},
+			roomID:    "test-id",
+			expExists: false,
+		},
+
+		"Having a room ID that exists in the repository, it should return exists.": {
+			repo: func() *memory.RoomRepository {
+				r := memory.NewRoomRepository()
+				r.SetRoomsByIDSeed(map[string]model.Room{
+					"test-id": {ID: "test-id", Name: "test"},
+				})
+				return r
+			},
+			roomID:    "test-id",
+			expExists: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			r := test.repo()
+			gotExists, err := r.RoomExists(context.TODO(), test.roomID)
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expExists, gotExists)
 			}
 		})
 	}

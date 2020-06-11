@@ -10,8 +10,8 @@ import (
 // implement to manage rooms in storage.
 type Repository interface {
 	// CreateRoom creates a new room.
-	// If the room doesn't have an ID it returns a errors.KindNotValid error kind.
-	// If the room already exists it returns a errors.KindAlreadyExists error kind.
+	// If the room doesn't have an ID it returns a internalerrors.NotValid error kind.
+	// If the room already exists it returns a internalerrors.AlreadyExists error kind.
 	CreateRoom(ctx context.Context, r model.Room) error
 }
 

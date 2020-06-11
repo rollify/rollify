@@ -6,7 +6,7 @@ import (
 
 	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/model"
-	"github.com/rollify/rollify/internal/room"
+	"github.com/rollify/rollify/internal/storage"
 )
 
 // RoomRepository is a memory based room repository.
@@ -56,4 +56,4 @@ func (r *RoomRepository) CreateRoom(ctx context.Context, room model.Room) error 
 }
 
 // Implementation assertions.
-var _ room.Repository = &RoomRepository{}
+var _ storage.RoomRepository = &RoomRepository{}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/rollify/rollify/internal/log"
 	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/storage"
 )
 
 var (
@@ -24,7 +25,7 @@ type Service interface {
 
 // ServiceConfig is the service configuration.
 type ServiceConfig struct {
-	RoomRepository Repository
+	RoomRepository storage.RoomRepository
 	Logger         log.Logger
 	IDGenerator    func() string
 }
@@ -47,7 +48,7 @@ func (c *ServiceConfig) defaults() error {
 }
 
 type service struct {
-	roomRepo Repository
+	roomRepo storage.RoomRepository
 	logger   log.Logger
 	idGen    func() string
 }

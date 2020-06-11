@@ -9,6 +9,7 @@ import (
 	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/log"
 	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/storage"
 )
 
 // Service is the application service of dice logic.
@@ -23,14 +24,14 @@ type Service interface {
 
 // ServiceConfig is the service configuration.
 type ServiceConfig struct {
-	DiceRepository Repository
-	Roller         Roller
-	Logger         log.Logger
-	IDGenerator    func() string
+	DiceRollRepository storage.DiceRollRepository
+	Roller             Roller
+	Logger             log.Logger
+	IDGenerator        func() string
 }
 
 func (c *ServiceConfig) defaults() error {
-	if c.DiceRepository == nil {
+	if c.DiceRollRepository == nil {
 		return fmt.Errorf("dice.DiceRepository is required")
 	}
 
@@ -51,10 +52,10 @@ func (c *ServiceConfig) defaults() error {
 }
 
 type service struct {
-	diceRepository Repository
-	roller         Roller
-	logger         log.Logger
-	idGen          func() string
+	diceRollRepository storage.DiceRollRepository
+	roller             Roller
+	logger             log.Logger
+	idGen              func() string
 }
 
 // NewService returns a new dice.Service.
@@ -65,10 +66,10 @@ func NewService(cfg ServiceConfig) (Service, error) {
 	}
 
 	return service{
-		diceRepository: cfg.DiceRepository,
-		roller:         cfg.Roller,
-		logger:         cfg.Logger,
-		idGen:          cfg.IDGenerator,
+		diceRollRepository: cfg.DiceRollRepository,
+		roller:             cfg.Roller,
+		logger:             cfg.Logger,
+		idGen:              cfg.IDGenerator,
 	}, nil
 }
 
@@ -144,7 +145,7 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 		return nil, fmt.Errorf("could not roll the dice: %w", err)
 	}
 
-	err = s.diceRepository.CreateDiceRoll(ctx, *dr)
+	err = s.diceRollRepository.CreateDiceRoll(ctx, *dr)
 	if err != nil {
 		return nil, fmt.Errorf("could not store dice roll: %w", err)
 	}

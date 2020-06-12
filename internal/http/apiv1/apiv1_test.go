@@ -321,13 +321,23 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 				expReq := dice.ListDiceRollsRequest{RoomID: "room-id", UserID: "user-id"}
 				resp := &dice.ListDiceRollsResponse{
 					DiceRolls: []model.DiceRoll{
-						{ID: "dr1", Dice: []model.DieRoll{
-							{ID: "d1", Type: model.DieTypeD6, Side: 4},
-							{ID: "d2", Type: model.DieTypeD6, Side: 5},
-						}},
-						{ID: "dr2", Dice: []model.DieRoll{
-							{ID: "d3", Type: model.DieTypeD20, Side: 18},
-						}},
+						{
+							ID:     "dr1",
+							UserID: "user-1",
+							RoomID: "room-1",
+							Dice: []model.DieRoll{
+								{ID: "d1", Type: model.DieTypeD6, Side: 4},
+								{ID: "d2", Type: model.DieTypeD6, Side: 5},
+							},
+						},
+						{
+							ID:     "dr2",
+							UserID: "user-2",
+							RoomID: "room-2",
+							Dice: []model.DieRoll{
+								{ID: "d3", Type: model.DieTypeD20, Side: 18},
+							},
+						},
 					},
 				}
 				m.On("ListDiceRolls", mock.Anything, expReq).Once().Return(resp, nil)
@@ -343,14 +353,16 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
  "items": [
   {
    "id": "dr1",
+   "user_id": "user-1",
+   "room_id": "room-1",
    "dice": [
     {
-     "user_id": "d1",
+     "id": "d1",
      "type_id": "d6",
      "side": 4
     },
     {
-     "user_id": "d2",
+     "id": "d2",
      "type_id": "d6",
      "side": 5
     }
@@ -358,9 +370,11 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
   },
   {
    "id": "dr2",
+   "user_id": "user-2",
+   "room_id": "room-2",
    "dice": [
     {
-     "user_id": "d3",
+     "id": "d3",
      "type_id": "d20",
      "side": 18
     }

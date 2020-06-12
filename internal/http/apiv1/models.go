@@ -102,12 +102,14 @@ type listDiceRollsResponse struct {
 }
 
 type diceRollResponse struct {
-	ID   string            `json:"id"`
-	Dice []dieRollResponse `json:"dice"`
+	ID     string            `json:"id"`
+	UserID string            `json:"user_id"`
+	RoomID string            `json:"room_id"`
+	Dice   []dieRollResponse `json:"dice"`
 }
 
 type dieRollResponse struct {
-	ID     string `json:"user_id"`
+	ID     string `json:"id"`
 	TypeID string `json:"type_id"`
 	Side   uint   `json:"side"`
 }
@@ -129,8 +131,10 @@ func mapModelToAPIListDiceRolls(r dice.ListDiceRollsResponse) listDiceRollsRespo
 			})
 		}
 		items = append(items, diceRollResponse{
-			ID:   dr.ID,
-			Dice: ds,
+			ID:     dr.ID,
+			RoomID: dr.RoomID,
+			UserID: dr.UserID,
+			Dice:   ds,
 		})
 	}
 

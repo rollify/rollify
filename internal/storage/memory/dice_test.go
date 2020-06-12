@@ -15,8 +15,6 @@ import (
 
 func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 	tests := map[string]struct {
-		roomID      string
-		userID      string
 		repo        func() *memory.DiceRollRepository
 		diceRoll    model.DiceRoll
 		expDiceRoll model.DiceRoll
@@ -24,38 +22,40 @@ func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 	}{
 
 		"Having a dice roll without room ID should return a not valid error.": {
-			roomID: "room-id",
-			repo: func() *memory.DiceRollRepository {
-				return memory.NewDiceRollRepository()
-			},
-			diceRoll: model.DiceRoll{ID: "test-id"},
-			expErr:   internalerrors.ErrNotValid,
-		},
-
-		"Having a dice roll without user ID should return a not valid error.": {
-			userID: "user-id",
-			repo: func() *memory.DiceRollRepository {
-				return memory.NewDiceRollRepository()
-			},
-			diceRoll: model.DiceRoll{ID: "test-id"},
-			expErr:   internalerrors.ErrNotValid,
-		},
-
-		"Having a dice roll without ID should return a not valid error.": {
-			roomID: "room-id",
-			userID: "user-id",
 			repo: func() *memory.DiceRollRepository {
 				return memory.NewDiceRollRepository()
 			},
 			diceRoll: model.DiceRoll{
-				ID: "",
+				ID:     "test-id",
+				RoomID: "room-id",
+			},
+			expErr: internalerrors.ErrNotValid,
+		},
+
+		"Having a dice roll without user ID should return a not valid error.": {
+			repo: func() *memory.DiceRollRepository {
+				return memory.NewDiceRollRepository()
+			},
+			diceRoll: model.DiceRoll{
+				ID:     "test-id",
+				UserID: "user-id",
+			},
+			expErr: internalerrors.ErrNotValid,
+		},
+
+		"Having a dice roll without ID should return a not valid error.": {
+			repo: func() *memory.DiceRollRepository {
+				return memory.NewDiceRollRepository()
+			},
+			diceRoll: model.DiceRoll{
+				ID:     "",
+				RoomID: "room-id",
+				UserID: "user-id",
 			},
 			expErr: internalerrors.ErrNotValid,
 		},
 
 		"Creating a dice roll that already exists should return an error.": {
-			roomID: "room-id",
-			userID: "user-id",
 			repo: func() *memory.DiceRollRepository {
 				r := memory.NewDiceRollRepository()
 				r.DiceRollsByID = map[string]*model.DiceRoll{
@@ -66,22 +66,26 @@ func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 				return r
 			},
 			diceRoll: model.DiceRoll{
-				ID: "test-id",
+				ID:     "test-id",
+				RoomID: "room-id",
+				UserID: "user-id",
 			},
 			expErr: internalerrors.ErrAlreadyExists,
 		},
 
 		"Creating a dice roll should store the room.": {
-			roomID: "room-id",
-			userID: "user-id",
 			repo: func() *memory.DiceRollRepository {
 				return memory.NewDiceRollRepository()
 			},
 			diceRoll: model.DiceRoll{
-				ID: "test-id",
+				ID:     "test-id",
+				RoomID: "room-id",
+				UserID: "user-id",
 			},
 			expDiceRoll: model.DiceRoll{
-				ID: "test-id",
+				ID:     "test-id",
+				RoomID: "room-id",
+				UserID: "user-id",
 			},
 		},
 	}
@@ -91,7 +95,7 @@ func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 			assert := assert.New(t)
 
 			r := test.repo()
-			err := r.CreateDiceRoll(context.TODO(), test.roomID, test.userID, test.diceRoll)
+			err := r.CreateDiceRoll(context.TODO(), test.diceRoll)
 
 			if test.expErr != nil && assert.Error(err) {
 				assert.True(errors.Is(err, test.expErr))
@@ -102,10 +106,10 @@ func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 				gotDiceRoll := r.DiceRollsByID[test.expDiceRoll.ID]
 				assert.Equal(test.expDiceRoll, *gotDiceRoll)
 
-				gotDiceRolls := r.DiceRollsByRoom[test.roomID]
+				gotDiceRolls := r.DiceRollsByRoom[test.diceRoll.RoomID]
 				assert.Contains(gotDiceRolls, &test.expDiceRoll)
 
-				gotDiceRolls = r.DiceRollsByRoomAndUser[test.roomID+test.userID]
+				gotDiceRolls = r.DiceRollsByRoomAndUser[test.diceRoll.RoomID+test.diceRoll.UserID]
 				assert.Contains(gotDiceRolls, &test.expDiceRoll)
 			}
 		})

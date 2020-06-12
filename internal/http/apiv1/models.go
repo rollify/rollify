@@ -33,8 +33,10 @@ func mapModelToAPIListDiceTypes(r dice.ListDiceTypesResponse) listDiceTypesRespo
 }
 
 type createDiceRollResponse struct {
-	ID   string    `json:"id"`
-	Dice []dieRoll `json:"dice"`
+	ID     string    `json:"id"`
+	RoomID string    `json:"room_id"`
+	UserID string    `json:"user_id"`
+	Dice   []dieRoll `json:"dice"`
 }
 
 type dieRoll struct {
@@ -59,8 +61,10 @@ func mapModelToAPIcreateDiceRoll(r dice.CreateDiceRollResponse) createDiceRollRe
 		})
 	}
 	return createDiceRollResponse{
-		ID:   r.DiceRoll.ID,
-		Dice: ds,
+		ID:     r.DiceRoll.ID,
+		RoomID: r.DiceRoll.RoomID,
+		UserID: r.DiceRoll.UserID,
+		Dice:   ds,
 	}
 }
 

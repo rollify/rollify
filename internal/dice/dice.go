@@ -153,8 +153,10 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 	}
 
 	dr := &model.DiceRoll{
-		ID:   s.idGen(),
-		Dice: dice,
+		ID:     s.idGen(),
+		RoomID: r.RoomID,
+		UserID: r.UserID,
+		Dice:   dice,
 	}
 
 	// Roll'em all!
@@ -164,7 +166,7 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 	}
 
 	// Store the dice roll.
-	err = s.diceRollRepository.CreateDiceRoll(ctx, r.RoomID, r.UserID, *dr)
+	err = s.diceRollRepository.CreateDiceRoll(ctx, *dr)
 	if err != nil {
 		return nil, fmt.Errorf("could not store dice roll: %w", err)
 	}

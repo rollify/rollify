@@ -14,6 +14,10 @@ type DieRoll struct {
 type DiceRoll struct {
 	// ID is the ID of the DiceRoll.
 	ID string
+	// UserID is the ID of the room were the dice roll was made.
+	RoomID string
+	// UserID is the ID of the user that made the dice roll.
+	UserID string
 	// Dice are the rolled dice values involved in the dice roll.
 	Dice []DieRoll
 }

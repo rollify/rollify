@@ -215,7 +215,9 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				}
 				resp := &dice.CreateDiceRollResponse{
 					DiceRoll: model.DiceRoll{
-						ID: "test-dice-roll",
+						ID:     "test-dice-roll",
+						UserID: "test-user",
+						RoomID: "test-room",
 						Dice: []model.DieRoll{
 							{ID: "dice-1", Type: model.DieTypeD6, Side: 5},
 							{ID: "dice-2", Type: model.DieTypeD20, Side: 18},
@@ -233,6 +235,8 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 			expStatusCode: http.StatusCreated,
 			expBody: `{
  "id": "test-dice-roll",
+ "room_id": "test-room",
+ "user_id": "test-user",
  "dice": [
   {
    "id": "dice-1",

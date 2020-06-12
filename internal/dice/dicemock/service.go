@@ -37,6 +37,29 @@ func (_m *Service) CreateDiceRoll(ctx context.Context, r dice.CreateDiceRollRequ
 	return r0, r1
 }
 
+// ListDiceRolls provides a mock function with given fields: ctx, r
+func (_m *Service) ListDiceRolls(ctx context.Context, r dice.ListDiceRollsRequest) (*dice.ListDiceRollsResponse, error) {
+	ret := _m.Called(ctx, r)
+
+	var r0 *dice.ListDiceRollsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, dice.ListDiceRollsRequest) *dice.ListDiceRollsResponse); ok {
+		r0 = rf(ctx, r)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dice.ListDiceRollsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, dice.ListDiceRollsRequest) error); ok {
+		r1 = rf(ctx, r)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListDiceTypes provides a mock function with given fields: ctx
 func (_m *Service) ListDiceTypes(ctx context.Context) (*dice.ListDiceTypesResponse, error) {
 	ret := _m.Called(ctx)

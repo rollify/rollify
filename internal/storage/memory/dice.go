@@ -16,9 +16,9 @@ type DiceRollRepository struct {
 	// DiceRollsByID is where the dice roll data is stored by ID. Not thread safe.
 	DiceRollsByID map[string]*model.DiceRoll
 	// DiceRollsByRoom is where the dice roll data is stored by room. Not thread safe.
-	DiceRollsByRoom map[string]*model.DiceRoll
+	DiceRollsByRoom map[string][]*model.DiceRoll
 	// DiceRollsByRoomAndUser is where the dice roll data is stored by room and user. Not thread safe.
-	DiceRollsByRoomAndUser map[string]*model.DiceRoll
+	DiceRollsByRoomAndUser map[string][]*model.DiceRoll
 
 	mu sync.Mutex
 }
@@ -27,8 +27,8 @@ type DiceRollRepository struct {
 func NewDiceRollRepository() *DiceRollRepository {
 	return &DiceRollRepository{
 		DiceRollsByID:          map[string]*model.DiceRoll{},
-		DiceRollsByRoom:        map[string]*model.DiceRoll{},
-		DiceRollsByRoomAndUser: map[string]*model.DiceRoll{},
+		DiceRollsByRoom:        map[string][]*model.DiceRoll{},
+		DiceRollsByRoomAndUser: map[string][]*model.DiceRoll{},
 	}
 }
 
@@ -47,10 +47,35 @@ func (r *DiceRollRepository) CreateDiceRoll(ctx context.Context, roomID, userID 
 	}
 
 	r.DiceRollsByID[dr.ID] = &dr
-	r.DiceRollsByRoom[roomID] = &dr
-	r.DiceRollsByRoomAndUser[roomID+userID] = &dr
+	r.DiceRollsByRoom[roomID] = append(r.DiceRollsByRoom[roomID], &dr)
+	r.DiceRollsByRoomAndUser[roomID+userID] = append(r.DiceRollsByRoomAndUser[roomID+userID], &dr)
 
 	return nil
+}
+
+// ListDiceRolls satisfies storage.DiceRollRepository interface.
+func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, opts storage.ListDiceRollsOpts) (*storage.DiceRollList, error) {
+	if opts.RoomID == "" {
+		return nil, internalerrors.ErrNotValid
+	}
+
+	var items []*model.DiceRoll
+
+	// If no user means all room.
+	if opts.UserID == "" {
+		items = r.DiceRollsByRoom[opts.RoomID]
+	} else {
+		items = r.DiceRollsByRoomAndUser[opts.RoomID+opts.UserID]
+	}
+
+	resultItems := make([]model.DiceRoll, 0, len(items))
+	for _, v := range items {
+		resultItems = append(resultItems, *v)
+	}
+
+	return &storage.DiceRollList{
+		Items: resultItems,
+	}, nil
 }
 
 // Implementation assertions.

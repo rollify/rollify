@@ -6,6 +6,17 @@ import (
 	"github.com/rollify/rollify/internal/model"
 )
 
+// DiceRollList is a list of dice rolls.
+type DiceRollList struct {
+	Items []model.DiceRoll
+}
+
+// ListDiceRollsOpts are the options used by the storage to list dice rolls.
+type ListDiceRollsOpts struct {
+	RoomID string
+	UserID string
+}
+
 // DiceRollRepository is the repository interface that implementations need to
 // implement to manage dice rolls in storage.
 type DiceRollRepository interface {
@@ -15,6 +26,9 @@ type DiceRollRepository interface {
 	// If the dice roll doesn't have an ID it returns a internalerrors.NotValid error kind.
 	// If the dice roll already exists it returns a internalerrors.AlreadyExists error kind.
 	CreateDiceRoll(ctx context.Context, roomID, userID string, dr model.DiceRoll) error
+	// ListDiceRolls lists dice rolls.
+	// If the dice roomID option is empty it returns a internalerrors.NotValid error kind.
+	ListDiceRolls(ctx context.Context, opts ListDiceRollsOpts) (*DiceRollList, error)
 }
 
 //go:generate mockery -case underscore -output storagemock -outpkg storagemock -name DiceRollRepository

@@ -9,6 +9,7 @@ import (
 
 	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/storage"
 	"github.com/rollify/rollify/internal/storage/memory"
 )
 
@@ -101,11 +102,89 @@ func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 				gotDiceRoll := r.DiceRollsByID[test.expDiceRoll.ID]
 				assert.Equal(test.expDiceRoll, *gotDiceRoll)
 
-				gotDiceRoll = r.DiceRollsByRoom[test.roomID]
-				assert.Equal(test.expDiceRoll, *gotDiceRoll)
+				gotDiceRolls := r.DiceRollsByRoom[test.roomID]
+				assert.Contains(gotDiceRolls, &test.expDiceRoll)
 
-				gotDiceRoll = r.DiceRollsByRoomAndUser[test.roomID+test.userID]
-				assert.Equal(test.expDiceRoll, *gotDiceRoll)
+				gotDiceRolls = r.DiceRollsByRoomAndUser[test.roomID+test.userID]
+				assert.Contains(gotDiceRolls, &test.expDiceRoll)
+			}
+		})
+	}
+}
+
+func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
+	tests := map[string]struct {
+		opts         storage.ListDiceRollsOpts
+		repo         func() *memory.DiceRollRepository
+		expDiceRolls *storage.DiceRollList
+		expErr       error
+	}{
+		"Listing dice rolls without room should fail.": {
+			opts: storage.ListDiceRollsOpts{
+				RoomID: "",
+				UserID: "",
+			},
+			repo: func() *memory.DiceRollRepository {
+				return memory.NewDiceRollRepository()
+			},
+			expErr: internalerrors.ErrNotValid,
+		},
+
+		"Listing all users dice rolls should return them.": {
+			opts: storage.ListDiceRollsOpts{
+				RoomID: "room-1",
+				UserID: "",
+			},
+			repo: func() *memory.DiceRollRepository {
+				r := memory.NewDiceRollRepository()
+				r.DiceRollsByRoom = map[string][]*model.DiceRoll{
+					"room-0": {{ID: "test00"}},
+					"room-1": {{ID: "test10"}, {ID: "test11"}},
+					"room-2": {{ID: "test20"}},
+				}
+				return r
+			},
+			expDiceRolls: &storage.DiceRollList{
+				Items: []model.DiceRoll{
+					{ID: "test10"},
+					{ID: "test11"},
+				},
+			},
+		},
+
+		"Listing single user dice rolls in a room should return them.": {
+			opts: storage.ListDiceRollsOpts{
+				RoomID: "room-2",
+				UserID: "user-1",
+			},
+			repo: func() *memory.DiceRollRepository {
+				r := memory.NewDiceRollRepository()
+				r.DiceRollsByRoomAndUser = map[string][]*model.DiceRoll{
+					"room-0user-1": {{ID: "test00"}},
+					"room-1user-2": {{ID: "test10"}, {ID: "test11"}},
+					"room-2user-1": {{ID: "test20"}},
+				}
+				return r
+			},
+			expDiceRolls: &storage.DiceRollList{
+				Items: []model.DiceRoll{
+					{ID: "test20"},
+				},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			r := test.repo()
+			gotDiceRolls, err := r.ListDiceRolls(context.TODO(), test.opts)
+
+			if test.expErr != nil && assert.Error(err) {
+				assert.True(errors.Is(err, test.expErr))
+			} else if assert.NoError(err) {
+				assert.Equal(test.expDiceRolls, gotDiceRolls)
 			}
 		})
 	}

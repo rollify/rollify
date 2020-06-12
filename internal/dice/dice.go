@@ -18,6 +18,8 @@ type Service interface {
 	ListDiceTypes(ctx context.Context) (*ListDiceTypesResponse, error)
 	// CreateDiceRoll creates dice rolls.
 	CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*CreateDiceRollResponse, error)
+	// ListDiceRolls lists dice rolls.
+	ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (*ListDiceRollsResponse, error)
 }
 
 //go:generate mockery -case underscore -output dicemock -outpkg dicemock -name Service
@@ -33,7 +35,7 @@ type ServiceConfig struct {
 
 func (c *ServiceConfig) defaults() error {
 	if c.DiceRollRepository == nil {
-		return fmt.Errorf("storage.DiceRepository is required")
+		return fmt.Errorf("storage.DiceRollRepository is required")
 	}
 
 	if c.RoomRepository == nil {
@@ -98,7 +100,7 @@ func (s service) ListDiceTypes(ctx context.Context) (*ListDiceTypesResponse, err
 	}, nil
 }
 
-// CreateDiceRollRequest is the request of the roll.
+// CreateDiceRollRequest is the request for CreateDiceRoll.
 type CreateDiceRollRequest struct {
 	UserID string
 	RoomID string
@@ -121,7 +123,7 @@ func (r CreateDiceRollRequest) validate() error {
 	return nil
 }
 
-// CreateDiceRollResponse is the response to the RollDice request.
+// CreateDiceRollResponse is the response for CreateDiceRoll.
 type CreateDiceRollResponse struct {
 	DiceRoll model.DiceRoll
 }
@@ -171,5 +173,44 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 
 	return &CreateDiceRollResponse{
 		DiceRoll: *dr,
+	}, nil
+}
+
+// ListDiceRollsRequest is the request for ListDiceRolls.
+type ListDiceRollsRequest struct {
+	UserID string
+	RoomID string
+}
+
+func (r ListDiceRollsRequest) validate() error {
+	if r.RoomID == "" {
+		return fmt.Errorf("config.RoomID is required")
+	}
+
+	return nil
+}
+
+// ListDiceRollsResponse is the response  for ListDiceRolls.
+type ListDiceRollsResponse struct {
+	DiceRolls []model.DiceRoll
+}
+
+func (s service) ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (*ListDiceRollsResponse, error) {
+	err := r.validate()
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", internalerrors.ErrNotValid, err)
+	}
+
+	drs, err := s.diceRollRepository.ListDiceRolls(ctx, storage.ListDiceRollsOpts{
+		RoomID: r.RoomID,
+		UserID: r.UserID,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("could not get dice roll list: %w", err)
+	}
+
+	return &ListDiceRollsResponse{
+		DiceRolls: drs.Items,
 	}, nil
 }

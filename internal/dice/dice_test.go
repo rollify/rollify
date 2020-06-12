@@ -13,6 +13,7 @@ import (
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/dice/dicemock"
 	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/storage"
 	"github.com/rollify/rollify/internal/storage/storagemock"
 )
 
@@ -227,6 +228,99 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			require.NoError(err)
 
 			gotResp, err := svc.CreateDiceRoll(context.TODO(), test.req())
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expResp(), gotResp)
+			}
+		})
+	}
+}
+
+func TestServiceListDiceRolls(t *testing.T) {
+	tests := map[string]struct {
+		config  dice.ServiceConfig
+		mock    func(diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository)
+		req     func() dice.ListDiceRollsRequest
+		expResp func() *dice.ListDiceRollsResponse
+		expErr  bool
+	}{
+		"Having a list dice roll request without room should fail.": {
+			mock: func(diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+			},
+			req: func() dice.ListDiceRollsRequest {
+				return dice.ListDiceRollsRequest{
+					RoomID: "",
+					UserID: "user-id",
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a list dice roll request with an error listing dice rolls, should fail.": {
+			mock: func(diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+				diceRollRepo.On("ListDiceRolls", mock.Anything, mock.Anything).Once().Return(nil, fmt.Errorf("wanted error"))
+			},
+			req: func() dice.ListDiceRollsRequest {
+				return dice.ListDiceRollsRequest{
+					RoomID: "room-id",
+					UserID: "user-id",
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a list dice roll request should list dice rolls.": {
+			mock: func(diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+				expOpts := storage.ListDiceRollsOpts{
+					RoomID: "room-id",
+					UserID: "user-id",
+				}
+				dr := &storage.DiceRollList{
+					Items: []model.DiceRoll{
+						{ID: "dr1"},
+						{ID: "dr2"},
+					},
+				}
+				diceRollRepo.On("ListDiceRolls", mock.Anything, expOpts).Once().Return(dr, nil)
+			},
+			req: func() dice.ListDiceRollsRequest {
+				return dice.ListDiceRollsRequest{
+					RoomID: "room-id",
+					UserID: "user-id",
+				}
+			},
+			expResp: func() *dice.ListDiceRollsResponse {
+				return &dice.ListDiceRollsResponse{
+					DiceRolls: []model.DiceRoll{
+						{ID: "dr1"},
+						{ID: "dr2"},
+					},
+				}
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			// Mocks
+			mdrrep := &storagemock.DiceRollRepository{}
+			mrrep := &storagemock.RoomRepository{}
+			test.mock(mdrrep, mrrep)
+
+			test.config.Roller = &dicemock.Roller{}
+			test.config.DiceRollRepository = mdrrep
+			test.config.RoomRepository = mrrep
+			test.config.IDGenerator = func() string { return "test" }
+
+			svc, err := dice.NewService(test.config)
+			require.NoError(err)
+
+			gotResp, err := svc.ListDiceRolls(context.TODO(), test.req())
 
 			if test.expErr {
 				assert.Error(err)

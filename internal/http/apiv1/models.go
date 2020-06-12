@@ -93,6 +93,59 @@ func mapAPIToModelcreateDiceRoll(r createDiceRollRequest) (*dice.CreateDiceRollR
 	}, nil
 }
 
+type listDiceRollsResponse struct {
+	Items []diceRollResponse `json:"items"`
+}
+
+type diceRollResponse struct {
+	ID   string            `json:"id"`
+	Dice []dieRollResponse `json:"dice"`
+}
+
+type dieRollResponse struct {
+	ID     string `json:"user_id"`
+	TypeID string `json:"type_id"`
+	Side   uint   `json:"side"`
+}
+
+type listDiceRollsRequest struct {
+	UserID string `json:"user_id"`
+	RoomID string `json:"room_id"`
+}
+
+func mapModelToAPIListDiceRolls(r dice.ListDiceRollsResponse) listDiceRollsResponse {
+	items := make([]diceRollResponse, 0, len(r.DiceRolls))
+	for _, dr := range r.DiceRolls {
+		ds := make([]dieRollResponse, 0, len(dr.Dice))
+		for _, d := range dr.Dice {
+			ds = append(ds, dieRollResponse{
+				ID:     d.ID,
+				TypeID: d.Type.ID(),
+				Side:   d.Side,
+			})
+		}
+		items = append(items, diceRollResponse{
+			ID:   dr.ID,
+			Dice: ds,
+		})
+	}
+
+	return listDiceRollsResponse{
+		Items: items,
+	}
+}
+
+func mapAPIToModelListDiceRolls(r listDiceRollsRequest) (*dice.ListDiceRollsRequest, error) {
+	if r.RoomID == "" {
+		return nil, fmt.Errorf("room_id is required")
+	}
+
+	return &dice.ListDiceRollsRequest{
+		UserID: r.UserID,
+		RoomID: r.RoomID,
+	}, nil
+}
+
 type createRoomResponse struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -101,7 +154,7 @@ type createRoomRequest struct {
 	Name string `json:"name"`
 }
 
-func mapModelToAPIcreateRoom(r room.CreateRoomResponse) createRoomResponse {
+func mapModelToAPICreateRoom(r room.CreateRoomResponse) createRoomResponse {
 	return createRoomResponse{
 		ID:   r.Room.ID,
 		Name: r.Room.Name,

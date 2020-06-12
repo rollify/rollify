@@ -25,7 +25,7 @@ type DiceRollRepository interface {
 	// If the dice userID is empty it returns a internalerrors.NotValid error kind.
 	// If the dice roll doesn't have an ID it returns a internalerrors.NotValid error kind.
 	// If the dice roll already exists it returns a internalerrors.AlreadyExists error kind.
-	CreateDiceRoll(ctx context.Context, roomID, userID string, dr model.DiceRoll) error
+	CreateDiceRoll(ctx context.Context, dr model.DiceRoll) error
 	// ListDiceRolls lists dice rolls.
 	// If the dice roomID option is empty it returns a internalerrors.NotValid error kind.
 	ListDiceRolls(ctx context.Context, opts ListDiceRollsOpts) (*DiceRollList, error)

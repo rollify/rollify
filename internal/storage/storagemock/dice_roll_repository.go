@@ -16,13 +16,13 @@ type DiceRollRepository struct {
 	mock.Mock
 }
 
-// CreateDiceRoll provides a mock function with given fields: ctx, roomID, userID, dr
-func (_m *DiceRollRepository) CreateDiceRoll(ctx context.Context, roomID string, userID string, dr model.DiceRoll) error {
-	ret := _m.Called(ctx, roomID, userID, dr)
+// CreateDiceRoll provides a mock function with given fields: ctx, dr
+func (_m *DiceRollRepository) CreateDiceRoll(ctx context.Context, dr model.DiceRoll) error {
+	ret := _m.Called(ctx, dr)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, model.DiceRoll) error); ok {
-		r0 = rf(ctx, roomID, userID, dr)
+	if rf, ok := ret.Get(0).(func(context.Context, model.DiceRoll) error); ok {
+		r0 = rf(ctx, dr)
 	} else {
 		r0 = ret.Error(0)
 	}

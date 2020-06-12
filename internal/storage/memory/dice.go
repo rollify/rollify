@@ -33,11 +33,11 @@ func NewDiceRollRepository() *DiceRollRepository {
 }
 
 // CreateDiceRoll satisfies dice.Repository interface.
-func (r *DiceRollRepository) CreateDiceRoll(ctx context.Context, roomID, userID string, dr model.DiceRoll) error {
+func (r *DiceRollRepository) CreateDiceRoll(ctx context.Context, dr model.DiceRoll) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if roomID == "" || userID == "" || dr.ID == "" {
+	if dr.RoomID == "" || dr.UserID == "" || dr.ID == "" {
 		return internalerrors.ErrNotValid
 	}
 
@@ -47,8 +47,8 @@ func (r *DiceRollRepository) CreateDiceRoll(ctx context.Context, roomID, userID 
 	}
 
 	r.DiceRollsByID[dr.ID] = &dr
-	r.DiceRollsByRoom[roomID] = append(r.DiceRollsByRoom[roomID], &dr)
-	r.DiceRollsByRoomAndUser[roomID+userID] = append(r.DiceRollsByRoomAndUser[roomID+userID], &dr)
+	r.DiceRollsByRoom[dr.RoomID] = append(r.DiceRollsByRoom[dr.RoomID], &dr)
+	r.DiceRollsByRoomAndUser[dr.RoomID+dr.UserID] = append(r.DiceRollsByRoomAndUser[dr.RoomID+dr.UserID], &dr)
 
 	return nil
 }

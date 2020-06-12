@@ -33,8 +33,10 @@ func mapModelToAPIListDiceTypes(r dice.ListDiceTypesResponse) listDiceTypesRespo
 }
 
 type createDiceRollResponse struct {
-	ID   string    `json:"id"`
-	Dice []dieRoll `json:"dice"`
+	ID     string    `json:"id"`
+	RoomID string    `json:"room_id"`
+	UserID string    `json:"user_id"`
+	Dice   []dieRoll `json:"dice"`
 }
 
 type dieRoll struct {
@@ -59,8 +61,10 @@ func mapModelToAPIcreateDiceRoll(r dice.CreateDiceRollResponse) createDiceRollRe
 		})
 	}
 	return createDiceRollResponse{
-		ID:   r.DiceRoll.ID,
-		Dice: ds,
+		ID:     r.DiceRoll.ID,
+		RoomID: r.DiceRoll.RoomID,
+		UserID: r.DiceRoll.UserID,
+		Dice:   ds,
 	}
 }
 
@@ -98,12 +102,14 @@ type listDiceRollsResponse struct {
 }
 
 type diceRollResponse struct {
-	ID   string            `json:"id"`
-	Dice []dieRollResponse `json:"dice"`
+	ID     string            `json:"id"`
+	UserID string            `json:"user_id"`
+	RoomID string            `json:"room_id"`
+	Dice   []dieRollResponse `json:"dice"`
 }
 
 type dieRollResponse struct {
-	ID     string `json:"user_id"`
+	ID     string `json:"id"`
 	TypeID string `json:"type_id"`
 	Side   uint   `json:"side"`
 }
@@ -125,8 +131,10 @@ func mapModelToAPIListDiceRolls(r dice.ListDiceRollsResponse) listDiceRollsRespo
 			})
 		}
 		items = append(items, diceRollResponse{
-			ID:   dr.ID,
-			Dice: ds,
+			ID:     dr.ID,
+			RoomID: dr.RoomID,
+			UserID: dr.UserID,
+			Dice:   ds,
 		})
 	}
 

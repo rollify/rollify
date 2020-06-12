@@ -27,7 +27,8 @@ func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 			},
 			diceRoll: model.DiceRoll{
 				ID:     "test-id",
-				RoomID: "room-id",
+				RoomID: "",
+				UserID: "user-id",
 			},
 			expErr: internalerrors.ErrNotValid,
 		},
@@ -38,7 +39,8 @@ func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 			},
 			diceRoll: model.DiceRoll{
 				ID:     "test-id",
-				UserID: "user-id",
+				RoomID: "room-id",
+				UserID: "",
 			},
 			expErr: internalerrors.ErrNotValid,
 		},

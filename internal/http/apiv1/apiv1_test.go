@@ -148,7 +148,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 			mock: func(m *dicemock.Service) {},
 			req: func() *http.Request {
 				body := `{"user_id": "","room_id": "test-room", "dice_type_ids": ["d20"]}`
-				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/roll", strings.NewReader(body))
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/rolls", strings.NewReader(body))
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -160,7 +160,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 			mock: func(m *dicemock.Service) {},
 			req: func() *http.Request {
 				body := `{"user_id": "test-user","room_id": "", "dice_type_ids": ["d20"]}`
-				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/roll", strings.NewReader(body))
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/rolls", strings.NewReader(body))
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -172,7 +172,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 			mock: func(m *dicemock.Service) {},
 			req: func() *http.Request {
 				body := `{"user_id": "test-user","room_id": "test-room", "dice_type_ids": []}`
-				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/roll", strings.NewReader(body))
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/rolls", strings.NewReader(body))
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -184,7 +184,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 			mock: func(m *dicemock.Service) {},
 			req: func() *http.Request {
 				body := `{"user_id": "test-user","room_id": "test-room", "dice_type_ids": ["d99999"]}`
-				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/roll", strings.NewReader(body))
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/rolls", strings.NewReader(body))
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -198,7 +198,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 			},
 			req: func() *http.Request {
 				body := `{"user_id": "test-user","room_id": "test-room", "dice_type_ids": ["d6", "d20"]}`
-				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/roll", strings.NewReader(body))
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/rolls", strings.NewReader(body))
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -226,7 +226,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 			},
 			req: func() *http.Request {
 				body := `{"user_id": "test-user","room_id": "test-room", "dice_type_ids": ["d6", "d20"]}`
-				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/roll", strings.NewReader(body))
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/dice/rolls", strings.NewReader(body))
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -243,6 +243,124 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
    "id": "dice-2",
    "dice_type_id": "d20",
    "side": 18
+  }
+ ]
+}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			md := &dicemock.Service{}
+			test.mock(md)
+
+			// Prepare.
+			cfg := apiv1.Config{
+				DiceAppService: md,
+				RoomAppService: &roommock.Service{},
+			}
+			h, err := apiv1.New(cfg)
+			require.NoError(err)
+
+			// Execute.
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, test.req())
+
+			// Check.
+			res := w.Result()
+			gotBody, err := ioutil.ReadAll(res.Body)
+			require.NoError(err)
+			assert.Equal(test.expStatusCode, res.StatusCode)
+			assert.Equal(test.expBody, string(gotBody))
+		})
+	}
+}
+
+func TestAPIV1ListDiceRolls(t *testing.T) {
+	tests := map[string]struct {
+		mock          func(*dicemock.Service)
+		req           func() *http.Request
+		expStatusCode int
+		expBody       string
+	}{
+		"Having a request without room id should fail.": {
+			mock: func(m *dicemock.Service) {},
+			req: func() *http.Request {
+				body := `{"room_id": "", "user_id": "user-id"}`
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", strings.NewReader(body))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusBadRequest,
+			expBody:       `room_id is required`,
+		},
+
+		"Having a request with an error form the app service, should fail.": {
+			mock: func(m *dicemock.Service) {
+				m.On("ListDiceRolls", mock.Anything, mock.Anything).Once().Return(nil, errors.New("wanted error"))
+			},
+			req: func() *http.Request {
+				body := `{"room_id": "room-id", "user_id": "user-id"}`
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", strings.NewReader(body))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusInternalServerError,
+			expBody:       `wanted error`,
+		},
+
+		"Having a request should return dice rolls.": {
+			mock: func(m *dicemock.Service) {
+				expReq := dice.ListDiceRollsRequest{RoomID: "room-id", UserID: "user-id"}
+				resp := &dice.ListDiceRollsResponse{
+					DiceRolls: []model.DiceRoll{
+						{ID: "dr1", Dice: []model.DieRoll{
+							{ID: "d1", Type: model.DieTypeD6, Side: 4},
+							{ID: "d2", Type: model.DieTypeD6, Side: 5},
+						}},
+						{ID: "dr2", Dice: []model.DieRoll{
+							{ID: "d3", Type: model.DieTypeD20, Side: 18},
+						}},
+					},
+				}
+				m.On("ListDiceRolls", mock.Anything, expReq).Once().Return(resp, nil)
+			},
+			req: func() *http.Request {
+				body := `{"room_id": "room-id", "user_id": "user-id"}`
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", strings.NewReader(body))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusOK,
+			expBody: `{
+ "items": [
+  {
+   "id": "dr1",
+   "dice": [
+    {
+     "user_id": "d1",
+     "type_id": "d6",
+     "side": 4
+    },
+    {
+     "user_id": "d2",
+     "type_id": "d6",
+     "side": 5
+    }
+   ]
+  },
+  {
+   "id": "dr2",
+   "dice": [
+    {
+     "user_id": "d3",
+     "type_id": "d20",
+     "side": 18
+    }
+   ]
   }
  ]
 }`,

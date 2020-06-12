@@ -23,13 +23,22 @@ func (a apiv1) registerRoutes(prefix string) {
 		Writes(listDiceTypesResponse{}).
 		Returns(http.StatusOK, "OK", listDiceTypesResponse{}))
 
-	a.apiws.Route(a.wrapWSPost("/dice/roll").
+	a.apiws.Route(a.wrapWSPost("/dice/rolls").
 		To(a.createDiceRoll()).
 		Metadata(restfulspec.KeyOpenAPITags, []string{"dice"}).
 		Doc("creates a dice roll").
 		Writes(createDiceRollResponse{}).
 		Reads(createDiceRollRequest{}).
 		Returns(http.StatusCreated, "Created", createDiceRollResponse{}).
+		Returns(http.StatusBadRequest, "", nil))
+
+	a.apiws.Route(a.wrapWSGet("/dice/rolls").
+		To(a.listDiceRolls()).
+		Metadata(restfulspec.KeyOpenAPITags, []string{"dice"}).
+		Doc("lists dice rolls").
+		Writes(listDiceRollsResponse{}).
+		Reads(listDiceRollsRequest{}).
+		Returns(http.StatusOK, "OK", listDiceRollsResponse{}).
 		Returns(http.StatusBadRequest, "", nil))
 
 	a.apiws.Route(a.wrapWSPost("/room").

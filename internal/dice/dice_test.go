@@ -120,7 +120,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 				}
 				roomRepo.On("RoomExists", mock.Anything, "test-room").Once().Return(true, nil)
 				roller.On("Roll", mock.Anything, exp).Once().Return(nil)
-				diceRollRepo.On("CreateDiceRoll", mock.Anything, *exp).Once().Return(nil)
+				diceRollRepo.On("CreateDiceRoll", mock.Anything, "test-room", "user-id", *exp).Once().Return(nil)
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -179,7 +179,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
 				roomRepo.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
 				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(nil)
-				diceRollRepo.On("CreateDiceRoll", mock.Anything, mock.Anything).Once().Return(errors.New("wanted error"))
+				diceRollRepo.On("CreateDiceRoll", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Once().Return(errors.New("wanted error"))
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{

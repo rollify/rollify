@@ -10,9 +10,11 @@ import (
 // implement to manage dice rolls in storage.
 type DiceRollRepository interface {
 	// CreateDiceRoll creates a new dice roll.
+	// If the dice roomID is empty it returns a internalerrors.NotValid error kind.
+	// If the dice userID is empty it returns a internalerrors.NotValid error kind.
 	// If the dice roll doesn't have an ID it returns a internalerrors.NotValid error kind.
 	// If the dice roll already exists it returns a internalerrors.AlreadyExists error kind.
-	CreateDiceRoll(ctx context.Context, r model.DiceRoll) error
+	CreateDiceRoll(ctx context.Context, roomID, userID string, dr model.DiceRoll) error
 }
 
 //go:generate mockery -case underscore -output storagemock -outpkg storagemock -name DiceRollRepository

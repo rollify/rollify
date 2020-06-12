@@ -33,12 +33,12 @@ func TestRoomRepositoryCreateRoom(t *testing.T) {
 		"Creating a room that already exists should return an error.": {
 			repo: func() *memory.RoomRepository {
 				r := memory.NewRoomRepository()
-				r.SetRoomsByIDSeed(map[string]model.Room{
+				r.RoomsByID = map[string]*model.Room{
 					"test-id": {
 						ID:   "test-id",
 						Name: "test",
 					},
-				})
+				}
 				return r
 			},
 			room: model.Room{
@@ -74,9 +74,8 @@ func TestRoomRepositoryCreateRoom(t *testing.T) {
 				assert.True(errors.Is(err, test.expErr))
 			} else if assert.NoError(err) {
 				// Check the room has been created internally.
-				seed := r.RoomsByIDSeed()
-				gotRoom := seed[test.expRoom.ID]
-				assert.Equal(test.expRoom, gotRoom)
+				gotRoom := r.RoomsByID[test.expRoom.ID]
+				assert.Equal(test.expRoom, *gotRoom)
 			}
 		})
 	}
@@ -100,9 +99,9 @@ func TestRoomRepositoryRoomExists(t *testing.T) {
 		"Having a room ID that exists in the repository, it should return exists.": {
 			repo: func() *memory.RoomRepository {
 				r := memory.NewRoomRepository()
-				r.SetRoomsByIDSeed(map[string]model.Room{
+				r.RoomsByID = map[string]*model.Room{
 					"test-id": {ID: "test-id", Name: "test"},
-				})
+				}
 				return r
 			},
 			roomID:    "test-id",

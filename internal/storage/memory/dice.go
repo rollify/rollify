@@ -9,48 +9,46 @@ import (
 	"github.com/rollify/rollify/internal/storage"
 )
 
-// DiceRollRepository is a memory based dice rolls repository.
+// DiceRollRepository is a fake repository based on memory.
+// This repository exposes the storage to the public so the users can
+// check the internal data in and maniputale it (e.g tests)
 type DiceRollRepository struct {
-	mu            sync.Mutex
-	diceRollsByID map[string]model.DiceRoll
+	// DiceRollsByID is where the dice roll data is stored by ID. Not thread safe.
+	DiceRollsByID map[string]*model.DiceRoll
+	// DiceRollsByRoom is where the dice roll data is stored by room. Not thread safe.
+	DiceRollsByRoom map[string]*model.DiceRoll
+	// DiceRollsByRoomAndUser is where the dice roll data is stored by room and user. Not thread safe.
+	DiceRollsByRoomAndUser map[string]*model.DiceRoll
+
+	mu sync.Mutex
 }
 
 // NewDiceRollRepository returns a new DiceRollRepository.
 func NewDiceRollRepository() *DiceRollRepository {
 	return &DiceRollRepository{
-		diceRollsByID: map[string]model.DiceRoll{},
+		DiceRollsByID:          map[string]*model.DiceRoll{},
+		DiceRollsByRoom:        map[string]*model.DiceRoll{},
+		DiceRollsByRoomAndUser: map[string]*model.DiceRoll{},
 	}
-}
-
-// SetDiceRollsByIDSeed helper function to set the data we want at any point.
-func (r *DiceRollRepository) SetDiceRollsByIDSeed(data map[string]model.DiceRoll) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.diceRollsByID = data
-}
-
-// DiceRollsByIDSeed helper function to get the data we want at any point.
-func (r *DiceRollRepository) DiceRollsByIDSeed() map[string]model.DiceRoll {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.diceRollsByID
 }
 
 // CreateDiceRoll satisfies dice.Repository interface.
-func (r *DiceRollRepository) CreateDiceRoll(ctx context.Context, dr model.DiceRoll) error {
+func (r *DiceRollRepository) CreateDiceRoll(ctx context.Context, roomID, userID string, dr model.DiceRoll) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if dr.ID == "" {
+	if roomID == "" || userID == "" || dr.ID == "" {
 		return internalerrors.ErrNotValid
 	}
 
-	_, ok := r.diceRollsByID[dr.ID]
+	_, ok := r.DiceRollsByID[dr.ID]
 	if ok {
 		return internalerrors.ErrAlreadyExists
 	}
 
-	r.diceRollsByID[dr.ID] = dr
+	r.DiceRollsByID[dr.ID] = &dr
+	r.DiceRollsByRoom[roomID] = &dr
+	r.DiceRollsByRoomAndUser[roomID+userID] = &dr
 
 	return nil
 }

@@ -162,7 +162,7 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 	}
 
 	// Store the dice roll.
-	err = s.diceRollRepository.CreateDiceRoll(ctx, *dr)
+	err = s.diceRollRepository.CreateDiceRoll(ctx, r.RoomID, r.UserID, *dr)
 	if err != nil {
 		return nil, fmt.Errorf("could not store dice roll: %w", err)
 	}

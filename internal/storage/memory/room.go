@@ -9,31 +9,21 @@ import (
 	"github.com/rollify/rollify/internal/storage"
 )
 
-// RoomRepository is a memory based room repository.
+// RoomRepository is a fake repository based on memory.
+// This repository exposes the storage to the public so the users can
+// check the internal data in and maniputale it (e.g tests)
 type RoomRepository struct {
-	mu        sync.Mutex
-	roomsByID map[string]model.Room
+	// RoomsByID is where the room data is stored by ID. Not thread safe.
+	RoomsByID map[string]*model.Room
+
+	mu sync.Mutex
 }
 
 // NewRoomRepository returns a new RoomRepository.
 func NewRoomRepository() *RoomRepository {
 	return &RoomRepository{
-		roomsByID: map[string]model.Room{},
+		RoomsByID: map[string]*model.Room{},
 	}
-}
-
-// SetRoomsByIDSeed helper function to set the data we want at any point.
-func (r *RoomRepository) SetRoomsByIDSeed(data map[string]model.Room) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.roomsByID = data
-}
-
-// RoomsByIDSeed helper function to get the data we want at any point.
-func (r *RoomRepository) RoomsByIDSeed() map[string]model.Room {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.roomsByID
 }
 
 // CreateRoom satisfies room.Repository interface.
@@ -45,12 +35,12 @@ func (r *RoomRepository) CreateRoom(_ context.Context, room model.Room) error {
 		return internalerrors.ErrNotValid
 	}
 
-	_, ok := r.roomsByID[room.ID]
+	_, ok := r.RoomsByID[room.ID]
 	if ok {
 		return internalerrors.ErrAlreadyExists
 	}
 
-	r.roomsByID[room.ID] = room
+	r.RoomsByID[room.ID] = &room
 
 	return nil
 }
@@ -60,7 +50,7 @@ func (r *RoomRepository) RoomExists(_ context.Context, id string) (exists bool, 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	_, ok := r.roomsByID[id]
+	_, ok := r.RoomsByID[id]
 	return ok, nil
 }
 

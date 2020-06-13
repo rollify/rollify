@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 // DieRoll represents a single die.
 type DieRoll struct {
 	// ID is the ID of the Die roll
@@ -14,6 +16,8 @@ type DieRoll struct {
 type DiceRoll struct {
 	// ID is the ID of the DiceRoll.
 	ID string
+	// Created at is when the dice roll was created.
+	CreatedAt time.Time
 	// UserID is the ID of the room were the dice roll was made.
 	RoomID string
 	// UserID is the ID of the user that made the dice roll.

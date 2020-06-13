@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -15,6 +16,8 @@ import (
 )
 
 func TestServiceCreateRoom(t *testing.T) {
+	t0 := time.Now().UTC()
+
 	tests := map[string]struct {
 		config  room.ServiceConfig
 		mock    func(r *storagemock.RoomRepository)
@@ -33,8 +36,9 @@ func TestServiceCreateRoom(t *testing.T) {
 		"Having a correct room creation it should store the room.": {
 			mock: func(r *storagemock.RoomRepository) {
 				exp := model.Room{
-					ID:   "test",
-					Name: "test-room",
+					ID:        "test",
+					CreatedAt: t0,
+					Name:      "test-room",
 				}
 				r.On("CreateRoom", mock.Anything, exp).Once().Return(nil)
 			},
@@ -44,8 +48,9 @@ func TestServiceCreateRoom(t *testing.T) {
 			expResp: func() *room.CreateRoomResponse {
 				return &room.CreateRoomResponse{
 					Room: model.Room{
-						ID:   "test",
-						Name: "test-room",
+						ID:        "test",
+						CreatedAt: t0,
+						Name:      "test-room",
 					},
 				}
 			},
@@ -73,6 +78,7 @@ func TestServiceCreateRoom(t *testing.T) {
 
 			test.config.RoomRepository = mr
 			test.config.IDGenerator = func() string { return "test" }
+			test.config.TimeNowFunc = func() time.Time { return t0 }
 
 			svc, err := room.NewService(test.config)
 			require.NoError(err)

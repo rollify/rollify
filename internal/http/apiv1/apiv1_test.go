@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -138,6 +139,8 @@ func TestAPIV1ListDiceTypes(t *testing.T) {
 }
 
 func TestAPIV1CreateDiceRoll(t *testing.T) {
+	t0, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:03Z")
+
 	tests := map[string]struct {
 		mock          func(*dicemock.Service)
 		req           func() *http.Request
@@ -215,9 +218,10 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				}
 				resp := &dice.CreateDiceRollResponse{
 					DiceRoll: model.DiceRoll{
-						ID:     "test-dice-roll",
-						UserID: "test-user",
-						RoomID: "test-room",
+						ID:        "test-dice-roll",
+						CreatedAt: t0,
+						UserID:    "test-user",
+						RoomID:    "test-room",
 						Dice: []model.DieRoll{
 							{ID: "dice-1", Type: model.DieTypeD6, Side: 5},
 							{ID: "dice-2", Type: model.DieTypeD20, Side: 18},
@@ -235,6 +239,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 			expStatusCode: http.StatusCreated,
 			expBody: `{
  "id": "test-dice-roll",
+ "created_at": "1912-06-23T01:02:03Z",
  "room_id": "test-room",
  "user_id": "test-user",
  "dice": [
@@ -284,6 +289,8 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 }
 
 func TestAPIV1ListDiceRolls(t *testing.T) {
+	t0, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:03Z")
+
 	tests := map[string]struct {
 		mock          func(*dicemock.Service)
 		req           func() *http.Request
@@ -322,18 +329,20 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 				resp := &dice.ListDiceRollsResponse{
 					DiceRolls: []model.DiceRoll{
 						{
-							ID:     "dr1",
-							UserID: "user-1",
-							RoomID: "room-1",
+							ID:        "dr1",
+							CreatedAt: t0,
+							UserID:    "user-1",
+							RoomID:    "room-1",
 							Dice: []model.DieRoll{
 								{ID: "d1", Type: model.DieTypeD6, Side: 4},
 								{ID: "d2", Type: model.DieTypeD6, Side: 5},
 							},
 						},
 						{
-							ID:     "dr2",
-							UserID: "user-2",
-							RoomID: "room-2",
+							ID:        "dr2",
+							CreatedAt: t0,
+							UserID:    "user-2",
+							RoomID:    "room-2",
 							Dice: []model.DieRoll{
 								{ID: "d3", Type: model.DieTypeD20, Side: 18},
 							},
@@ -353,6 +362,7 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
  "items": [
   {
    "id": "dr1",
+   "created_at": "1912-06-23T01:02:03Z",
    "user_id": "user-1",
    "room_id": "room-1",
    "dice": [
@@ -370,6 +380,7 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
   },
   {
    "id": "dr2",
+   "created_at": "1912-06-23T01:02:03Z",
    "user_id": "user-2",
    "room_id": "room-2",
    "dice": [
@@ -416,6 +427,8 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 }
 
 func TestAPIV1CreateRoom(t *testing.T) {
+	t0, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:03Z")
+
 	tests := map[string]struct {
 		mock          func(*roommock.Service)
 		req           func() *http.Request
@@ -452,8 +465,9 @@ func TestAPIV1CreateRoom(t *testing.T) {
 			mock: func(m *roommock.Service) {
 				exp := room.CreateRoomRequest{Name: "test-room"}
 				resp := &room.CreateRoomResponse{Room: model.Room{
-					Name: "test-room",
-					ID:   "room-id",
+					Name:      "test-room",
+					CreatedAt: t0,
+					ID:        "room-id",
 				}}
 				m.On("CreateRoom", mock.Anything, exp).Once().Return(resp, nil)
 			},
@@ -466,6 +480,7 @@ func TestAPIV1CreateRoom(t *testing.T) {
 			expStatusCode: http.StatusCreated,
 			expBody: `{
  "id": "room-id",
+ "created_at": "1912-06-23T01:02:03Z",
  "name": "test-room"
 }`,
 		},

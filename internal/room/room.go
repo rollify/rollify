@@ -3,6 +3,7 @@ package room
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -28,6 +29,7 @@ type ServiceConfig struct {
 	RoomRepository storage.RoomRepository
 	Logger         log.Logger
 	IDGenerator    func() string
+	TimeNowFunc    func() time.Time
 }
 
 func (c *ServiceConfig) defaults() error {
@@ -44,6 +46,10 @@ func (c *ServiceConfig) defaults() error {
 		c.IDGenerator = func() string { return uuid.New().String() }
 	}
 
+	if c.TimeNowFunc == nil {
+		c.TimeNowFunc = time.Now
+	}
+
 	return nil
 }
 
@@ -51,6 +57,7 @@ type service struct {
 	roomRepo storage.RoomRepository
 	logger   log.Logger
 	idGen    func() string
+	timeNow  func() time.Time
 }
 
 // NewService returns a new room.Service.
@@ -64,6 +71,7 @@ func NewService(cfg ServiceConfig) (Service, error) {
 		roomRepo: cfg.RoomRepository,
 		logger:   cfg.Logger,
 		idGen:    cfg.IDGenerator,
+		timeNow:  cfg.TimeNowFunc,
 	}, nil
 }
 
@@ -93,8 +101,9 @@ func (s service) CreateRoom(ctx context.Context, r CreateRoomRequest) (*CreateRo
 
 	// Create a new room.
 	room := model.Room{
-		ID:   s.idGen(),
-		Name: r.Name,
+		ID:        s.idGen(),
+		CreatedAt: s.timeNow().UTC(),
+		Name:      r.Name,
 	}
 
 	// Store room.

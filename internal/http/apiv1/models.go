@@ -2,6 +2,7 @@ package apiv1
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/model"
@@ -33,10 +34,12 @@ func mapModelToAPIListDiceTypes(r dice.ListDiceTypesResponse) listDiceTypesRespo
 }
 
 type createDiceRollResponse struct {
-	ID     string    `json:"id"`
-	RoomID string    `json:"room_id"`
-	UserID string    `json:"user_id"`
-	Dice   []dieRoll `json:"dice"`
+	ID string `json:"id"`
+	// Representation in RFC3339.
+	CreateAt string    `json:"created_at"`
+	RoomID   string    `json:"room_id"`
+	UserID   string    `json:"user_id"`
+	Dice     []dieRoll `json:"dice"`
 }
 
 type dieRoll struct {
@@ -61,10 +64,11 @@ func mapModelToAPIcreateDiceRoll(r dice.CreateDiceRollResponse) createDiceRollRe
 		})
 	}
 	return createDiceRollResponse{
-		ID:     r.DiceRoll.ID,
-		RoomID: r.DiceRoll.RoomID,
-		UserID: r.DiceRoll.UserID,
-		Dice:   ds,
+		ID:       r.DiceRoll.ID,
+		CreateAt: r.DiceRoll.CreatedAt.Format(time.RFC3339),
+		RoomID:   r.DiceRoll.RoomID,
+		UserID:   r.DiceRoll.UserID,
+		Dice:     ds,
 	}
 }
 
@@ -102,10 +106,12 @@ type listDiceRollsResponse struct {
 }
 
 type diceRollResponse struct {
-	ID     string            `json:"id"`
-	UserID string            `json:"user_id"`
-	RoomID string            `json:"room_id"`
-	Dice   []dieRollResponse `json:"dice"`
+	ID string `json:"id"`
+	// Representation in RFC3339.
+	CreateAt string            `json:"created_at"`
+	UserID   string            `json:"user_id"`
+	RoomID   string            `json:"room_id"`
+	Dice     []dieRollResponse `json:"dice"`
 }
 
 type dieRollResponse struct {
@@ -131,10 +137,11 @@ func mapModelToAPIListDiceRolls(r dice.ListDiceRollsResponse) listDiceRollsRespo
 			})
 		}
 		items = append(items, diceRollResponse{
-			ID:     dr.ID,
-			RoomID: dr.RoomID,
-			UserID: dr.UserID,
-			Dice:   ds,
+			ID:       dr.ID,
+			CreateAt: dr.CreatedAt.Format(time.RFC3339),
+			RoomID:   dr.RoomID,
+			UserID:   dr.UserID,
+			Dice:     ds,
 		})
 	}
 
@@ -155,8 +162,10 @@ func mapAPIToModelListDiceRolls(r listDiceRollsRequest) (*dice.ListDiceRollsRequ
 }
 
 type createRoomResponse struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID string `json:"id"`
+	// Representation in RFC3339.
+	CreateAt string `json:"created_at"`
+	Name     string `json:"name"`
 }
 type createRoomRequest struct {
 	Name string `json:"name"`
@@ -164,8 +173,9 @@ type createRoomRequest struct {
 
 func mapModelToAPICreateRoom(r room.CreateRoomResponse) createRoomResponse {
 	return createRoomResponse{
-		ID:   r.Room.ID,
-		Name: r.Room.Name,
+		ID:       r.Room.ID,
+		CreateAt: r.Room.CreatedAt.Format(time.RFC3339),
+		Name:     r.Room.Name,
 	}
 }
 

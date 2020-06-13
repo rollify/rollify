@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -62,6 +63,8 @@ func TestServiceListDiceTypes(t *testing.T) {
 }
 
 func TestServiceCreateDiceRoll(t *testing.T) {
+	t0 := time.Now().UTC()
+
 	tests := map[string]struct {
 		config  dice.ServiceConfig
 		mock    func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository)
@@ -112,9 +115,10 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
 				// Expexted dice roll call.
 				exp := &model.DiceRoll{
-					ID:     "test",
-					RoomID: "test-room",
-					UserID: "user-id",
+					ID:        "test",
+					CreatedAt: t0,
+					RoomID:    "test-room",
+					UserID:    "user-id",
 					Dice: []model.DieRoll{
 						{ID: "test", Type: model.DieTypeD6},
 						{ID: "test", Type: model.DieTypeD8},
@@ -139,9 +143,10 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			expResp: func() *dice.CreateDiceRollResponse {
 				return &dice.CreateDiceRollResponse{
 					DiceRoll: model.DiceRoll{
-						ID:     "test",
-						RoomID: "test-room",
-						UserID: "user-id",
+						ID:        "test",
+						CreatedAt: t0,
+						RoomID:    "test-room",
+						UserID:    "user-id",
 						Dice: []model.DieRoll{
 							{ID: "test", Type: model.DieTypeD6},
 							{ID: "test", Type: model.DieTypeD8},
@@ -227,6 +232,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			test.config.DiceRollRepository = mdrrep
 			test.config.RoomRepository = mrrep
 			test.config.IDGenerator = func() string { return "test" }
+			test.config.TimeNowFunc = func() time.Time { return t0 }
 
 			svc, err := dice.NewService(test.config)
 			require.NoError(err)

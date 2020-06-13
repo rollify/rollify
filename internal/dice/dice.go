@@ -3,6 +3,7 @@ package dice
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -31,6 +32,7 @@ type ServiceConfig struct {
 	Roller             Roller
 	Logger             log.Logger
 	IDGenerator        func() string
+	TimeNowFunc        func() time.Time
 }
 
 func (c *ServiceConfig) defaults() error {
@@ -55,6 +57,10 @@ func (c *ServiceConfig) defaults() error {
 		c.IDGenerator = func() string { return uuid.New().String() }
 	}
 
+	if c.TimeNowFunc == nil {
+		c.TimeNowFunc = time.Now
+	}
+
 	return nil
 }
 
@@ -64,6 +70,7 @@ type service struct {
 	roller             Roller
 	logger             log.Logger
 	idGen              func() string
+	timeNow            func() time.Time
 }
 
 // NewService returns a new dice.Service.
@@ -79,6 +86,7 @@ func NewService(cfg ServiceConfig) (Service, error) {
 		roller:             cfg.Roller,
 		logger:             cfg.Logger,
 		idGen:              cfg.IDGenerator,
+		timeNow:            cfg.TimeNowFunc,
 	}, nil
 }
 
@@ -153,10 +161,11 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 	}
 
 	dr := &model.DiceRoll{
-		ID:     s.idGen(),
-		RoomID: r.RoomID,
-		UserID: r.UserID,
-		Dice:   dice,
+		ID:        s.idGen(),
+		CreatedAt: s.timeNow().UTC(),
+		RoomID:    r.RoomID,
+		UserID:    r.UserID,
+		Dice:      dice,
 	}
 
 	// Roll'em all!

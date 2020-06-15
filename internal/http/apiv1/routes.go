@@ -41,7 +41,7 @@ func (a apiv1) registerRoutes(prefix string) {
 		Returns(http.StatusOK, "OK", listDiceRollsResponse{}).
 		Returns(http.StatusBadRequest, "", nil))
 
-	a.apiws.Route(a.wrapWSPost("/room").
+	a.apiws.Route(a.wrapWSPost("/rooms").
 		To(a.createRoom()).
 		Metadata(restfulspec.KeyOpenAPITags, []string{"room"}).
 		Doc("creates a room").

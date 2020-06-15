@@ -439,7 +439,7 @@ func TestAPIV1CreateRoom(t *testing.T) {
 			mock: func(m *roommock.Service) {},
 			req: func() *http.Request {
 				body := `{"name": ""}`
-				r, _ := http.NewRequest(http.MethodPost, "/api/v1/room", strings.NewReader(body))
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/rooms", strings.NewReader(body))
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -453,7 +453,7 @@ func TestAPIV1CreateRoom(t *testing.T) {
 			},
 			req: func() *http.Request {
 				body := `{"name": "test-room"}`
-				r, _ := http.NewRequest(http.MethodPost, "/api/v1/room", strings.NewReader(body))
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/rooms", strings.NewReader(body))
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -473,7 +473,7 @@ func TestAPIV1CreateRoom(t *testing.T) {
 			},
 			req: func() *http.Request {
 				body := `{"name": "test-room"}`
-				r, _ := http.NewRequest(http.MethodPost, "/api/v1/room", strings.NewReader(body))
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/rooms", strings.NewReader(body))
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},

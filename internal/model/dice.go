@@ -16,6 +16,10 @@ type DieRoll struct {
 type DiceRoll struct {
 	// ID is the ID of the DiceRoll.
 	ID string
+	// Serial is an incremental ID (managed by the storage) that is safe to sort.
+	// Is encouraged to use this to sort or know a point in time (after/before) instead
+	// of CreatedAt.
+	Serial uint
 	// Created at is when the dice roll was created.
 	CreatedAt time.Time
 	// UserID is the ID of the room were the dice roll was made.

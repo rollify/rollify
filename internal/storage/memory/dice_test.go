@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/model"
@@ -114,6 +115,55 @@ func TestDiceRollRepositoryCreateDiceRoll(t *testing.T) {
 				gotDiceRolls = r.DiceRollsByRoomAndUser[test.diceRoll.RoomID+test.diceRoll.UserID]
 				assert.Contains(gotDiceRolls, &test.expDiceRoll)
 			}
+		})
+	}
+}
+
+func TestDiceRollRepositoryCreateDiceRollSerial(t *testing.T) {
+	tests := map[string]struct {
+		repo      func() *memory.DiceRollRepository
+		diceRolls []model.DiceRoll
+	}{
+
+		"creating dice rolls should create unique and incremental serials for each of them.": {
+			repo: func() *memory.DiceRollRepository {
+				return memory.NewDiceRollRepository()
+			},
+			diceRolls: []model.DiceRoll{
+				{ID: "dr1", UserID: "user1", RoomID: "test"},
+				{ID: "dr2", UserID: "user1", RoomID: "test"},
+				{ID: "dr3", UserID: "user1", RoomID: "test"},
+				{ID: "dr4", UserID: "user1", RoomID: "test"},
+				{ID: "dr5", UserID: "user1", RoomID: "test"},
+				{ID: "dr6", UserID: "user1", RoomID: "test"},
+				{ID: "dr7", UserID: "user1", RoomID: "test"},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			r := test.repo()
+			var prevSerial uint
+			for i, dr := range test.diceRolls {
+				err := r.CreateDiceRoll(context.TODO(), dr)
+				require.NoError(err)
+
+				// Don't check first one.
+				if i == 0 {
+					prevSerial = dr.Serial
+					continue
+				}
+
+				// Check our dr serial is greater than the previous one.
+				storedDiceRoll := r.DiceRollsByID[dr.ID]
+				assert.Greater(storedDiceRoll.Serial, prevSerial)
+				prevSerial = storedDiceRoll.Serial
+			}
+
 		})
 	}
 }

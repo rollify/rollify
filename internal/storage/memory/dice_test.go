@@ -152,7 +152,7 @@ func TestDiceRollRepositoryCreateDiceRollSerial(t *testing.T) {
 				err := r.CreateDiceRoll(context.TODO(), dr)
 				require.NoError(err)
 
-				// Don't check first one
+				// Don't check first one.
 				if i == 0 {
 					prevSerial = dr.Serial
 					continue

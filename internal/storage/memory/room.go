@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/rollify/rollify/internal/internalerrors"
@@ -32,7 +33,7 @@ func (r *RoomRepository) CreateRoom(_ context.Context, room model.Room) error {
 	defer r.mu.Unlock()
 
 	if room.ID == "" {
-		return internalerrors.ErrNotValid
+		return fmt.Errorf("missing room ID: %w", internalerrors.ErrNotValid)
 	}
 
 	_, ok := r.RoomsByID[room.ID]

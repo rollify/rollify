@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/rollify/rollify/internal/internalerrors"
@@ -20,7 +21,9 @@ type DiceRollRepository struct {
 	// DiceRollsByRoomAndUser is where the dice roll data is stored by room and user. Not thread safe.
 	DiceRollsByRoomAndUser map[string][]*model.DiceRoll
 
-	mu sync.Mutex
+	// serialTrack will track the point where the serials for diceRolls are.
+	serialTrack uint
+	mu          sync.Mutex
 }
 
 // NewDiceRollRepository returns a new DiceRollRepository.
@@ -37,8 +40,13 @@ func (r *DiceRollRepository) CreateDiceRoll(ctx context.Context, dr model.DiceRo
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if dr.RoomID == "" || dr.UserID == "" || dr.ID == "" {
-		return internalerrors.ErrNotValid
+	switch {
+	case dr.RoomID == "":
+		return fmt.Errorf("missing room ID: %w", internalerrors.ErrNotValid)
+	case dr.UserID == "":
+		return fmt.Errorf("missing user ID: %w", internalerrors.ErrNotValid)
+	case dr.ID == "":
+		return fmt.Errorf("missing ID: %w", internalerrors.ErrNotValid)
 	}
 
 	_, ok := r.DiceRollsByID[dr.ID]
@@ -49,6 +57,10 @@ func (r *DiceRollRepository) CreateDiceRoll(ctx context.Context, dr model.DiceRo
 	r.DiceRollsByID[dr.ID] = &dr
 	r.DiceRollsByRoom[dr.RoomID] = append(r.DiceRollsByRoom[dr.RoomID], &dr)
 	r.DiceRollsByRoomAndUser[dr.RoomID+dr.UserID] = append(r.DiceRollsByRoomAndUser[dr.RoomID+dr.UserID], &dr)
+
+	// Set up the serial.
+	dr.Serial = r.serialTrack
+	r.serialTrack++
 
 	return nil
 }

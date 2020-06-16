@@ -3,6 +3,7 @@ package memory_test
 import (
 	"context"
 	"errors"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -188,6 +189,9 @@ func TestUserRepositoryListRoomUsers(t *testing.T) {
 			if test.expErr {
 				assert.Error(err)
 			} else if assert.NoError(err) {
+				// Sort both for consistency.
+				sort.Slice(test.expList.Items, func(i, j int) bool { return test.expList.Items[i].ID < test.expList.Items[j].ID })
+				sort.Slice(gotList.Items, func(i, j int) bool { return gotList.Items[i].ID < gotList.Items[j].ID })
 				assert.Equal(test.expList, gotList)
 			}
 		})

@@ -16,6 +16,8 @@ type CmdConfig struct {
 	APIListenAddr      string
 	InternalListenAddr string
 	MetricsPath        string
+	HealthCheckPath    string
+	PprofPath          string
 	StorageType        string
 }
 
@@ -30,6 +32,8 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	app.Flag("api-listen-address", "the address where the HTTP API server will be listening.").Default(":8080").StringVar(&c.APIListenAddr)
 	app.Flag("internal-listen-address", "the address where the HTTP internal data (metrics, pprof...) server will be listening.").Default(":8081").StringVar(&c.InternalListenAddr)
 	app.Flag("metrics-path", "the path where Prometehus metrics will be served.").Default("/metrics").StringVar(&c.MetricsPath)
+	app.Flag("health-check-path", "the path where the health check will be served.").Default("/status").StringVar(&c.HealthCheckPath)
+	app.Flag("pprof-path", "the path where the pprof handlers will be served.").Default("/debug/pprof").StringVar(&c.PprofPath)
 	app.Flag("storage-type", "the storage type used on the application.").Default(StorageTypeMemory).EnumVar(&c.StorageType, StorageTypeMemory)
 
 	_, err := app.Parse(args[1:])

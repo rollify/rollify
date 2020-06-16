@@ -21,9 +21,7 @@ type ListDiceRollsOpts struct {
 // implement to manage dice rolls in storage.
 type DiceRollRepository interface {
 	// CreateDiceRoll creates a new dice roll.
-	// If the dice roomID is empty it returns a internalerrors.NotValid error kind.
-	// If the dice userID is empty it returns a internalerrors.NotValid error kind.
-	// If the dice roll doesn't have an ID it returns a internalerrors.NotValid error kind.
+	// If the dice data is missing or not valid it will return a internalerrors.NotValid error kind.
 	// If the dice roll already exists it returns a internalerrors.AlreadyExists error kind.
 	CreateDiceRoll(ctx context.Context, dr model.DiceRoll) error
 	// ListDiceRolls lists dice rolls.
@@ -37,7 +35,7 @@ type DiceRollRepository interface {
 // implement to manage rooms in storage.
 type RoomRepository interface {
 	// CreateRoom creates a new room.
-	// If the room doesn't have an ID it returns a internalerrors.NotValid error kind.
+	// If the room data is missing or not valid it will return a internalerrors.NotValid error kind.
 	// If the room already exists it returns a internalerrors.AlreadyExists error kind.
 	CreateRoom(ctx context.Context, r model.Room) error
 	// RoomExists returns true if the room exists.
@@ -45,3 +43,21 @@ type RoomRepository interface {
 }
 
 //go:generate mockery -case underscore -output storagemock -outpkg storagemock -name RoomRepository
+
+// UserList is a list of users.
+type UserList struct {
+	Items []model.User
+}
+
+// UserRepository is the repository interface that implementations need to
+// implement to manage users in storage.
+type UserRepository interface {
+	// CreateRoom creates a new room.
+	// If the user data is missing or not valid it will return a internalerrors.NotValid error kind.
+	// If the room already exists it returns a internalerrors.AlreadyExists error kind.
+	CreateUser(ctx context.Context, u model.User) error
+	// ListRoomUsers returns the user list of a room.
+	ListRoomUsers(ctx context.Context, roomID string) (*UserList, error)
+}
+
+//go:generate mockery -case underscore -output storagemock -outpkg storagemock -name UserRepository

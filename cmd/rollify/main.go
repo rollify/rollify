@@ -132,9 +132,10 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	// Serving internal HTTP server.
 	{
 		logger := logger.WithKV(log.KV{
-			"addr":    cmdCfg.InternalListenAddr,
-			"metrics": true,
-			"pprof":   true,
+			"addr":         cmdCfg.InternalListenAddr,
+			"metrics":      cmdCfg.MetricsPath,
+			"health-check": cmdCfg.HealthCheckPath,
+			"pprof":        cmdCfg.PprofPath,
 		})
 		mux := http.NewServeMux()
 
@@ -142,11 +143,14 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		mux.Handle(cmdCfg.MetricsPath, promhttp.Handler())
 
 		// Pprof.
-		mux.HandleFunc("/debug/pprof/", pprof.Index)
-		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+		mux.HandleFunc(cmdCfg.PprofPath+"/", pprof.Index)
+		mux.HandleFunc(cmdCfg.PprofPath+"/cmdline", pprof.Cmdline)
+		mux.HandleFunc(cmdCfg.PprofPath+"/profile", pprof.Profile)
+		mux.HandleFunc(cmdCfg.PprofPath+"/symbol", pprof.Symbol)
+		mux.HandleFunc(cmdCfg.PprofPath+"/trace", pprof.Trace)
+
+		// Health check.
+		mux.Handle(cmdCfg.HealthCheckPath, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(`{"status":"ok"}`)) }))
 
 		// Create server.
 		server := &http.Server{

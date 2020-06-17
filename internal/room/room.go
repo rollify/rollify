@@ -7,14 +7,10 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/log"
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/storage"
-)
-
-var (
-	// ErrNotValid will be used when something is not valid.
-	ErrNotValid = fmt.Errorf("not valid")
 )
 
 // Service is the application service of dice logic.
@@ -82,7 +78,7 @@ type CreateRoomRequest struct {
 
 func (r CreateRoomRequest) validate() error {
 	if r.Name == "" {
-		return fmt.Errorf("config.Name is required")
+		return fmt.Errorf("name is required")
 	}
 
 	return nil
@@ -96,7 +92,7 @@ type CreateRoomResponse struct {
 func (s service) CreateRoom(ctx context.Context, r CreateRoomRequest) (*CreateRoomResponse, error) {
 	err := r.validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrNotValid, err)
+		return nil, fmt.Errorf("%w: %s", internalerrors.ErrNotValid, err)
 	}
 
 	// Create a new room.

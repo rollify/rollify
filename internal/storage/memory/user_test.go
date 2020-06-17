@@ -197,3 +197,85 @@ func TestUserRepositoryListRoomUsers(t *testing.T) {
 		})
 	}
 }
+
+func TestUserRepositoryUserExistsByNameInsensitive(t *testing.T) {
+	tests := map[string]struct {
+		repo      func() *memory.UserRepository
+		roomID    string
+		username  string
+		expExists bool
+		expErr    error
+	}{
+		"Having a user user that is not in the room, should return no exists.": {
+			repo: func() *memory.UserRepository {
+				r := memory.NewUserRepository()
+				r.UsersByRoom = map[string]map[string]*model.User{
+					"room1-id": {
+						"user1-id": &model.User{
+							ID:     "user1-id",
+							RoomID: "room1-id",
+							Name:   "test1",
+						},
+					},
+				}
+				return r
+			},
+			roomID:    "room2-id",
+			username:  "test1",
+			expExists: false,
+		},
+
+		"Having a user user that matches exactly, should return exists.": {
+			repo: func() *memory.UserRepository {
+				r := memory.NewUserRepository()
+				r.UsersByRoom = map[string]map[string]*model.User{
+					"room1-id": {
+						"user1-id": &model.User{
+							ID:     "user1-id",
+							RoomID: "room1-id",
+							Name:   "test1",
+						},
+					},
+				}
+				return r
+			},
+			roomID:    "room1-id",
+			username:  "test1",
+			expExists: true,
+		},
+
+		"Having a user user that matches case insensitive, should return exists.": {
+			repo: func() *memory.UserRepository {
+				r := memory.NewUserRepository()
+				r.UsersByRoom = map[string]map[string]*model.User{
+					"room1-id": {
+						"user1-id": &model.User{
+							ID:     "user1-id",
+							RoomID: "room1-id",
+							Name:   "TeSt1",
+						},
+					},
+				}
+				return r
+			},
+			roomID:    "room1-id",
+			username:  "tEsT1",
+			expExists: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			r := test.repo()
+			gotExists, err := r.UserExistsByNameInsensitive(context.TODO(), test.roomID, test.username)
+
+			if test.expErr != nil && assert.Error(err) {
+				assert.True(errors.Is(err, test.expErr))
+			} else if assert.NoError(err) {
+				assert.Equal(test.expExists, gotExists)
+			}
+		})
+	}
+}

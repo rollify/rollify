@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/rollify/rollify/internal/internalerrors"
@@ -72,6 +73,20 @@ func (r *UserRepository) ListRoomUsers(ctx context.Context, roomID string) (*sto
 	return &storage.UserList{
 		Items: users,
 	}, nil
+}
+
+// UserExistsByNameInsensitive storage.UserRepository interface.
+func (r *UserRepository) UserExistsByNameInsensitive(ctx context.Context, roomID, username string) (bool, error) {
+	us := r.UsersByRoom[roomID]
+
+	nameNoCase := strings.ToLower(username)
+	for _, u := range us {
+		if strings.ToLower(u.Name) == nameNoCase {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // Implementation assertions.

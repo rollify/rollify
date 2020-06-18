@@ -231,9 +231,8 @@ type listUsersResponse struct {
 }
 
 type userResponse struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	RoomID string `json:"room_id"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 	// Representation in RFC3339.
 	CreateAt string `json:"created_at"`
 }
@@ -248,7 +247,6 @@ func mapModelToAPIListUsers(r user.ListUsersResponse) listUsersResponse {
 		items = append(items, userResponse{
 			ID:       u.ID,
 			Name:     u.Name,
-			RoomID:   u.RoomID,
 			CreateAt: u.CreatedAt.Format(time.RFC3339),
 		})
 	}

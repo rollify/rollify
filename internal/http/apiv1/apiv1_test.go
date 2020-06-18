@@ -695,13 +695,11 @@ func TestAPIV1ListUsers(t *testing.T) {
   {
    "id": "test1-id",
    "name": "test1",
-   "room_id": "test1-id",
    "created_at": "1912-06-23T01:02:03Z"
   },
   {
    "id": "test2-id",
    "name": "test2",
-   "room_id": "test2-id",
    "created_at": "1912-06-23T01:02:03Z"
   }
  ]

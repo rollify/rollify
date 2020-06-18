@@ -92,6 +92,9 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		RoomRepository: roomRepo,
 		Logger:         logger,
 	})
+	if err != nil {
+		return fmt.Errorf("could not create user application service: %w", err)
+	}
 
 	// Prepare our main runner.
 	var g run.Group

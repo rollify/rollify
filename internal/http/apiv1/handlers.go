@@ -191,7 +191,7 @@ func (a *apiv1) createUser() restful.RouteFunction {
 }
 
 func writeResponseError(logger log.Logger, resp *restful.Response, status int, err error) {
-	err = resp.WriteError(status, err)
+	err = resp.WriteServiceError(status, restful.NewError(status, err.Error()))
 	if err != nil {
 		logger.Errorf("could not write http response: %w", err)
 	}

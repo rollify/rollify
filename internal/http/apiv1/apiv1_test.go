@@ -107,7 +107,7 @@ func TestAPIV1ListDiceTypes(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       `wanted error`,
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
 		},
 	}
 
@@ -160,7 +160,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       `user_id is required`,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"user_id is required\"\n}",
 		},
 
 		"Having a request without room ID should fail.": {
@@ -172,7 +172,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       `room_id is required`,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room_id is required\"\n}",
 		},
 
 		"Having a request without dice types should fail.": {
@@ -184,7 +184,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       `dice_type_ids are required`,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"dice_type_ids are required\"\n}",
 		},
 
 		"Having a request with invalid dice types should fail .": {
@@ -196,7 +196,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       `d99999 die type is not valid`,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"d99999 die type is not valid\"\n}",
 		},
 
 		"Having a correct request that fails creating the roll should fail.": {
@@ -210,7 +210,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       `wanted error`,
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
 		},
 
 		"Having a correct request should create the dice roll correctly.": {
@@ -311,7 +311,7 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       `room_id is required`,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room_id is required\"\n}",
 		},
 
 		"Having a request with an error form the app service, should fail.": {
@@ -325,7 +325,7 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       `wanted error`,
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
 		},
 
 		"Having a request should return dice rolls.": {
@@ -450,7 +450,7 @@ func TestAPIV1CreateRoom(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       `name is required`,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"name is required\"\n}",
 		},
 
 		"Having a correct request that fails creating the the room should fail.": {
@@ -464,7 +464,7 @@ func TestAPIV1CreateRoom(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       `wanted error`,
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
 		},
 
 		"Having a correct request should create the room.": {
@@ -541,7 +541,7 @@ func TestAPIV1CreateUser(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       `name is required`,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"name is required\"\n}",
 		},
 
 		"Having a request without room id should fail.": {
@@ -553,7 +553,7 @@ func TestAPIV1CreateUser(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       `room_id is required`,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room_id is required\"\n}",
 		},
 
 		"Having a correct request that fails creating the the user should fail.": {
@@ -567,7 +567,7 @@ func TestAPIV1CreateUser(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       `wanted error`,
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
 		},
 
 		"Having a correct request should create the user.": {

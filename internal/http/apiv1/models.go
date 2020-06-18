@@ -225,3 +225,42 @@ func mapAPIToModelCreateUser(r createUserRequest) (*user.CreateUserRequest, erro
 		RoomID: r.RoomID,
 	}, nil
 }
+
+type listUsersResponse struct {
+	Items []userResponse `json:"items"`
+}
+
+type userResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// Representation in RFC3339.
+	CreateAt string `json:"created_at"`
+}
+
+type listUsersRequest struct {
+	RoomID string `json:"room_id"`
+}
+
+func mapModelToAPIListUsers(r user.ListUsersResponse) listUsersResponse {
+	items := make([]userResponse, 0, len(r.Users))
+	for _, u := range r.Users {
+		items = append(items, userResponse{
+			ID:       u.ID,
+			Name:     u.Name,
+			CreateAt: u.CreatedAt.Format(time.RFC3339),
+		})
+	}
+	return listUsersResponse{
+		Items: items,
+	}
+}
+
+func mapAPIToModelListUsers(r listUsersRequest) (*user.ListUsersRequest, error) {
+	if r.RoomID == "" {
+		return nil, fmt.Errorf("room_id is required")
+	}
+
+	return &user.ListUsersRequest{
+		RoomID: r.RoomID,
+	}, nil
+}

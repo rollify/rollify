@@ -18,6 +18,8 @@ import (
 type Service interface {
 	// Creates an user for a specific room.
 	CreateUser(ctx context.Context, r CreateUserRequest) (*CreateUserResponse, error)
+	// Lists users for a specific room.
+	ListUsers(ctx context.Context, r ListUsersRequest) (*ListUsersResponse, error)
 }
 
 //go:generate mockery -case underscore -output usermock -outpkg usermock -name Service
@@ -150,5 +152,48 @@ func (s service) CreateUser(ctx context.Context, r CreateUserRequest) (*CreateUs
 
 	return &CreateUserResponse{
 		User: user,
+	}, nil
+}
+
+// ListUsersRequest is the request to ListUsers.
+type ListUsersRequest struct {
+	RoomID string
+}
+
+func (r ListUsersRequest) validate() error {
+	if r.RoomID == "" {
+		return fmt.Errorf("roomID is required")
+	}
+
+	return nil
+}
+
+// ListUsersResponse is the response to the ListUsers request.
+type ListUsersResponse struct {
+	Users []model.User
+}
+
+func (s service) ListUsers(ctx context.Context, r ListUsersRequest) (*ListUsersResponse, error) {
+	err := r.validate()
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", internalerrors.ErrNotValid, err)
+	}
+
+	exists, err := s.roomRepo.RoomExists(ctx, r.RoomID)
+	if err != nil {
+		return nil, fmt.Errorf("could not check if room exists: %w", err)
+	}
+
+	if !exists {
+		return nil, fmt.Errorf("%w: room does not exist", internalerrors.ErrNotValid)
+	}
+
+	us, err := s.userRepo.ListRoomUsers(ctx, r.RoomID)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve users: %w", err)
+	}
+
+	return &ListUsersResponse{
+		Users: us.Items,
 	}, nil
 }

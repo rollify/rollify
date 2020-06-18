@@ -33,7 +33,7 @@ func (a *apiv1) listDiceTypes() restful.RouteFunction {
 		mResp, err := a.diceAppSvc.ListDiceTypes(req.Request.Context())
 		if err != nil {
 			writeResponseError(logger, resp, errToStatusCode(err), err)
-			logger.Warningf("error processing request: %w", err)
+			logger.Warningf("error processing request: %s", err)
 			return
 		}
 
@@ -69,7 +69,7 @@ func (a *apiv1) createDiceRoll() restful.RouteFunction {
 		mResp, err := a.diceAppSvc.CreateDiceRoll(req.Request.Context(), *mReq)
 		if err != nil {
 			writeResponseError(logger, resp, errToStatusCode(err), err)
-			logger.Warningf("error processing request: %w", err)
+			logger.Warningf("error processing request: %s", err)
 			return
 		}
 
@@ -105,7 +105,7 @@ func (a *apiv1) listDiceRolls() restful.RouteFunction {
 		mResp, err := a.diceAppSvc.ListDiceRolls(req.Request.Context(), *mReq)
 		if err != nil {
 			writeResponseError(logger, resp, errToStatusCode(err), err)
-			logger.Warningf("error processing request: %w", err)
+			logger.Warningf("error processing request: %s", err)
 			return
 		}
 
@@ -141,12 +141,48 @@ func (a *apiv1) createRoom() restful.RouteFunction {
 		mResp, err := a.roomAppSvc.CreateRoom(req.Request.Context(), *mReq)
 		if err != nil {
 			writeResponseError(logger, resp, errToStatusCode(err), err)
-			logger.Warningf("error processing request: %w", err)
+			logger.Warningf("error processing request: %s", err)
 			return
 		}
 
 		// Map response.
 		r := mapModelToAPICreateRoom(*mResp)
+		err = resp.WriteHeaderAndEntity(http.StatusCreated, r)
+		if err != nil {
+			logger.Errorf("could not write http response: %w", err)
+		}
+	}
+}
+
+func (a *apiv1) createUser() restful.RouteFunction {
+	logger := a.logger.WithKV(log.KV{"handler": "createUser"})
+
+	return func(req *restful.Request, resp *restful.Response) {
+		logger.Debugf("handler called")
+
+		// Map request.
+		entReq := &createUserRequest{}
+		err := req.ReadEntity(entReq)
+		if err != nil {
+			writeResponseError(logger, resp, http.StatusBadRequest, err)
+			return
+		}
+		mReq, err := mapAPIToModelCreateUser(*entReq)
+		if err != nil {
+			writeResponseError(logger, resp, http.StatusBadRequest, err)
+			return
+		}
+
+		// Execute.
+		mResp, err := a.UserAppSvc.CreateUser(req.Request.Context(), *mReq)
+		if err != nil {
+			writeResponseError(logger, resp, errToStatusCode(err), err)
+			logger.Warningf("error processing request: %s", err)
+			return
+		}
+
+		// Map response.
+		r := mapModelToAPICreateUser(*mResp)
 		err = resp.WriteHeaderAndEntity(http.StatusCreated, r)
 		if err != nil {
 			logger.Errorf("could not write http response: %w", err)

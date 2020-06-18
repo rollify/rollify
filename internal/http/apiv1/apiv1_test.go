@@ -20,6 +20,8 @@ import (
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/room/roommock"
+	"github.com/rollify/rollify/internal/user"
+	"github.com/rollify/rollify/internal/user/usermock"
 )
 
 func TestAPIV1Pong(t *testing.T) {
@@ -47,6 +49,7 @@ func TestAPIV1Pong(t *testing.T) {
 			cfg := apiv1.Config{
 				DiceAppService: &dicemock.Service{},
 				RoomAppService: &roommock.Service{},
+				UserAppService: &usermock.Service{},
 			}
 			h, err := apiv1.New(cfg)
 			require.NoError(err)
@@ -120,6 +123,7 @@ func TestAPIV1ListDiceTypes(t *testing.T) {
 			cfg := apiv1.Config{
 				DiceAppService: md,
 				RoomAppService: &roommock.Service{},
+				UserAppService: &usermock.Service{},
 			}
 			h, err := apiv1.New(cfg)
 			require.NoError(err)
@@ -270,6 +274,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 			cfg := apiv1.Config{
 				DiceAppService: md,
 				RoomAppService: &roommock.Service{},
+				UserAppService: &usermock.Service{},
 			}
 			h, err := apiv1.New(cfg)
 			require.NoError(err)
@@ -408,6 +413,7 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 			cfg := apiv1.Config{
 				DiceAppService: md,
 				RoomAppService: &roommock.Service{},
+				UserAppService: &usermock.Service{},
 			}
 			h, err := apiv1.New(cfg)
 			require.NoError(err)
@@ -498,6 +504,112 @@ func TestAPIV1CreateRoom(t *testing.T) {
 			cfg := apiv1.Config{
 				DiceAppService: &dicemock.Service{},
 				RoomAppService: mr,
+				UserAppService: &usermock.Service{},
+			}
+			h, err := apiv1.New(cfg)
+			require.NoError(err)
+
+			// Execute.
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, test.req())
+
+			// Check.
+			res := w.Result()
+			gotBody, err := ioutil.ReadAll(res.Body)
+			require.NoError(err)
+			assert.Equal(test.expStatusCode, res.StatusCode)
+			assert.Equal(test.expBody, string(gotBody))
+		})
+	}
+}
+
+func TestAPIV1CreateUser(t *testing.T) {
+	t0, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:03Z")
+
+	tests := map[string]struct {
+		mock          func(*usermock.Service)
+		req           func() *http.Request
+		expStatusCode int
+		expBody       string
+	}{
+		"Having a request without name should fail.": {
+			mock: func(m *usermock.Service) {},
+			req: func() *http.Request {
+				body := `{"name": "", "room_id": "room1-id"}`
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(body))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusBadRequest,
+			expBody:       `name is required`,
+		},
+
+		"Having a request without room id should fail.": {
+			mock: func(m *usermock.Service) {},
+			req: func() *http.Request {
+				body := `{"name": "test1", "room_id": ""}`
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(body))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusBadRequest,
+			expBody:       `room_id is required`,
+		},
+
+		"Having a correct request that fails creating the the user should fail.": {
+			mock: func(m *usermock.Service) {
+				m.On("CreateUser", mock.Anything, mock.Anything).Once().Return(nil, fmt.Errorf("wanted error"))
+			},
+			req: func() *http.Request {
+				body := `{"name": "test-room", "room_id": "test1-id"}`
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(body))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusInternalServerError,
+			expBody:       `wanted error`,
+		},
+
+		"Having a correct request should create the user.": {
+			mock: func(m *usermock.Service) {
+				exp := user.CreateUserRequest{Name: "test1", RoomID: "test1-id"}
+				resp := &user.CreateUserResponse{User: model.User{
+					ID:        "test1-id",
+					RoomID:    "test1-id",
+					Name:      "test1",
+					CreatedAt: t0,
+				}}
+				m.On("CreateUser", mock.Anything, exp).Once().Return(resp, nil)
+			},
+			req: func() *http.Request {
+				body := `{"name": "test1", "room_id": "test1-id"}`
+				r, _ := http.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(body))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusCreated,
+			expBody: `{
+ "id": "test1-id",
+ "created_at": "1912-06-23T01:02:03Z",
+ "name": "test1",
+ "room_id": "test1-id"
+}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			mu := &usermock.Service{}
+			test.mock(mu)
+
+			// Prepare.
+			cfg := apiv1.Config{
+				DiceAppService: &dicemock.Service{},
+				RoomAppService: &roommock.Service{},
+				UserAppService: mu,
 			}
 			h, err := apiv1.New(cfg)
 			require.NoError(err)

@@ -7,6 +7,7 @@ import (
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/room"
+	"github.com/rollify/rollify/internal/user"
 )
 
 type listDiceTypesResponse struct {
@@ -186,5 +187,41 @@ func mapAPIToModelCreateRoom(r createRoomRequest) (*room.CreateRoomRequest, erro
 
 	return &room.CreateRoomRequest{
 		Name: r.Name,
+	}, nil
+}
+
+type createUserResponse struct {
+	ID string `json:"id"`
+	// Representation in RFC3339.
+	CreateAt string `json:"created_at"`
+	Name     string `json:"name"`
+	RoomID   string `json:"room_id"`
+}
+type createUserRequest struct {
+	Name   string `json:"name"`
+	RoomID string `json:"room_id"`
+}
+
+func mapModelToAPICreateUser(r user.CreateUserResponse) createUserResponse {
+	return createUserResponse{
+		ID:       r.User.ID,
+		CreateAt: r.User.CreatedAt.Format(time.RFC3339),
+		Name:     r.User.Name,
+		RoomID:   r.User.RoomID,
+	}
+}
+
+func mapAPIToModelCreateUser(r createUserRequest) (*user.CreateUserRequest, error) {
+	if r.Name == "" {
+		return nil, fmt.Errorf("name is required")
+	}
+
+	if r.RoomID == "" {
+		return nil, fmt.Errorf("room_id is required")
+	}
+
+	return &user.CreateUserRequest{
+		Name:   r.Name,
+		RoomID: r.RoomID,
 	}, nil
 }

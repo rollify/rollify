@@ -21,6 +21,7 @@ import (
 	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/storage"
 	"github.com/rollify/rollify/internal/storage/memory"
+	"github.com/rollify/rollify/internal/user"
 )
 
 var (
@@ -56,11 +57,13 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	var (
 		roomRepo     storage.RoomRepository
 		diceRollRepo storage.DiceRollRepository
+		userRepo     storage.UserRepository
 	)
 	switch cmdCfg.StorageType {
 	case StorageTypeMemory:
 		roomRepo = memory.NewRoomRepository()
 		diceRollRepo = memory.NewDiceRollRepository()
+		userRepo = memory.NewUserRepository()
 	default:
 		return fmt.Errorf("storage type '%s' unknown", cmdCfg.StorageType)
 	}
@@ -84,6 +87,12 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		return fmt.Errorf("could not create room application service: %w", err)
 	}
 
+	userAppService, err := user.NewService(user.ServiceConfig{
+		UserRepository: userRepo,
+		RoomRepository: roomRepo,
+		Logger:         logger,
+	})
+
 	// Prepare our main runner.
 	var g run.Group
 
@@ -98,6 +107,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		apiv1Handler, err := apiv1.New(apiv1.Config{
 			DiceAppService: diceAppService,
 			RoomAppService: roomAppService,
+			UserAppService: userAppService,
 			Logger:         logger,
 		})
 		if err != nil {

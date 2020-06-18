@@ -36,8 +36,9 @@ func (a apiv1) registerRoutes(prefix string) {
 		To(a.listDiceRolls()).
 		Metadata(restfulspec.KeyOpenAPITags, []string{"dice"}).
 		Doc("lists dice rolls").
+		Param(a.apiws.PathParameter(listDiceRollsParamUserID, "identifier of the user")).
+		Param(a.apiws.PathParameter(listDiceRollsParamRoomID, "identifier of the room")).
 		Writes(listDiceRollsResponse{}).
-		Reads(listDiceRollsRequest{}).
 		Returns(http.StatusOK, "OK", listDiceRollsResponse{}).
 		Returns(http.StatusBadRequest, "", nil))
 
@@ -65,8 +66,8 @@ func (a apiv1) registerRoutes(prefix string) {
 		To(a.listUsers()).
 		Metadata(restfulspec.KeyOpenAPITags, []string{"user"}).
 		Doc("list room users").
+		Param(a.apiws.PathParameter(listUsersParamRoomID, "identifier of the room")).
 		Writes(listUsersResponse{}).
-		Reads(listUsersRequest{}).
 		Returns(http.StatusOK, "OK", listUsersResponse{}).
 		Returns(http.StatusBadRequest, "", nil))
 

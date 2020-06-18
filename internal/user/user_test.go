@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/storage"
 	"github.com/rollify/rollify/internal/storage/storagemock"
 	"github.com/rollify/rollify/internal/user"
 )
@@ -151,6 +152,109 @@ func TestServiceCreateUser(t *testing.T) {
 			require.NoError(err)
 
 			gotResp, err := svc.CreateUser(context.TODO(), test.req())
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expResp(), gotResp)
+			}
+		})
+	}
+}
+
+func TestServiceListUsers(t *testing.T) {
+	t0 := time.Now().UTC()
+
+	tests := map[string]struct {
+		config  user.ServiceConfig
+		mock    func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository)
+		req     func() user.ListUsersRequest
+		expResp func() *user.ListUsersResponse
+		expErr  bool
+	}{
+		"Having a list request without room ID, should fail.": {
+			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {},
+			req: func() user.ListUsersRequest {
+				return user.ListUsersRequest{RoomID: ""}
+			},
+			expErr: true,
+		},
+
+		"Having a list request for a non existent room, should fail.": {
+			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
+				rr.On("RoomExists", mock.Anything, "room-id").Once().Return(false, nil)
+			},
+			req: func() user.ListUsersRequest {
+				return user.ListUsersRequest{RoomID: "room-id"}
+			},
+			expErr: true,
+		},
+
+		"Having a list request with an error while checking the room exists, should fail.": {
+			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
+				rr.On("RoomExists", mock.Anything, mock.Anything).Once().Return(false, errors.New("wanted error"))
+			},
+			req: func() user.ListUsersRequest {
+				return user.ListUsersRequest{RoomID: "room-id"}
+			},
+			expErr: true,
+		},
+
+		"Having a list request, should list the users.": {
+			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
+				rr.On("RoomExists", mock.Anything, mock.Anything).Return(true, nil)
+				users := &storage.UserList{
+					Items: []model.User{
+						{ID: "user1", Name: "username1"},
+						{ID: "user2", Name: "username2"},
+					},
+				}
+				ru.On("ListRoomUsers", mock.Anything, "room-id").Return(users, nil)
+			},
+			req: func() user.ListUsersRequest {
+				return user.ListUsersRequest{RoomID: "room-id"}
+			},
+			expResp: func() *user.ListUsersResponse {
+				return &user.ListUsersResponse{
+					Users: []model.User{
+						{ID: "user1", Name: "username1"},
+						{ID: "user2", Name: "username2"},
+					},
+				}
+			},
+		},
+
+		"Having a list request with an error while listing the users, should fail.": {
+			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
+				rr.On("RoomExists", mock.Anything, mock.Anything).Return(true, nil)
+				ru.On("ListRoomUsers", mock.Anything, mock.Anything).Return(nil, errors.New("wanted error"))
+			},
+			req: func() user.ListUsersRequest {
+				return user.ListUsersRequest{RoomID: "room-id"}
+			},
+			expErr: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			// Mocks
+			mr := &storagemock.RoomRepository{}
+			mu := &storagemock.UserRepository{}
+			test.mock(mu, mr)
+
+			test.config.RoomRepository = mr
+			test.config.UserRepository = mu
+			test.config.IDGenerator = func() string { return "test" }
+			test.config.TimeNowFunc = func() time.Time { return t0 }
+
+			svc, err := user.NewService(test.config)
+			require.NoError(err)
+
+			gotResp, err := svc.ListUsers(context.TODO(), test.req())
 
 			if test.expErr {
 				assert.Error(err)

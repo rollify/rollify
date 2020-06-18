@@ -36,3 +36,26 @@ func (_m *Service) CreateUser(ctx context.Context, r user.CreateUserRequest) (*u
 
 	return r0, r1
 }
+
+// ListUsers provides a mock function with given fields: ctx, r
+func (_m *Service) ListUsers(ctx context.Context, r user.ListUsersRequest) (*user.ListUsersResponse, error) {
+	ret := _m.Called(ctx, r)
+
+	var r0 *user.ListUsersResponse
+	if rf, ok := ret.Get(0).(func(context.Context, user.ListUsersRequest) *user.ListUsersResponse); ok {
+		r0 = rf(ctx, r)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*user.ListUsersResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, user.ListUsersRequest) error); ok {
+		r1 = rf(ctx, r)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

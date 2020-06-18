@@ -61,6 +61,15 @@ func (a apiv1) registerRoutes(prefix string) {
 		Returns(http.StatusBadRequest, "", nil).
 		Returns(http.StatusConflict, "user already exists", nil))
 
+	a.apiws.Route(a.wrapWSGet("/users").
+		To(a.listUsers()).
+		Metadata(restfulspec.KeyOpenAPITags, []string{"user"}).
+		Doc("list room users").
+		Writes(listUsersResponse{}).
+		Reads(listUsersRequest{}).
+		Returns(http.StatusOK, "OK", listUsersResponse{}).
+		Returns(http.StatusBadRequest, "", nil))
+
 	// Register docs.
 	// Important: Needs to be the last route registed, because it needs to know what were
 	// the registered endpoints.

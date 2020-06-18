@@ -190,6 +190,42 @@ func (a *apiv1) createUser() restful.RouteFunction {
 	}
 }
 
+func (a *apiv1) listUsers() restful.RouteFunction {
+	logger := a.logger.WithKV(log.KV{"handler": "listUsers"})
+
+	return func(req *restful.Request, resp *restful.Response) {
+		logger.Debugf("handler called")
+
+		// Map request.
+		entReq := &listUsersRequest{}
+		err := req.ReadEntity(entReq)
+		if err != nil {
+			writeResponseError(logger, resp, http.StatusBadRequest, err)
+			return
+		}
+		mReq, err := mapAPIToModelListUsers(*entReq)
+		if err != nil {
+			writeResponseError(logger, resp, http.StatusBadRequest, err)
+			return
+		}
+
+		// Execute.
+		mResp, err := a.UserAppSvc.ListUsers(req.Request.Context(), *mReq)
+		if err != nil {
+			writeResponseError(logger, resp, errToStatusCode(err), err)
+			logger.Warningf("error processing request: %s", err)
+			return
+		}
+
+		// Map response.
+		r := mapModelToAPIListUsers(*mResp)
+		err = resp.WriteHeaderAndEntity(http.StatusOK, r)
+		if err != nil {
+			logger.Errorf("could not write http response: %w", err)
+		}
+	}
+}
+
 func writeResponseError(logger log.Logger, resp *restful.Response, status int, err error) {
 	err = resp.WriteServiceError(status, restful.NewError(status, err.Error()))
 	if err != nil {

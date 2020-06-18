@@ -627,3 +627,115 @@ func TestAPIV1CreateUser(t *testing.T) {
 		})
 	}
 }
+
+func TestAPIV1ListUsers(t *testing.T) {
+	t0, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:03Z")
+
+	tests := map[string]struct {
+		mock          func(*usermock.Service)
+		req           func() *http.Request
+		expStatusCode int
+		expBody       string
+	}{
+		"Having a request without room id should fail.": {
+			mock: func(m *usermock.Service) {},
+			req: func() *http.Request {
+				body := `{"room_id": ""}`
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/users", strings.NewReader(body))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusBadRequest,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room_id is required\"\n}",
+		},
+
+		"Having a request that fails while listing users, should fail.": {
+			mock: func(m *usermock.Service) {
+				m.On("ListUsers", mock.Anything, mock.Anything).Once().Return(nil, errors.New("wanted error"))
+			},
+			req: func() *http.Request {
+				body := `{"room_id": "room-id"}`
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/users", strings.NewReader(body))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusInternalServerError,
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
+		},
+
+		"Having a request should list the users.": {
+			mock: func(m *usermock.Service) {
+				exp := user.ListUsersRequest{RoomID: "room-id"}
+				resp := &user.ListUsersResponse{
+					Users: []model.User{
+						{
+							ID:        "test1-id",
+							RoomID:    "test1-id",
+							Name:      "test1",
+							CreatedAt: t0,
+						},
+						{
+							ID:        "test2-id",
+							RoomID:    "test2-id",
+							Name:      "test2",
+							CreatedAt: t0,
+						},
+					}}
+				m.On("ListUsers", mock.Anything, exp).Once().Return(resp, nil)
+			},
+			req: func() *http.Request {
+				body := `{"room_id": "room-id"}`
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/users", strings.NewReader(body))
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusOK,
+			expBody: `{
+ "items": [
+  {
+   "id": "test1-id",
+   "name": "test1",
+   "room_id": "test1-id",
+   "created_at": "1912-06-23T01:02:03Z"
+  },
+  {
+   "id": "test2-id",
+   "name": "test2",
+   "room_id": "test2-id",
+   "created_at": "1912-06-23T01:02:03Z"
+  }
+ ]
+}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			mu := &usermock.Service{}
+			test.mock(mu)
+
+			// Prepare.
+			cfg := apiv1.Config{
+				DiceAppService: &dicemock.Service{},
+				RoomAppService: &roommock.Service{},
+				UserAppService: mu,
+			}
+			h, err := apiv1.New(cfg)
+			require.NoError(err)
+
+			// Execute.
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, test.req())
+
+			// Check.
+			res := w.Result()
+			gotBody, err := ioutil.ReadAll(res.Body)
+			require.NoError(err)
+			assert.Equal(test.expStatusCode, res.StatusCode)
+			assert.Equal(test.expBody, string(gotBody))
+		})
+	}
+}

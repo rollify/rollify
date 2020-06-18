@@ -89,13 +89,7 @@ func (a *apiv1) listDiceRolls() restful.RouteFunction {
 		logger.Debugf("handler called")
 
 		// Map request.
-		entReq := &listDiceRollsRequest{}
-		err := req.ReadEntity(entReq)
-		if err != nil {
-			writeResponseError(logger, resp, http.StatusBadRequest, err)
-			return
-		}
-		mReq, err := mapAPIToModelListDiceRolls(*entReq)
+		mReq, err := mapAPIToModelListDiceRolls(req.Request.URL.Query())
 		if err != nil {
 			writeResponseError(logger, resp, http.StatusBadRequest, err)
 			return
@@ -197,13 +191,7 @@ func (a *apiv1) listUsers() restful.RouteFunction {
 		logger.Debugf("handler called")
 
 		// Map request.
-		entReq := &listUsersRequest{}
-		err := req.ReadEntity(entReq)
-		if err != nil {
-			writeResponseError(logger, resp, http.StatusBadRequest, err)
-			return
-		}
-		mReq, err := mapAPIToModelListUsers(*entReq)
+		mReq, err := mapAPIToModelListUsers(req.Request.URL.Query())
 		if err != nil {
 			writeResponseError(logger, resp, http.StatusBadRequest, err)
 			return

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -305,13 +306,16 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 		"Having a request without room id should fail.": {
 			mock: func(m *dicemock.Service) {},
 			req: func() *http.Request {
-				body := `{"room_id": "", "user_id": "user-id"}`
-				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", strings.NewReader(body))
+				q := url.Values{}
+				q.Add("room-id", "")
+				q.Add("user-id", "user-id")
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", nil)
+				r.URL.RawQuery = q.Encode()
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room_id is required\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room-id is required\"\n}",
 		},
 
 		"Having a request with an error form the app service, should fail.": {
@@ -319,8 +323,11 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 				m.On("ListDiceRolls", mock.Anything, mock.Anything).Once().Return(nil, errors.New("wanted error"))
 			},
 			req: func() *http.Request {
-				body := `{"room_id": "room-id", "user_id": "user-id"}`
-				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", strings.NewReader(body))
+				q := url.Values{}
+				q.Add("room-id", "room-id")
+				q.Add("user-id", "user-id")
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", nil)
+				r.URL.RawQuery = q.Encode()
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -357,8 +364,11 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 				m.On("ListDiceRolls", mock.Anything, expReq).Once().Return(resp, nil)
 			},
 			req: func() *http.Request {
-				body := `{"room_id": "room-id", "user_id": "user-id"}`
-				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", strings.NewReader(body))
+				q := url.Values{}
+				q.Add("room-id", "room-id")
+				q.Add("user-id", "user-id")
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", nil)
+				r.URL.RawQuery = q.Encode()
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -640,13 +650,15 @@ func TestAPIV1ListUsers(t *testing.T) {
 		"Having a request without room id should fail.": {
 			mock: func(m *usermock.Service) {},
 			req: func() *http.Request {
-				body := `{"room_id": ""}`
-				r, _ := http.NewRequest(http.MethodGet, "/api/v1/users", strings.NewReader(body))
+				q := url.Values{}
+				q.Add("room-id", "")
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/users", nil)
+				r.URL.RawQuery = q.Encode()
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room_id is required\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room-id is required\"\n}",
 		},
 
 		"Having a request that fails while listing users, should fail.": {
@@ -654,8 +666,10 @@ func TestAPIV1ListUsers(t *testing.T) {
 				m.On("ListUsers", mock.Anything, mock.Anything).Once().Return(nil, errors.New("wanted error"))
 			},
 			req: func() *http.Request {
-				body := `{"room_id": "room-id"}`
-				r, _ := http.NewRequest(http.MethodGet, "/api/v1/users", strings.NewReader(body))
+				q := url.Values{}
+				q.Add("room-id", "room-id")
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/users", nil)
+				r.URL.RawQuery = q.Encode()
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},
@@ -684,8 +698,10 @@ func TestAPIV1ListUsers(t *testing.T) {
 				m.On("ListUsers", mock.Anything, exp).Once().Return(resp, nil)
 			},
 			req: func() *http.Request {
-				body := `{"room_id": "room-id"}`
-				r, _ := http.NewRequest(http.MethodGet, "/api/v1/users", strings.NewReader(body))
+				q := url.Values{}
+				q.Add("room-id", "room-id")
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/users", nil)
+				r.URL.RawQuery = q.Encode()
 				r.Header.Set("Content-Type", "application/json")
 				return r
 			},

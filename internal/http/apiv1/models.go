@@ -2,6 +2,7 @@ package apiv1
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/rollify/rollify/internal/dice"
@@ -121,11 +122,6 @@ type dieRollResponse struct {
 	Side   uint   `json:"side"`
 }
 
-type listDiceRollsRequest struct {
-	UserID string `json:"user_id"`
-	RoomID string `json:"room_id"`
-}
-
 func mapModelToAPIListDiceRolls(r dice.ListDiceRollsResponse) listDiceRollsResponse {
 	items := make([]diceRollResponse, 0, len(r.DiceRolls))
 	for _, dr := range r.DiceRolls {
@@ -151,14 +147,22 @@ func mapModelToAPIListDiceRolls(r dice.ListDiceRollsResponse) listDiceRollsRespo
 	}
 }
 
-func mapAPIToModelListDiceRolls(r listDiceRollsRequest) (*dice.ListDiceRollsRequest, error) {
-	if r.RoomID == "" {
-		return nil, fmt.Errorf("room_id is required")
+const (
+	listDiceRollsParamUserID = "user-id"
+	listDiceRollsParamRoomID = "room-id"
+)
+
+func mapAPIToModelListDiceRolls(p url.Values) (*dice.ListDiceRollsRequest, error) {
+	roomID := p.Get(listDiceRollsParamRoomID)
+	if roomID == "" {
+		return nil, fmt.Errorf("room-id is required")
 	}
 
+	userID := p.Get(listDiceRollsParamUserID)
+
 	return &dice.ListDiceRollsRequest{
-		UserID: r.UserID,
-		RoomID: r.RoomID,
+		UserID: userID,
+		RoomID: roomID,
 	}, nil
 }
 
@@ -237,10 +241,6 @@ type userResponse struct {
 	CreateAt string `json:"created_at"`
 }
 
-type listUsersRequest struct {
-	RoomID string `json:"room_id"`
-}
-
 func mapModelToAPIListUsers(r user.ListUsersResponse) listUsersResponse {
 	items := make([]userResponse, 0, len(r.Users))
 	for _, u := range r.Users {
@@ -255,12 +255,15 @@ func mapModelToAPIListUsers(r user.ListUsersResponse) listUsersResponse {
 	}
 }
 
-func mapAPIToModelListUsers(r listUsersRequest) (*user.ListUsersRequest, error) {
-	if r.RoomID == "" {
-		return nil, fmt.Errorf("room_id is required")
+const listUsersParamRoomID = "room-id"
+
+func mapAPIToModelListUsers(p url.Values) (*user.ListUsersRequest, error) {
+	roomID := p.Get(listUsersParamRoomID)
+	if roomID == "" {
+		return nil, fmt.Errorf("room-id is required")
 	}
 
 	return &user.ListUsersRequest{
-		RoomID: r.RoomID,
+		RoomID: roomID,
 	}, nil
 }

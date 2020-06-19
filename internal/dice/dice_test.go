@@ -270,7 +270,7 @@ func TestServiceListDiceRolls(t *testing.T) {
 
 		"Having a list dice roll request with an error listing dice rolls, should fail.": {
 			mock: func(diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
-				diceRollRepo.On("ListDiceRolls", mock.Anything, mock.Anything).Once().Return(nil, fmt.Errorf("wanted error"))
+				diceRollRepo.On("ListDiceRolls", mock.Anything, mock.Anything, mock.Anything).Once().Return(nil, fmt.Errorf("wanted error"))
 			},
 			req: func() dice.ListDiceRollsRequest {
 				return dice.ListDiceRollsRequest{
@@ -293,7 +293,7 @@ func TestServiceListDiceRolls(t *testing.T) {
 						{ID: "dr2"},
 					},
 				}
-				diceRollRepo.On("ListDiceRolls", mock.Anything, expOpts).Once().Return(dr, nil)
+				diceRollRepo.On("ListDiceRolls", mock.Anything, mock.Anything, expOpts).Once().Return(dr, nil)
 			},
 			req: func() dice.ListDiceRollsRequest {
 				return dice.ListDiceRollsRequest{

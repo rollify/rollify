@@ -189,8 +189,9 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 
 // ListDiceRollsRequest is the request for ListDiceRolls.
 type ListDiceRollsRequest struct {
-	UserID string
-	RoomID string
+	UserID   string
+	RoomID   string
+	PageOpts model.PaginationOpts
 }
 
 func (r ListDiceRollsRequest) validate() error {
@@ -204,6 +205,7 @@ func (r ListDiceRollsRequest) validate() error {
 // ListDiceRollsResponse is the response  for ListDiceRolls.
 type ListDiceRollsResponse struct {
 	DiceRolls []model.DiceRoll
+	Cursor    model.PaginationCursors
 }
 
 func (s service) ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (*ListDiceRollsResponse, error) {
@@ -212,12 +214,15 @@ func (s service) ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (*Li
 		return nil, fmt.Errorf("%w: %s", internalerrors.ErrNotValid, err)
 	}
 
-	pageOpts := storage.PaginationOpts{
-		Order: storage.PaginationOrderDesc,
-		Size:  100,
+	// Set up pagination defaults.
+	if r.PageOpts.Size <= 0 || r.PageOpts.Size > 100 {
+		r.PageOpts.Size = 100
+	}
+	if r.PageOpts.Order == model.PaginationOrderDefault {
+		r.PageOpts.Order = model.PaginationOrderDesc
 	}
 
-	drs, err := s.diceRollRepository.ListDiceRolls(ctx, pageOpts, storage.ListDiceRollsOpts{
+	drs, err := s.diceRollRepository.ListDiceRolls(ctx, r.PageOpts, storage.ListDiceRollsOpts{
 		RoomID: r.RoomID,
 		UserID: r.UserID,
 	})
@@ -228,5 +233,6 @@ func (s service) ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (*Li
 
 	return &ListDiceRollsResponse{
 		DiceRolls: drs.Items,
+		Cursor:    drs.Cursors,
 	}, nil
 }

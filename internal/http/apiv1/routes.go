@@ -38,6 +38,8 @@ func (a apiv1) registerRoutes(prefix string) {
 		Doc("lists dice rolls").
 		Param(a.apiws.PathParameter(listDiceRollsParamUserID, "identifier of the user")).
 		Param(a.apiws.PathParameter(listDiceRollsParamRoomID, "identifier of the room")).
+		Param(a.apiws.PathParameter(listDiceRollsPaginationCursor, "cursor for next page of dice rolls")).
+		Param(a.apiws.PathParameter(listDiceRollsPaginationOrder, "order of the cursor, 'desc' or 'asc'")).
 		Writes(listDiceRollsResponse{}).
 		Returns(http.StatusOK, "OK", listDiceRollsResponse{}).
 		Returns(http.StatusBadRequest, "", nil))

@@ -105,6 +105,14 @@ func mapAPIToModelcreateDiceRoll(r createDiceRollRequest) (*dice.CreateDiceRollR
 
 type listDiceRollsResponse struct {
 	Items []diceRollResponse `json:"items"`
+	Meta  metadata           `json:"metadata"`
+}
+
+type metadata struct {
+	FirstCursor string `json:"first_cursor"`
+	LastCursor  string `json:"last_cursor"`
+	HasNext     bool   `json:"has_next"`
+	HasPrevious bool   `json:"has_previous"`
 }
 
 type diceRollResponse struct {
@@ -144,13 +152,34 @@ func mapModelToAPIListDiceRolls(r dice.ListDiceRollsResponse) listDiceRollsRespo
 
 	return listDiceRollsResponse{
 		Items: items,
+		Meta: metadata{
+			FirstCursor: r.Cursor.FirstCursor,
+			LastCursor:  r.Cursor.LastCursor,
+			HasNext:     r.Cursor.HasNext,
+			HasPrevious: r.Cursor.HasPrevious,
+		},
 	}
 }
 
 const (
-	listDiceRollsParamUserID = "user-id"
-	listDiceRollsParamRoomID = "room-id"
+	listDiceRollsParamUserID      = "user-id"
+	listDiceRollsParamRoomID      = "room-id"
+	listDiceRollsPaginationCursor = "cursor"
+	listDiceRollsPaginationOrder  = "order"
 )
+
+func mapAPIToModelPaginationOrder(order string) (model.PaginationOrder, error) {
+	switch order {
+	case "":
+		return model.PaginationOrderDefault, nil
+	case "asc":
+		return model.PaginationOrderAsc, nil
+	case "desc":
+		return model.PaginationOrderDesc, nil
+	default:
+		return 0, fmt.Errorf("pagination order '%s' is invalid", order)
+	}
+}
 
 func mapAPIToModelListDiceRolls(p url.Values) (*dice.ListDiceRollsRequest, error) {
 	roomID := p.Get(listDiceRollsParamRoomID)
@@ -159,10 +188,20 @@ func mapAPIToModelListDiceRolls(p url.Values) (*dice.ListDiceRollsRequest, error
 	}
 
 	userID := p.Get(listDiceRollsParamUserID)
+	cursor := p.Get(listDiceRollsPaginationCursor)
+	order := p.Get(listDiceRollsPaginationOrder)
+	mOrder, err := mapAPIToModelPaginationOrder(order)
+	if err != nil {
+		return nil, err
+	}
 
 	return &dice.ListDiceRollsRequest{
 		UserID: userID,
 		RoomID: roomID,
+		PageOpts: model.PaginationOpts{
+			Cursor: cursor,
+			Order:  mOrder,
+		},
 	}, nil
 }
 

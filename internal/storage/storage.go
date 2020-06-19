@@ -6,38 +6,10 @@ import (
 	"github.com/rollify/rollify/internal/model"
 )
 
-// Cursors has the information regarding the listing cursors of a
-// paginated list.
-type Cursors struct {
-	FirstCursor string
-	LastCursor  string
-	HasNext     bool
-	HasPrevious bool
-}
-
-// PaginationOrder is the order used to list.
-type PaginationOrder int
-
-const (
-	// PaginationOrderDefault is the default order used to list pages.
-	PaginationOrderDefault PaginationOrder = iota
-	// PaginationOrderAsc is the ascendant order used to list pages.
-	PaginationOrderAsc
-	// PaginationOrderDesc is the descendant order used to list pages.
-	PaginationOrderDesc
-)
-
-// PaginationOpts are the options used to paginate.
-type PaginationOpts struct {
-	Cursor string
-	Size   uint
-	Order  PaginationOrder
-}
-
 // DiceRollList is a list of dice rolls.
 type DiceRollList struct {
-	Items []model.DiceRoll
-	Cursors
+	Items   []model.DiceRoll
+	Cursors model.PaginationCursors
 }
 
 // ListDiceRollsOpts are the options used by the storage to list dice rolls.
@@ -53,9 +25,9 @@ type DiceRollRepository interface {
 	// If the dice data is missing or not valid it will return a internalerrors.NotValid error kind.
 	// If the dice roll already exists it returns a internalerrors.AlreadyExists error kind.
 	CreateDiceRoll(ctx context.Context, dr model.DiceRoll) error
-	// ListDiceRolls lists dice rolls.
+	// ListDiceRolls lists dice rolls, by default in descendant order (newest first).
 	// If the dice roomID option is empty it returns a internalerrors.NotValid error kind.
-	ListDiceRolls(ctx context.Context, pageOpts PaginationOpts, filterOpts ListDiceRollsOpts) (*DiceRollList, error)
+	ListDiceRolls(ctx context.Context, pageOpts model.PaginationOpts, filterOpts ListDiceRollsOpts) (*DiceRollList, error)
 }
 
 //go:generate mockery -case underscore -output storagemock -outpkg storagemock -name DiceRollRepository

@@ -31,11 +31,11 @@ func (_m *DiceRollRepository) CreateDiceRoll(ctx context.Context, dr model.DiceR
 }
 
 // ListDiceRolls provides a mock function with given fields: ctx, pageOpts, filterOpts
-func (_m *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts storage.PaginationOpts, filterOpts storage.ListDiceRollsOpts) (*storage.DiceRollList, error) {
+func (_m *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.PaginationOpts, filterOpts storage.ListDiceRollsOpts) (*storage.DiceRollList, error) {
 	ret := _m.Called(ctx, pageOpts, filterOpts)
 
 	var r0 *storage.DiceRollList
-	if rf, ok := ret.Get(0).(func(context.Context, storage.PaginationOpts, storage.ListDiceRollsOpts) *storage.DiceRollList); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, model.PaginationOpts, storage.ListDiceRollsOpts) *storage.DiceRollList); ok {
 		r0 = rf(ctx, pageOpts, filterOpts)
 	} else {
 		if ret.Get(0) != nil {
@@ -44,7 +44,7 @@ func (_m *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts storag
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, storage.PaginationOpts, storage.ListDiceRollsOpts) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, model.PaginationOpts, storage.ListDiceRollsOpts) error); ok {
 		r1 = rf(ctx, pageOpts, filterOpts)
 	} else {
 		r1 = ret.Error(1)

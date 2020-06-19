@@ -331,7 +331,7 @@ func TestServiceListDiceRolls(t *testing.T) {
 			},
 		},
 
-		"Hving custom pagination should use it.": {
+		"Having custom pagination should use it.": {
 			mock: func(diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
 				expPageOpts := model.PaginationOpts{
 					Cursor: "threepwood",
@@ -354,6 +354,41 @@ func TestServiceListDiceRolls(t *testing.T) {
 			},
 			expResp: func() *dice.ListDiceRollsResponse {
 				return &dice.ListDiceRollsResponse{}
+			},
+		},
+
+		"Having a pagination return from the repository, should be returned.": {
+			mock: func(diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+				dr := &storage.DiceRollList{
+					Cursors: model.PaginationCursors{
+						FirstCursor: "first",
+						LastCursor:  "second",
+						HasNext:     true,
+						HasPrevious: true,
+					},
+				}
+				diceRollRepo.On("ListDiceRolls", mock.Anything, mock.Anything, mock.Anything).Once().Return(dr, nil)
+			},
+			req: func() dice.ListDiceRollsRequest {
+				return dice.ListDiceRollsRequest{
+					RoomID: "room-id",
+					UserID: "user-id",
+					PageOpts: model.PaginationOpts{
+						Cursor: "threepwood",
+						Order:  model.PaginationOrderAsc,
+						Size:   93,
+					},
+				}
+			},
+			expResp: func() *dice.ListDiceRollsResponse {
+				return &dice.ListDiceRollsResponse{
+					Cursors: model.PaginationCursors{
+						FirstCursor: "first",
+						LastCursor:  "second",
+						HasNext:     true,
+						HasPrevious: true,
+					},
+				}
 			},
 		},
 	}

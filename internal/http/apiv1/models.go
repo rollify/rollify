@@ -153,10 +153,10 @@ func mapModelToAPIListDiceRolls(r dice.ListDiceRollsResponse) listDiceRollsRespo
 	return listDiceRollsResponse{
 		Items: items,
 		Meta: metadata{
-			FirstCursor: r.Cursor.FirstCursor,
-			LastCursor:  r.Cursor.LastCursor,
-			HasNext:     r.Cursor.HasNext,
-			HasPrevious: r.Cursor.HasPrevious,
+			FirstCursor: r.Cursors.FirstCursor,
+			LastCursor:  r.Cursors.LastCursor,
+			HasNext:     r.Cursors.HasNext,
+			HasPrevious: r.Cursors.HasPrevious,
 		},
 	}
 }

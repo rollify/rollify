@@ -362,7 +362,7 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 					},
 				}
 				resp := &dice.ListDiceRollsResponse{
-					Cursor: model.PaginationCursors{
+					Cursors: model.PaginationCursors{
 						FirstCursor: "first",
 						LastCursor:  "last",
 						HasNext:     true,

@@ -205,7 +205,7 @@ func (r ListDiceRollsRequest) validate() error {
 // ListDiceRollsResponse is the response  for ListDiceRolls.
 type ListDiceRollsResponse struct {
 	DiceRolls []model.DiceRoll
-	Cursor    model.PaginationCursors
+	Cursors   model.PaginationCursors
 }
 
 func (s service) ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (*ListDiceRollsResponse, error) {
@@ -233,6 +233,6 @@ func (s service) ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (*Li
 
 	return &ListDiceRollsResponse{
 		DiceRolls: drs.Items,
-		Cursor:    drs.Cursors,
+		Cursors:   drs.Cursors,
 	}, nil
 }

@@ -170,13 +170,15 @@ func TestDiceRollRepositoryCreateDiceRollSerial(t *testing.T) {
 
 func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 	tests := map[string]struct {
-		opts         storage.ListDiceRollsOpts
+		pageOpts     storage.PaginationOpts
+		filterOpts   storage.ListDiceRollsOpts
 		repo         func() *memory.DiceRollRepository
 		expDiceRolls *storage.DiceRollList
 		expErr       error
 	}{
 		"Listing dice rolls without room should fail.": {
-			opts: storage.ListDiceRollsOpts{
+			pageOpts: storage.PaginationOpts{Size: 9999999999},
+			filterOpts: storage.ListDiceRollsOpts{
 				RoomID: "",
 				UserID: "",
 			},
@@ -186,45 +188,247 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 			expErr: internalerrors.ErrNotValid,
 		},
 
-		"Listing all users dice rolls should return them.": {
-			opts: storage.ListDiceRollsOpts{
+		"Listing all users dice rolls in a room should return all of the room dice rolls.": {
+			pageOpts: storage.PaginationOpts{Size: 9999999999},
+			filterOpts: storage.ListDiceRollsOpts{
 				RoomID: "room-1",
 				UserID: "",
 			},
 			repo: func() *memory.DiceRollRepository {
 				r := memory.NewDiceRollRepository()
 				r.DiceRollsByRoom = map[string][]*model.DiceRoll{
-					"room-0": {{ID: "test00"}},
-					"room-1": {{ID: "test10"}, {ID: "test11"}},
-					"room-2": {{ID: "test20"}},
+					"room-0": {{ID: "test00", Serial: 0}},
+					"room-1": {{ID: "test10", Serial: 1}, {ID: "test11", Serial: 2}},
+					"room-2": {{ID: "test20", Serial: 3}},
 				}
 				return r
 			},
 			expDiceRolls: &storage.DiceRollList{
 				Items: []model.DiceRoll{
-					{ID: "test10"},
-					{ID: "test11"},
+					{ID: "test11", Serial: 2},
+					{ID: "test10", Serial: 1},
+				},
+				Cursors: storage.Cursors{
+					FirstCursor: "eyJzZXJpYWwiOjJ9",
+					LastCursor:  "eyJzZXJpYWwiOjF9",
+					HasPrevious: false,
+					HasNext:     false,
 				},
 			},
 		},
 
-		"Listing single user dice rolls in a room should return them.": {
-			opts: storage.ListDiceRollsOpts{
+		"Listing single user dice rolls in a room should return only the onest of the user in the room.": {
+			pageOpts: storage.PaginationOpts{Size: 9999999999},
+			filterOpts: storage.ListDiceRollsOpts{
 				RoomID: "room-2",
 				UserID: "user-1",
 			},
 			repo: func() *memory.DiceRollRepository {
 				r := memory.NewDiceRollRepository()
 				r.DiceRollsByRoomAndUser = map[string][]*model.DiceRoll{
-					"room-0user-1": {{ID: "test00"}},
-					"room-1user-2": {{ID: "test10"}, {ID: "test11"}},
-					"room-2user-1": {{ID: "test20"}},
+					"room-0user-1": {{ID: "test00", Serial: 0}},
+					"room-1user-2": {{ID: "test10", Serial: 1}, {ID: "test11", Serial: 2}},
+					"room-2user-1": {{ID: "test20", Serial: 3}},
 				}
 				return r
 			},
 			expDiceRolls: &storage.DiceRollList{
 				Items: []model.DiceRoll{
-					{ID: "test20"},
+					{ID: "test20", Serial: 3},
+				},
+				Cursors: storage.Cursors{
+					FirstCursor: "eyJzZXJpYWwiOjN9",
+					LastCursor:  "eyJzZXJpYWwiOjN9",
+					HasPrevious: false,
+					HasNext:     false,
+				},
+			},
+		},
+
+		"Listing dice rolls with a cursor and limit should return them by default in desc order.": {
+			pageOpts: storage.PaginationOpts{
+				Cursor: "eyJzZXJpYWwiOjN9",
+				Size:   2,
+			},
+			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
+			repo: func() *memory.DiceRollRepository {
+				r := memory.NewDiceRollRepository()
+				r.DiceRollsByRoom = map[string][]*model.DiceRoll{
+					"room-0": {
+						{ID: "test00", Serial: 0},
+						{ID: "test01", Serial: 1},
+						{ID: "test02", Serial: 2},
+						{ID: "test03", Serial: 3},
+						{ID: "test04", Serial: 4},
+						{ID: "test05", Serial: 5},
+						{ID: "test06", Serial: 6},
+					},
+				}
+				return r
+			},
+			expDiceRolls: &storage.DiceRollList{
+				Items: []model.DiceRoll{
+					{ID: "test02", Serial: 2},
+					{ID: "test01", Serial: 1},
+				},
+				Cursors: storage.Cursors{
+					FirstCursor: "eyJzZXJpYWwiOjJ9",
+					LastCursor:  "eyJzZXJpYWwiOjF9",
+					HasPrevious: true,
+					HasNext:     true,
+				},
+			},
+		},
+
+		"Listing dice rolls in asc order, should return them in asc order.": {
+			pageOpts: storage.PaginationOpts{
+				Cursor: "eyJzZXJpYWwiOjN9",
+				Size:   2,
+				Order:  storage.PaginationOrderAsc,
+			},
+			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
+			repo: func() *memory.DiceRollRepository {
+				r := memory.NewDiceRollRepository()
+				r.DiceRollsByRoom = map[string][]*model.DiceRoll{
+					"room-0": {
+						{ID: "test00", Serial: 0},
+						{ID: "test01", Serial: 1},
+						{ID: "test02", Serial: 2},
+						{ID: "test03", Serial: 3},
+						{ID: "test04", Serial: 4},
+						{ID: "test05", Serial: 5},
+						{ID: "test06", Serial: 6},
+					},
+				}
+				return r
+			},
+			expDiceRolls: &storage.DiceRollList{
+				Items: []model.DiceRoll{
+					{ID: "test04", Serial: 4},
+					{ID: "test05", Serial: 5},
+				},
+				Cursors: storage.Cursors{
+					FirstCursor: "eyJzZXJpYWwiOjR9",
+					LastCursor:  "eyJzZXJpYWwiOjV9",
+					HasPrevious: true,
+					HasNext:     true,
+				},
+			},
+		},
+
+		"Listing dice rolls that needs to return all of them, should return that doesn't have more.": {
+			pageOpts: storage.PaginationOpts{
+				Cursor: "eyJzZXJpYWwiOjN9",
+				Size:   9999999999,
+				Order:  storage.PaginationOrderAsc,
+			},
+			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
+			repo: func() *memory.DiceRollRepository {
+				r := memory.NewDiceRollRepository()
+				r.DiceRollsByRoom = map[string][]*model.DiceRoll{
+					"room-0": {
+						{ID: "test00", Serial: 0},
+						{ID: "test01", Serial: 1},
+						{ID: "test02", Serial: 2},
+						{ID: "test03", Serial: 3},
+						{ID: "test04", Serial: 4},
+						{ID: "test05", Serial: 5},
+						{ID: "test06", Serial: 6},
+					},
+				}
+				return r
+			},
+			expDiceRolls: &storage.DiceRollList{
+				Items: []model.DiceRoll{
+					{ID: "test04", Serial: 4},
+					{ID: "test05", Serial: 5},
+					{ID: "test06", Serial: 6},
+				},
+				Cursors: storage.Cursors{
+					FirstCursor: "eyJzZXJpYWwiOjR9",
+					LastCursor:  "eyJzZXJpYWwiOjZ9",
+					HasPrevious: true,
+					HasNext:     false,
+				},
+			},
+		},
+
+		"Listing all dice roolls without cursors in asc order.": {
+			pageOpts: storage.PaginationOpts{
+				Size:  100,
+				Order: storage.PaginationOrderAsc,
+			},
+			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
+			repo: func() *memory.DiceRollRepository {
+				r := memory.NewDiceRollRepository()
+				r.DiceRollsByRoom = map[string][]*model.DiceRoll{
+					"room-0": {
+						{ID: "test00", Serial: 0},
+						{ID: "test01", Serial: 1},
+						{ID: "test02", Serial: 2},
+						{ID: "test03", Serial: 3},
+						{ID: "test04", Serial: 4},
+						{ID: "test05", Serial: 5},
+						{ID: "test06", Serial: 6},
+					},
+				}
+				return r
+			},
+			expDiceRolls: &storage.DiceRollList{
+				Items: []model.DiceRoll{
+					{ID: "test00", Serial: 0},
+					{ID: "test01", Serial: 1},
+					{ID: "test02", Serial: 2},
+					{ID: "test03", Serial: 3},
+					{ID: "test04", Serial: 4},
+					{ID: "test05", Serial: 5},
+					{ID: "test06", Serial: 6},
+				},
+				Cursors: storage.Cursors{
+					FirstCursor: "eyJzZXJpYWwiOjB9",
+					LastCursor:  "eyJzZXJpYWwiOjZ9",
+					HasPrevious: false,
+					HasNext:     false,
+				},
+			},
+		},
+
+		"Listing all dice roolls without cursors in desc order.": {
+			pageOpts: storage.PaginationOpts{
+				Size:  100,
+				Order: storage.PaginationOrderDesc,
+			},
+			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
+			repo: func() *memory.DiceRollRepository {
+				r := memory.NewDiceRollRepository()
+				r.DiceRollsByRoom = map[string][]*model.DiceRoll{
+					"room-0": {
+						{ID: "test00", Serial: 0},
+						{ID: "test01", Serial: 1},
+						{ID: "test02", Serial: 2},
+						{ID: "test03", Serial: 3},
+						{ID: "test04", Serial: 4},
+						{ID: "test05", Serial: 5},
+						{ID: "test06", Serial: 6},
+					},
+				}
+				return r
+			},
+			expDiceRolls: &storage.DiceRollList{
+				Items: []model.DiceRoll{
+					{ID: "test06", Serial: 6},
+					{ID: "test05", Serial: 5},
+					{ID: "test04", Serial: 4},
+					{ID: "test03", Serial: 3},
+					{ID: "test02", Serial: 2},
+					{ID: "test01", Serial: 1},
+					{ID: "test00", Serial: 0},
+				},
+				Cursors: storage.Cursors{
+					FirstCursor: "eyJzZXJpYWwiOjZ9",
+					LastCursor:  "eyJzZXJpYWwiOjB9",
+					HasPrevious: false,
+					HasNext:     false,
 				},
 			},
 		},
@@ -235,7 +439,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 			assert := assert.New(t)
 
 			r := test.repo()
-			gotDiceRolls, err := r.ListDiceRolls(context.TODO(), test.opts)
+			gotDiceRolls, err := r.ListDiceRolls(context.TODO(), test.pageOpts, test.filterOpts)
 
 			if test.expErr != nil && assert.Error(err) {
 				assert.True(errors.Is(err, test.expErr))

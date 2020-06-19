@@ -212,7 +212,12 @@ func (s service) ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (*Li
 		return nil, fmt.Errorf("%w: %s", internalerrors.ErrNotValid, err)
 	}
 
-	drs, err := s.diceRollRepository.ListDiceRolls(ctx, storage.ListDiceRollsOpts{
+	pageOpts := storage.PaginationOpts{
+		Order: storage.PaginationOrderDesc,
+		Size:  100,
+	}
+
+	drs, err := s.diceRollRepository.ListDiceRolls(ctx, pageOpts, storage.ListDiceRollsOpts{
 		RoomID: r.RoomID,
 		UserID: r.UserID,
 	})

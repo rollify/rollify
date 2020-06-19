@@ -318,6 +318,22 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room-id is required\"\n}",
 		},
 
+		"Having a wrong order query should fail.": {
+			mock: func(m *dicemock.Service) {},
+			req: func() *http.Request {
+				q := url.Values{}
+				q.Add("room-id", "room-id")
+				q.Add("user-id", "user-id")
+				q.Add("order", "wrong")
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", nil)
+				r.URL.RawQuery = q.Encode()
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusBadRequest,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"pagination order 'wrong' is invalid\"\n}",
+		},
+
 		"Having a request with an error form the app service, should fail.": {
 			mock: func(m *dicemock.Service) {
 				m.On("ListDiceRolls", mock.Anything, mock.Anything).Once().Return(nil, errors.New("wanted error"))
@@ -337,8 +353,21 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 
 		"Having a request should return dice rolls.": {
 			mock: func(m *dicemock.Service) {
-				expReq := dice.ListDiceRollsRequest{RoomID: "room-id", UserID: "user-id"}
+				expReq := dice.ListDiceRollsRequest{
+					RoomID: "room-id",
+					UserID: "user-id",
+					PageOpts: model.PaginationOpts{
+						Cursor: "threepwood",
+						Order:  model.PaginationOrderAsc,
+					},
+				}
 				resp := &dice.ListDiceRollsResponse{
+					Cursors: model.PaginationCursors{
+						FirstCursor: "first",
+						LastCursor:  "last",
+						HasNext:     true,
+						HasPrevious: true,
+					},
 					DiceRolls: []model.DiceRoll{
 						{
 							ID:        "dr1",
@@ -367,6 +396,9 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 				q := url.Values{}
 				q.Add("room-id", "room-id")
 				q.Add("user-id", "user-id")
+				q.Add("cursor", "threepwood")
+				q.Add("order", "asc")
+
 				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/rolls", nil)
 				r.URL.RawQuery = q.Encode()
 				r.Header.Set("Content-Type", "application/json")
@@ -406,7 +438,13 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
     }
    ]
   }
- ]
+ ],
+ "metadata": {
+  "first_cursor": "first",
+  "last_cursor": "last",
+  "has_next": true,
+  "has_previous": true
+ }
 }`,
 		},
 	}

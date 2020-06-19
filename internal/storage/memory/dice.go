@@ -73,7 +73,7 @@ type cursor struct {
 }
 
 // ListDiceRolls satisfies storage.DiceRollRepository interface.
-func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts storage.PaginationOpts, filterOpts storage.ListDiceRollsOpts) (*storage.DiceRollList, error) {
+func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.PaginationOpts, filterOpts storage.ListDiceRollsOpts) (*storage.DiceRollList, error) {
 	if filterOpts.RoomID == "" {
 		return nil, internalerrors.ErrNotValid
 	}
@@ -107,7 +107,7 @@ func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts storage
 	// Sort and get starting point based on cursor.
 	// By default uses desc order (newest first).
 	startIndex := 0
-	if pageOpts.Order == storage.PaginationOrderAsc {
+	if pageOpts.Order == model.PaginationOrderAsc {
 		sort.SliceStable(items, func(i, j int) bool { return items[i].Serial < items[j].Serial })
 		// Search for the starting point of the list based on the cursor.
 		// (Not optimized, don't need).
@@ -163,7 +163,7 @@ func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts storage
 
 	return &storage.DiceRollList{
 		Items: resultItems,
-		Cursors: storage.Cursors{
+		Cursors: model.PaginationCursors{
 			FirstCursor: fistCursor,
 			LastCursor:  lastCursor,
 			HasPrevious: startIndex != 0, // If we are not the first means that we have previous.

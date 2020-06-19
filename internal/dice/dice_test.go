@@ -310,6 +310,87 @@ func TestServiceListDiceRolls(t *testing.T) {
 				}
 			},
 		},
+
+		"Not having pagination should set safe defaults.": {
+			mock: func(diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+				expPageOpts := model.PaginationOpts{
+					Order: model.PaginationOrderDesc,
+					Size:  100,
+				}
+				dr := &storage.DiceRollList{}
+				diceRollRepo.On("ListDiceRolls", mock.Anything, expPageOpts, mock.Anything).Once().Return(dr, nil)
+			},
+			req: func() dice.ListDiceRollsRequest {
+				return dice.ListDiceRollsRequest{
+					RoomID: "room-id",
+					UserID: "user-id",
+				}
+			},
+			expResp: func() *dice.ListDiceRollsResponse {
+				return &dice.ListDiceRollsResponse{}
+			},
+		},
+
+		"Having custom pagination should use it.": {
+			mock: func(diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+				expPageOpts := model.PaginationOpts{
+					Cursor: "threepwood",
+					Order:  model.PaginationOrderAsc,
+					Size:   93,
+				}
+				dr := &storage.DiceRollList{}
+				diceRollRepo.On("ListDiceRolls", mock.Anything, expPageOpts, mock.Anything).Once().Return(dr, nil)
+			},
+			req: func() dice.ListDiceRollsRequest {
+				return dice.ListDiceRollsRequest{
+					RoomID: "room-id",
+					UserID: "user-id",
+					PageOpts: model.PaginationOpts{
+						Cursor: "threepwood",
+						Order:  model.PaginationOrderAsc,
+						Size:   93,
+					},
+				}
+			},
+			expResp: func() *dice.ListDiceRollsResponse {
+				return &dice.ListDiceRollsResponse{}
+			},
+		},
+
+		"Having a pagination return from the repository, should be returned.": {
+			mock: func(diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository) {
+				dr := &storage.DiceRollList{
+					Cursors: model.PaginationCursors{
+						FirstCursor: "first",
+						LastCursor:  "second",
+						HasNext:     true,
+						HasPrevious: true,
+					},
+				}
+				diceRollRepo.On("ListDiceRolls", mock.Anything, mock.Anything, mock.Anything).Once().Return(dr, nil)
+			},
+			req: func() dice.ListDiceRollsRequest {
+				return dice.ListDiceRollsRequest{
+					RoomID: "room-id",
+					UserID: "user-id",
+					PageOpts: model.PaginationOpts{
+						Cursor: "threepwood",
+						Order:  model.PaginationOrderAsc,
+						Size:   93,
+					},
+				}
+			},
+			expResp: func() *dice.ListDiceRollsResponse {
+				return &dice.ListDiceRollsResponse{
+					Cursors: model.PaginationCursors{
+						FirstCursor: "first",
+						LastCursor:  "second",
+						HasNext:     true,
+						HasPrevious: true,
+					},
+				}
+			},
+		},
 	}
 
 	for name, test := range tests {

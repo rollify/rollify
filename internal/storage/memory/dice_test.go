@@ -170,14 +170,14 @@ func TestDiceRollRepositoryCreateDiceRollSerial(t *testing.T) {
 
 func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 	tests := map[string]struct {
-		pageOpts     storage.PaginationOpts
+		pageOpts     model.PaginationOpts
 		filterOpts   storage.ListDiceRollsOpts
 		repo         func() *memory.DiceRollRepository
 		expDiceRolls *storage.DiceRollList
 		expErr       error
 	}{
 		"Listing dice rolls without room should fail.": {
-			pageOpts: storage.PaginationOpts{Size: 9999999999},
+			pageOpts: model.PaginationOpts{Size: 9999999999},
 			filterOpts: storage.ListDiceRollsOpts{
 				RoomID: "",
 				UserID: "",
@@ -189,7 +189,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 		},
 
 		"Listing all users dice rolls in a room should return all of the room dice rolls.": {
-			pageOpts: storage.PaginationOpts{Size: 9999999999},
+			pageOpts: model.PaginationOpts{Size: 9999999999},
 			filterOpts: storage.ListDiceRollsOpts{
 				RoomID: "room-1",
 				UserID: "",
@@ -208,7 +208,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 					{ID: "test11", Serial: 2},
 					{ID: "test10", Serial: 1},
 				},
-				Cursors: storage.Cursors{
+				Cursors: model.PaginationCursors{
 					FirstCursor: "eyJzZXJpYWwiOjJ9",
 					LastCursor:  "eyJzZXJpYWwiOjF9",
 					HasPrevious: false,
@@ -218,7 +218,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 		},
 
 		"Listing single user dice rolls in a room should return only the onest of the user in the room.": {
-			pageOpts: storage.PaginationOpts{Size: 9999999999},
+			pageOpts: model.PaginationOpts{Size: 9999999999},
 			filterOpts: storage.ListDiceRollsOpts{
 				RoomID: "room-2",
 				UserID: "user-1",
@@ -236,7 +236,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 				Items: []model.DiceRoll{
 					{ID: "test20", Serial: 3},
 				},
-				Cursors: storage.Cursors{
+				Cursors: model.PaginationCursors{
 					FirstCursor: "eyJzZXJpYWwiOjN9",
 					LastCursor:  "eyJzZXJpYWwiOjN9",
 					HasPrevious: false,
@@ -246,7 +246,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 		},
 
 		"Listing dice rolls with a cursor and limit should return them by default in desc order.": {
-			pageOpts: storage.PaginationOpts{
+			pageOpts: model.PaginationOpts{
 				Cursor: "eyJzZXJpYWwiOjN9",
 				Size:   2,
 			},
@@ -271,7 +271,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 					{ID: "test02", Serial: 2},
 					{ID: "test01", Serial: 1},
 				},
-				Cursors: storage.Cursors{
+				Cursors: model.PaginationCursors{
 					FirstCursor: "eyJzZXJpYWwiOjJ9",
 					LastCursor:  "eyJzZXJpYWwiOjF9",
 					HasPrevious: true,
@@ -281,10 +281,10 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 		},
 
 		"Listing dice rolls in asc order, should return them in asc order.": {
-			pageOpts: storage.PaginationOpts{
+			pageOpts: model.PaginationOpts{
 				Cursor: "eyJzZXJpYWwiOjN9",
 				Size:   2,
-				Order:  storage.PaginationOrderAsc,
+				Order:  model.PaginationOrderAsc,
 			},
 			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
 			repo: func() *memory.DiceRollRepository {
@@ -307,7 +307,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 					{ID: "test04", Serial: 4},
 					{ID: "test05", Serial: 5},
 				},
-				Cursors: storage.Cursors{
+				Cursors: model.PaginationCursors{
 					FirstCursor: "eyJzZXJpYWwiOjR9",
 					LastCursor:  "eyJzZXJpYWwiOjV9",
 					HasPrevious: true,
@@ -317,10 +317,10 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 		},
 
 		"Listing dice rolls that needs to return all of them, should return that doesn't have more.": {
-			pageOpts: storage.PaginationOpts{
+			pageOpts: model.PaginationOpts{
 				Cursor: "eyJzZXJpYWwiOjN9",
 				Size:   9999999999,
-				Order:  storage.PaginationOrderAsc,
+				Order:  model.PaginationOrderAsc,
 			},
 			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
 			repo: func() *memory.DiceRollRepository {
@@ -344,7 +344,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 					{ID: "test05", Serial: 5},
 					{ID: "test06", Serial: 6},
 				},
-				Cursors: storage.Cursors{
+				Cursors: model.PaginationCursors{
 					FirstCursor: "eyJzZXJpYWwiOjR9",
 					LastCursor:  "eyJzZXJpYWwiOjZ9",
 					HasPrevious: true,
@@ -354,9 +354,9 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 		},
 
 		"Listing all dice roolls without cursors in asc order.": {
-			pageOpts: storage.PaginationOpts{
+			pageOpts: model.PaginationOpts{
 				Size:  100,
-				Order: storage.PaginationOrderAsc,
+				Order: model.PaginationOrderAsc,
 			},
 			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
 			repo: func() *memory.DiceRollRepository {
@@ -384,7 +384,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 					{ID: "test05", Serial: 5},
 					{ID: "test06", Serial: 6},
 				},
-				Cursors: storage.Cursors{
+				Cursors: model.PaginationCursors{
 					FirstCursor: "eyJzZXJpYWwiOjB9",
 					LastCursor:  "eyJzZXJpYWwiOjZ9",
 					HasPrevious: false,
@@ -394,9 +394,9 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 		},
 
 		"Listing all dice roolls without cursors in desc order.": {
-			pageOpts: storage.PaginationOpts{
+			pageOpts: model.PaginationOpts{
 				Size:  100,
-				Order: storage.PaginationOrderDesc,
+				Order: model.PaginationOrderDesc,
 			},
 			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
 			repo: func() *memory.DiceRollRepository {
@@ -424,7 +424,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 					{ID: "test01", Serial: 1},
 					{ID: "test00", Serial: 0},
 				},
-				Cursors: storage.Cursors{
+				Cursors: model.PaginationCursors{
 					FirstCursor: "eyJzZXJpYWwiOjZ9",
 					LastCursor:  "eyJzZXJpYWwiOjB9",
 					HasPrevious: false,

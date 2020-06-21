@@ -80,7 +80,17 @@ func New(cfg Config) (http.Handler, error) {
 		Produces(restful.MIME_JSON)
 	a.restContainer.Add(a.apiws)
 
+	// Register routes.
 	a.registerRoutes(cfg.ServePefix)
+
+	// Enable cors.
+	cors := restful.CrossOriginResourceSharing{
+		AllowedHeaders: []string{"Content-Type", "Accept"},
+		AllowedMethods: []string{"GET", "POST"},
+		CookiesAllowed: false,
+		Container:      a.restContainer}
+	a.restContainer.Filter(cors.Filter)
+	a.restContainer.Filter(a.restContainer.OPTIONSFilter)
 
 	return a, nil
 }

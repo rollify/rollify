@@ -82,11 +82,7 @@ func (r *UserRepository) ListRoomUsers(ctx context.Context, roomID string) (*sto
 // UserExists storage.UserRepository interface.
 func (r *UserRepository) UserExists(ctx context.Context, userID string) (bool, error) {
 	_, ok := r.UsersByID[userID]
-	if ok {
-		return true, nil
-	}
-
-	return false, nil
+	return ok, nil
 }
 
 // UserExistsByNameInsensitive storage.UserRepository interface.

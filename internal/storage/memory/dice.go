@@ -107,6 +107,7 @@ func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.P
 	// Sort and get starting point based on cursor.
 	// By default uses desc order (newest first).
 	startIndex := 0
+	found := false
 	if pageOpts.Order == model.PaginationOrderAsc {
 		sort.SliceStable(items, func(i, j int) bool { return items[i].Serial < items[j].Serial })
 		// Search for the starting point of the list based on the cursor.
@@ -114,6 +115,7 @@ func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.P
 		for i, dr := range items {
 			if int(dr.Serial) > userCursor.Serial {
 				startIndex = i
+				found = true
 				break
 			}
 		}
@@ -123,9 +125,15 @@ func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.P
 		for i, dr := range items {
 			if int(dr.Serial) < userCursor.Serial {
 				startIndex = i
+				found = true
 				break
 			}
 		}
+	}
+
+	// If we have cursor and we didn't found, we are at the end of the list.
+	if pageOpts.Cursor != "" && !found {
+		startIndex = len(items)
 	}
 
 	// Filter the list from the starting point that we got with the cursor and

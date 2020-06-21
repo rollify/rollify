@@ -176,6 +176,7 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 		expDiceRolls *storage.DiceRollList
 		expErr       error
 	}{
+
 		"Listing dice rolls without room should fail.": {
 			pageOpts: model.PaginationOpts{Size: 9999999999},
 			filterOpts: storage.ListDiceRollsOpts{
@@ -428,6 +429,64 @@ func TestDiceRollRepositoryListDiceRoll(t *testing.T) {
 					FirstCursor: "eyJzZXJpYWwiOjZ9",
 					LastCursor:  "eyJzZXJpYWwiOjB9",
 					HasPrevious: false,
+					HasNext:     false,
+				},
+			},
+		},
+
+		"Listing dice rolls when there are not left should return there are no more dice rolls (asc).": {
+			pageOpts: model.PaginationOpts{
+				Cursor: "eyJzZXJpYWwiOjJ9",
+				Size:   9999999999,
+				Order:  model.PaginationOrderAsc,
+			},
+			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
+			repo: func() *memory.DiceRollRepository {
+				r := memory.NewDiceRollRepository()
+				r.DiceRollsByRoom = map[string][]*model.DiceRoll{
+					"room-0": {
+						{ID: "test00", Serial: 0},
+						{ID: "test01", Serial: 1},
+						{ID: "test02", Serial: 2},
+					},
+				}
+				return r
+			},
+			expDiceRolls: &storage.DiceRollList{
+				Items: []model.DiceRoll{},
+				Cursors: model.PaginationCursors{
+					FirstCursor: "",
+					LastCursor:  "",
+					HasPrevious: true,
+					HasNext:     false,
+				},
+			},
+		},
+
+		"Listing dice rolls when there are not left should return there are no more dice rolls (desc).": {
+			pageOpts: model.PaginationOpts{
+				Cursor: "eyJzZXJpYWwiOjB9",
+				Size:   9999999999,
+				Order:  model.PaginationOrderDesc,
+			},
+			filterOpts: storage.ListDiceRollsOpts{RoomID: "room-0"},
+			repo: func() *memory.DiceRollRepository {
+				r := memory.NewDiceRollRepository()
+				r.DiceRollsByRoom = map[string][]*model.DiceRoll{
+					"room-0": {
+						{ID: "test00", Serial: 0},
+						{ID: "test01", Serial: 1},
+						{ID: "test02", Serial: 2},
+					},
+				}
+				return r
+			},
+			expDiceRolls: &storage.DiceRollList{
+				Items: []model.DiceRoll{},
+				Cursors: model.PaginationCursors{
+					FirstCursor: "",
+					LastCursor:  "",
+					HasPrevious: true,
 					HasNext:     false,
 				},
 			},

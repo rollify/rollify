@@ -29,6 +29,7 @@ type Service interface {
 type ServiceConfig struct {
 	DiceRollRepository storage.DiceRollRepository
 	RoomRepository     storage.RoomRepository
+	UserRepository     storage.UserRepository
 	Roller             Roller
 	Logger             log.Logger
 	IDGenerator        func() string
@@ -42,6 +43,10 @@ func (c *ServiceConfig) defaults() error {
 
 	if c.RoomRepository == nil {
 		return fmt.Errorf("storage.RoomRepository is required")
+	}
+
+	if c.UserRepository == nil {
+		return fmt.Errorf("storage.UserRepository is required")
 	}
 
 	if c.Roller == nil {
@@ -67,6 +72,7 @@ func (c *ServiceConfig) defaults() error {
 type service struct {
 	diceRollRepository storage.DiceRollRepository
 	roomRepository     storage.RoomRepository
+	userRepository     storage.UserRepository
 	roller             Roller
 	logger             log.Logger
 	idGen              func() string
@@ -83,6 +89,7 @@ func NewService(cfg ServiceConfig) (Service, error) {
 	return service{
 		diceRollRepository: cfg.DiceRollRepository,
 		roomRepository:     cfg.RoomRepository,
+		userRepository:     cfg.UserRepository,
 		roller:             cfg.Roller,
 		logger:             cfg.Logger,
 		idGen:              cfg.IDGenerator,
@@ -149,6 +156,15 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 	}
 	if !roomExists {
 		return nil, fmt.Errorf("room does not exists: %w", internalerrors.ErrNotValid)
+	}
+
+	// Check the user exists.
+	userExist, err := s.userRepository.UserExists(ctx, r.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("could not check if user exists: %w", err)
+	}
+	if !userExist {
+		return nil, fmt.Errorf("user does not exists: %w", internalerrors.ErrNotValid)
 	}
 
 	// Create a dice roll.

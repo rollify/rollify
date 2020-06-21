@@ -72,6 +72,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	diceAppService, err := dice.NewService(dice.ServiceConfig{
 		DiceRollRepository: diceRollRepo,
 		RoomRepository:     roomRepo,
+		UserRepository:     userRepo,
 		Roller:             dice.NewRandomRoller(),
 		Logger:             logger,
 	})

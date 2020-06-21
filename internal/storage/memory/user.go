@@ -17,6 +17,8 @@ import (
 type UserRepository struct {
 	// UsersByRoom is where the users data is stored by room. Not thread safe.
 	UsersByRoom map[string]map[string]*model.User
+	// UsersByID is where the users data is stored by id. Not thread safe.
+	UsersByID map[string]*model.User
 
 	mu sync.Mutex
 }
@@ -25,6 +27,7 @@ type UserRepository struct {
 func NewUserRepository() *UserRepository {
 	return &UserRepository{
 		UsersByRoom: map[string]map[string]*model.User{},
+		UsersByID:   map[string]*model.User{},
 	}
 }
 
@@ -53,6 +56,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, u model.User) error {
 	}
 
 	r.UsersByRoom[u.RoomID][u.ID] = &u
+	r.UsersByID[u.ID] = &u
 
 	return nil
 }
@@ -73,6 +77,12 @@ func (r *UserRepository) ListRoomUsers(ctx context.Context, roomID string) (*sto
 	return &storage.UserList{
 		Items: users,
 	}, nil
+}
+
+// UserExists storage.UserRepository interface.
+func (r *UserRepository) UserExists(ctx context.Context, userID string) (bool, error) {
+	_, ok := r.UsersByID[userID]
+	return ok, nil
 }
 
 // UserExistsByNameInsensitive storage.UserRepository interface.

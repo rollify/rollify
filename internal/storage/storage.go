@@ -59,6 +59,8 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, u model.User) error
 	// ListRoomUsers returns the user list of a room.
 	ListRoomUsers(ctx context.Context, roomID string) (*UserList, error)
+	// UserExists returns true if the ID of the user exists.
+	UserExists(ctx context.Context, userID string) (bool, error)
 	// UserExistsByNameInsensitive checks if a user exists in a room using the username
 	// in case insensitive mode.
 	UserExistsByNameInsensitive(ctx context.Context, roomID, username string) (bool, error)

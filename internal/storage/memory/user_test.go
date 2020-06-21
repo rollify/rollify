@@ -112,7 +112,11 @@ func TestUserRepositoryCreateUser(t *testing.T) {
 				usersByRoom := r.UsersByRoom[test.expUser.RoomID]
 				require.NotNil(usersByRoom)
 				gotUser := usersByRoom[test.expUser.ID]
+				require.NotNil(gotUser)
+				assert.Equal(test.expUser, *gotUser)
 
+				gotUser = r.UsersByID[test.expUser.ID]
+				require.NotNil(gotUser)
 				assert.Equal(test.expUser, *gotUser)
 			}
 		})
@@ -198,6 +202,54 @@ func TestUserRepositoryListRoomUsers(t *testing.T) {
 	}
 }
 
+func TestUserRepositoryUserExists(t *testing.T) {
+	tests := map[string]struct {
+		repo      func() *memory.UserRepository
+		userID    string
+		expExists bool
+		expErr    error
+	}{
+		"Having a user that does not exit, should return no exists.": {
+			repo: func() *memory.UserRepository {
+				r := memory.NewUserRepository()
+				r.UsersByID = map[string]*model.User{
+					"user1-id": {},
+				}
+				return r
+			},
+			userID:    "user2-id",
+			expExists: false,
+		},
+
+		"Having a user that exists in a room, should return exists.": {
+			repo: func() *memory.UserRepository {
+				r := memory.NewUserRepository()
+				r.UsersByID = map[string]*model.User{
+					"user1-id": {},
+				}
+				return r
+			},
+			userID:    "user1-id",
+			expExists: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			r := test.repo()
+			gotExists, err := r.UserExists(context.TODO(), test.userID)
+
+			if test.expErr != nil && assert.Error(err) {
+				assert.True(errors.Is(err, test.expErr))
+			} else if assert.NoError(err) {
+				assert.Equal(test.expExists, gotExists)
+			}
+		})
+	}
+}
+
 func TestUserRepositoryUserExistsByNameInsensitive(t *testing.T) {
 	tests := map[string]struct {
 		repo      func() *memory.UserRepository
@@ -212,9 +264,7 @@ func TestUserRepositoryUserExistsByNameInsensitive(t *testing.T) {
 				r.UsersByRoom = map[string]map[string]*model.User{
 					"room1-id": {
 						"user1-id": &model.User{
-							ID:     "user1-id",
-							RoomID: "room1-id",
-							Name:   "test1",
+							Name: "test1",
 						},
 					},
 				}
@@ -231,9 +281,7 @@ func TestUserRepositoryUserExistsByNameInsensitive(t *testing.T) {
 				r.UsersByRoom = map[string]map[string]*model.User{
 					"room1-id": {
 						"user1-id": &model.User{
-							ID:     "user1-id",
-							RoomID: "room1-id",
-							Name:   "test1",
+							Name: "test1",
 						},
 					},
 				}
@@ -250,9 +298,7 @@ func TestUserRepositoryUserExistsByNameInsensitive(t *testing.T) {
 				r.UsersByRoom = map[string]map[string]*model.User{
 					"room1-id": {
 						"user1-id": &model.User{
-							ID:     "user1-id",
-							RoomID: "room1-id",
-							Name:   "TeSt1",
+							Name: "TeSt1",
 						},
 					},
 				}

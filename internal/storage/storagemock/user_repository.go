@@ -53,6 +53,27 @@ func (_m *UserRepository) ListRoomUsers(ctx context.Context, roomID string) (*st
 	return r0, r1
 }
 
+// UserExists provides a mock function with given fields: ctx, userID
+func (_m *UserRepository) UserExists(ctx context.Context, userID string) (bool, error) {
+	ret := _m.Called(ctx, userID)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(context.Context, string) bool); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UserExistsByNameInsensitive provides a mock function with given fields: ctx, roomID, username
 func (_m *UserRepository) UserExistsByNameInsensitive(ctx context.Context, roomID string, username string) (bool, error) {
 	ret := _m.Called(ctx, roomID, username)

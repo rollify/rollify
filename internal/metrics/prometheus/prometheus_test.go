@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -20,7 +21,7 @@ func TestRecorder(t *testing.T) {
 		measure    func(r metrics.Recorder)
 		expMetrics []string
 	}{
-		"Measure dice roll dice quantity.": {
+		"Measure dice roller dice roll dice quantity.": {
 			measure: func(r metrics.Recorder) {
 				r.MeasureDiceRollQuantity(context.TODO(), "test-1", &model.DiceRoll{})
 				r.MeasureDiceRollQuantity(context.TODO(), "test-2", &model.DiceRoll{
@@ -67,7 +68,7 @@ func TestRecorder(t *testing.T) {
 			},
 		},
 
-		"Measure die roll result.": {
+		"Measure dice roller die roll result.": {
 			measure: func(r metrics.Recorder) {
 				r.MeasureDieRollResult(context.TODO(), "test-1", &model.DieRoll{Type: model.DieTypeD4, Side: 2})
 				r.MeasureDieRollResult(context.TODO(), "test-1", &model.DieRoll{Type: model.DieTypeD6, Side: 2})
@@ -95,6 +96,141 @@ func TestRecorder(t *testing.T) {
 				`rollify_dice_roller_die_roll_results_total{die_side="7",die_type="d10",roller_type="test-1"} 1`,
 				`rollify_dice_roller_die_roll_results_total{die_side="7",die_type="d8",roller_type="test-1"} 1`,
 				`rollify_dice_roller_die_roll_results_total{die_side="8",die_type="d20",roller_type="test-1"} 1`,
+			},
+		},
+
+		"Measure dice app service operation duration.": {
+			measure: func(r metrics.Recorder) {
+				r.MeasureDiceServiceOpDuration(context.TODO(), "op1", true, 55*time.Millisecond)
+				r.MeasureDiceServiceOpDuration(context.TODO(), "op1", true, 55*time.Millisecond)
+				r.MeasureDiceServiceOpDuration(context.TODO(), "op1", false, 267*time.Millisecond)
+				r.MeasureDiceServiceOpDuration(context.TODO(), "op1", true, 6*time.Second)
+				r.MeasureDiceServiceOpDuration(context.TODO(), "op2", false, 143*time.Millisecond)
+			},
+			expMetrics: []string{
+				`# HELP rollify_dice_service_operation_duration_seconds The duration of dice application service.`,
+				`# TYPE rollify_dice_service_operation_duration_seconds histogram`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="0.005"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="0.01"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="0.025"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="0.05"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="0.1"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="0.25"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="0.5"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="1"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="2.5"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="5"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="10"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="false",le="+Inf"} 1`,
+				`rollify_dice_service_operation_duration_seconds_count{op="op1",success="false"} 1`,
+
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.005"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.01"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.025"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.05"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.1"} 2`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.25"} 2`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.5"} 2`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="1"} 2`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="2.5"} 2`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="5"} 2`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="10"} 3`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op1",success="true",le="+Inf"} 3`,
+				`rollify_dice_service_operation_duration_seconds_count{op="op1",success="true"} 3`,
+
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.005"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.01"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.025"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.05"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.1"} 0`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.25"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.5"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="1"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="2.5"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="5"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="10"} 1`,
+				`rollify_dice_service_operation_duration_seconds_bucket{op="op2",success="false",le="+Inf"} 1`,
+				`rollify_dice_service_operation_duration_seconds_count{op="op2",success="false"} 1`,
+			},
+		},
+
+		"Measure room app service operation duration.": {
+			measure: func(r metrics.Recorder) {
+				r.MeasureRoomServiceOpDuration(context.TODO(), "op1", true, 55*time.Millisecond)
+				r.MeasureRoomServiceOpDuration(context.TODO(), "op1", true, 55*time.Millisecond)
+				r.MeasureRoomServiceOpDuration(context.TODO(), "op1", true, 6*time.Second)
+				r.MeasureRoomServiceOpDuration(context.TODO(), "op2", false, 143*time.Millisecond)
+			},
+			expMetrics: []string{
+				`# HELP rollify_room_service_operation_duration_seconds The duration of room application service.`,
+				`# TYPE rollify_room_service_operation_duration_seconds histogram`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.005"} 0`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.01"} 0`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.025"} 0`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.05"} 0`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.1"} 2`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.25"} 2`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.5"} 2`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="1"} 2`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="2.5"} 2`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="5"} 2`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="10"} 3`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op1",success="true",le="+Inf"} 3`,
+				`rollify_room_service_operation_duration_seconds_count{op="op1",success="true"} 3`,
+
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.005"} 0`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.01"} 0`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.025"} 0`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.05"} 0`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.1"} 0`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.25"} 1`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.5"} 1`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="1"} 1`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="2.5"} 1`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="5"} 1`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="10"} 1`,
+				`rollify_room_service_operation_duration_seconds_bucket{op="op2",success="false",le="+Inf"} 1`,
+				`rollify_room_service_operation_duration_seconds_count{op="op2",success="false"} 1`,
+			},
+		},
+
+		"Measure user app service operation duration.": {
+			measure: func(r metrics.Recorder) {
+				r.MeasureUserServiceOpDuration(context.TODO(), "op1", true, 55*time.Millisecond)
+				r.MeasureUserServiceOpDuration(context.TODO(), "op1", true, 55*time.Millisecond)
+				r.MeasureUserServiceOpDuration(context.TODO(), "op1", true, 6*time.Second)
+				r.MeasureUserServiceOpDuration(context.TODO(), "op2", false, 143*time.Millisecond)
+			},
+			expMetrics: []string{
+				`# HELP rollify_user_service_operation_duration_seconds The duration of user application service.`,
+				`# TYPE rollify_user_service_operation_duration_seconds histogram`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.005"} 0`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.01"} 0`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.025"} 0`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.05"} 0`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.1"} 2`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.25"} 2`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="0.5"} 2`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="1"} 2`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="2.5"} 2`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="5"} 2`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="10"} 3`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op1",success="true",le="+Inf"} 3`,
+				`rollify_user_service_operation_duration_seconds_count{op="op1",success="true"} 3`,
+
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.005"} 0`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.01"} 0`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.025"} 0`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.05"} 0`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.1"} 0`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.25"} 1`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="0.5"} 1`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="1"} 1`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="2.5"} 1`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="5"} 1`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="10"} 1`,
+				`rollify_user_service_operation_duration_seconds_bucket{op="op2",success="false",le="+Inf"} 1`,
+				`rollify_user_service_operation_duration_seconds_count{op="op2",success="false"} 1`,
 			},
 		},
 	}

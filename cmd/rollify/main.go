@@ -88,6 +88,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("could not create dice application service: %w", err)
 	}
+	diceAppService = dice.NewMeasureService(metricsRecorder, diceAppService)
 
 	roomAppService, err := room.NewService(room.ServiceConfig{
 		RoomRepository: roomRepo,
@@ -96,6 +97,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("could not create room application service: %w", err)
 	}
+	roomAppService = room.NewMeasureService(metricsRecorder, roomAppService)
 
 	userAppService, err := user.NewService(user.ServiceConfig{
 		UserRepository: userRepo,
@@ -105,6 +107,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("could not create user application service: %w", err)
 	}
+	userAppService = user.NewMeasureService(metricsRecorder, userAppService)
 
 	// Prepare our main runner.
 	var g run.Group

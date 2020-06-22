@@ -73,12 +73,16 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		return fmt.Errorf("storage type '%s' unknown", cmdCfg.StorageType)
 	}
 
+	// Roller.
+	roller := dice.NewRandomRoller()
+	roller = dice.NewMeasureRoller("random", metricsRecorder, roller)
+
 	// Create app services.
 	diceAppService, err := dice.NewService(dice.ServiceConfig{
 		DiceRollRepository: diceRollRepo,
 		RoomRepository:     roomRepo,
 		UserRepository:     userRepo,
-		Roller:             dice.NewRandomRoller(),
+		Roller:             roller,
 		Logger:             logger,
 	})
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	gohttpmetrics "github.com/slok/go-http-metrics/middleware/gorestful"
 )
 
 func (a apiv1) registerRoutes(prefix string) {
@@ -93,6 +94,7 @@ func (a *apiv1) wrapWSPost(route string) *restful.RouteBuilder {
 
 // wrapMiddleware wraps a routebuilder with filters/middlewares.
 func (a *apiv1) wrapMiddleware(route string, rb *restful.RouteBuilder) *restful.RouteBuilder {
-	// TODO(slok).
+	rb = rb.Filter(gohttpmetrics.Handler(route, a.metricsMiddleware))
+	// Next middlewares...
 	return rb
 }

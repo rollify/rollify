@@ -66,12 +66,16 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	)
 	switch cmdCfg.StorageType {
 	case StorageTypeMemory:
-		roomRepo = memory.NewRoomRepository()
 		diceRollRepo = memory.NewDiceRollRepository()
+		roomRepo = memory.NewRoomRepository()
 		userRepo = memory.NewUserRepository()
 	default:
 		return fmt.Errorf("storage type '%s' unknown", cmdCfg.StorageType)
 	}
+
+	diceRollRepo = storage.NewMeasuredDiceRollRepository(cmdCfg.StorageType, metricsRecorder, diceRollRepo)
+	roomRepo = storage.NewMeasuredRoomRepository(cmdCfg.StorageType, metricsRecorder, roomRepo)
+	userRepo = storage.NewMeasuredUserRepository(cmdCfg.StorageType, metricsRecorder, userRepo)
 
 	// Roller.
 	roller := dice.NewRandomRoller()

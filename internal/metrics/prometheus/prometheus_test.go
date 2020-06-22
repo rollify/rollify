@@ -233,6 +233,126 @@ func TestRecorder(t *testing.T) {
 				`rollify_user_service_operation_duration_seconds_count{op="op2",success="false"} 1`,
 			},
 		},
+
+		"Measure dice roll repo operation duration.": {
+			measure: func(r metrics.Recorder) {
+				r.MeasureDiceRollRepoOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureDiceRollRepoOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureDiceRollRepoOpDuration(context.TODO(), "t1", "op1", true, 6*time.Second)
+				r.MeasureDiceRollRepoOpDuration(context.TODO(), "t2", "op2", false, 143*time.Millisecond)
+			},
+			expMetrics: []string{
+				`# HELP rollify_dice_roll_repository_operation_duration_seconds The duration of dice roll storage repository operations.`,
+				`# TYPE rollify_dice_roll_repository_operation_duration_seconds histogram`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.005"} 0`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.01"} 0`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.025"} 0`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.05"} 0`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.1"} 2`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.25"} 2`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.5"} 2`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="1"} 2`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="2.5"} 2`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="5"} 2`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="10"} 3`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="+Inf"} 3`,
+				`rollify_dice_roll_repository_operation_duration_seconds_count{op="op1",storage_type="t1",success="true"} 3`,
+
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.005"} 0`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.01"} 0`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.025"} 0`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.05"} 0`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.1"} 0`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.25"} 1`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.5"} 1`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="1"} 1`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="2.5"} 1`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="5"} 1`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="10"} 1`,
+				`rollify_dice_roll_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="+Inf"} 1`,
+				`rollify_dice_roll_repository_operation_duration_seconds_count{op="op2",storage_type="t2",success="false"} 1`,
+			},
+		},
+
+		"Measure room repo operation duration.": {
+			measure: func(r metrics.Recorder) {
+				r.MeasureRoomRepoOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureRoomRepoOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureRoomRepoOpDuration(context.TODO(), "t1", "op1", true, 6*time.Second)
+				r.MeasureRoomRepoOpDuration(context.TODO(), "t2", "op2", false, 143*time.Millisecond)
+			},
+			expMetrics: []string{
+				`# HELP rollify_room_repository_operation_duration_seconds The duration of room storage repository operations.`,
+				`# TYPE rollify_room_repository_operation_duration_seconds histogram`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.005"} 0`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.01"} 0`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.025"} 0`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.05"} 0`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.1"} 2`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.25"} 2`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.5"} 2`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="1"} 2`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="2.5"} 2`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="5"} 2`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="10"} 3`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="+Inf"} 3`,
+				`rollify_room_repository_operation_duration_seconds_count{op="op1",storage_type="t1",success="true"} 3`,
+
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.005"} 0`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.01"} 0`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.025"} 0`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.05"} 0`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.1"} 0`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.25"} 1`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.5"} 1`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="1"} 1`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="2.5"} 1`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="5"} 1`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="10"} 1`,
+				`rollify_room_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="+Inf"} 1`,
+				`rollify_room_repository_operation_duration_seconds_count{op="op2",storage_type="t2",success="false"} 1`,
+			},
+		},
+
+		"Measure user repo operation duration.": {
+			measure: func(r metrics.Recorder) {
+				r.MeasureUserRepoOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureUserRepoOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureUserRepoOpDuration(context.TODO(), "t1", "op1", true, 6*time.Second)
+				r.MeasureUserRepoOpDuration(context.TODO(), "t2", "op2", false, 143*time.Millisecond)
+			},
+			expMetrics: []string{
+				`# HELP rollify_user_repository_operation_duration_seconds The duration of user storage repository operations.`,
+				`# TYPE rollify_user_repository_operation_duration_seconds histogram`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.005"} 0`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.01"} 0`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.025"} 0`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.05"} 0`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.1"} 2`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.25"} 2`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="0.5"} 2`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="1"} 2`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="2.5"} 2`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="5"} 2`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="10"} 3`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op1",storage_type="t1",success="true",le="+Inf"} 3`,
+				`rollify_user_repository_operation_duration_seconds_count{op="op1",storage_type="t1",success="true"} 3`,
+
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.005"} 0`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.01"} 0`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.025"} 0`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.05"} 0`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.1"} 0`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.25"} 1`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="0.5"} 1`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="1"} 1`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="2.5"} 1`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="5"} 1`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="10"} 1`,
+				`rollify_user_repository_operation_duration_seconds_bucket{op="op2",storage_type="t2",success="false",le="+Inf"} 1`,
+				`rollify_user_repository_operation_duration_seconds_count{op="op2",storage_type="t2",success="false"} 1`,
+			},
+		},
 	}
 
 	for name, test := range tests {

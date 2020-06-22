@@ -68,6 +68,7 @@ func (m measuredService) ListDiceTypes(ctx context.Context) (resp *ListDiceTypes
 
 	return m.next.ListDiceTypes(ctx)
 }
+
 func (m measuredService) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (resp *CreateDiceRollResponse, err error) {
 	defer func(t0 time.Time) {
 		m.rec.MeasureDiceServiceOpDuration(ctx, "CreateDiceRoll", err == nil, time.Since(t0))
@@ -75,6 +76,7 @@ func (m measuredService) CreateDiceRoll(ctx context.Context, r CreateDiceRollReq
 
 	return m.next.CreateDiceRoll(ctx, r)
 }
+
 func (m measuredService) ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (resp *ListDiceRollsResponse, err error) {
 	defer func(t0 time.Time) {
 		m.rec.MeasureDiceServiceOpDuration(ctx, "ListDiceRolls", err == nil, time.Since(t0))

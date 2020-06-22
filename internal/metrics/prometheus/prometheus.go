@@ -13,6 +13,7 @@ import (
 	"github.com/rollify/rollify/internal/http/apiv1"
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/room"
+	"github.com/rollify/rollify/internal/storage"
 	"github.com/rollify/rollify/internal/user"
 )
 
@@ -26,11 +27,14 @@ type httpRecorder gohttpmetrics.Recorder
 type Recorder struct {
 	httpRecorder
 
-	diceRollQuantity      *prometheus.HistogramVec
-	dieRollResult         *prometheus.CounterVec
-	diceServiceOPDuration *prometheus.HistogramVec
-	roomServiceOPDuration *prometheus.HistogramVec
-	userServiceOPDuration *prometheus.HistogramVec
+	diceRollQuantity       *prometheus.HistogramVec
+	dieRollResult          *prometheus.CounterVec
+	diceServiceOPDuration  *prometheus.HistogramVec
+	roomServiceOPDuration  *prometheus.HistogramVec
+	userServiceOPDuration  *prometheus.HistogramVec
+	diceRollRepoOPDuration *prometheus.HistogramVec
+	roomRepoOPDuration     *prometheus.HistogramVec
+	userRepoOPDuration     *prometheus.HistogramVec
 }
 
 // NewRecorder returns a new recorder implementation for prometheus.
@@ -73,6 +77,27 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 			Name:      "operation_duration_seconds",
 			Help:      "The duration of user application service.",
 		}, []string{"op", "success"}),
+
+		diceRollRepoOPDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: prefix,
+			Subsystem: "dice_roll_repository",
+			Name:      "operation_duration_seconds",
+			Help:      "The duration of dice roll storage repository operations.",
+		}, []string{"storage_type", "op", "success"}),
+
+		roomRepoOPDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: prefix,
+			Subsystem: "room_repository",
+			Name:      "operation_duration_seconds",
+			Help:      "The duration of room storage repository operations.",
+		}, []string{"storage_type", "op", "success"}),
+
+		userRepoOPDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: prefix,
+			Subsystem: "user_repository",
+			Name:      "operation_duration_seconds",
+			Help:      "The duration of user storage repository operations.",
+		}, []string{"storage_type", "op", "success"}),
 	}
 
 	reg.MustRegister(
@@ -81,6 +106,9 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 		r.diceServiceOPDuration,
 		r.userServiceOPDuration,
 		r.roomServiceOPDuration,
+		r.diceRollRepoOPDuration,
+		r.roomRepoOPDuration,
+		r.userRepoOPDuration,
 	)
 
 	return r
@@ -111,10 +139,29 @@ func (r Recorder) MeasureUserServiceOpDuration(ctx context.Context, op string, s
 	r.userServiceOPDuration.WithLabelValues(op, strconv.FormatBool(success)).Observe(t.Seconds())
 }
 
+// MeasureDiceRollRepoOpDuration satisfies storage.DiceRollRepositoryMetricsRecorder interface.
+func (r Recorder) MeasureDiceRollRepoOpDuration(ctx context.Context, storageType, op string, success bool, t time.Duration) {
+	r.diceRollRepoOPDuration.WithLabelValues(storageType, op, strconv.FormatBool(success)).Observe(t.Seconds())
+}
+
+// MeasureRoomRepoOpDuration satisfies storage.RoomRepositoryMetricsRecorder interface.
+func (r Recorder) MeasureRoomRepoOpDuration(ctx context.Context, storageType, op string, success bool, t time.Duration) {
+	r.roomRepoOPDuration.WithLabelValues(storageType, op, strconv.FormatBool(success)).Observe(t.Seconds())
+}
+
+// MeasureUserRepoOpDuration satisfies storage.UserRepositoryMetricsRecorder interface.
+func (r Recorder) MeasureUserRepoOpDuration(ctx context.Context, storageType, op string, success bool, t time.Duration) {
+	r.userRepoOPDuration.WithLabelValues(storageType, op, strconv.FormatBool(success)).Observe(t.Seconds())
+}
+
 var (
-	_ apiv1.MetricsRecorder       = Recorder{}
-	_ dice.RollerMetricsRecorder  = Recorder{}
-	_ dice.ServiceMetricsRecorder = Recorder{}
-	_ room.ServiceMetricsRecorder = Recorder{}
-	_ user.ServiceMetricsRecorder = Recorder{}
+	_ apiv1.MetricsRecorder                     = Recorder{}
+	_ dice.RollerMetricsRecorder                = Recorder{}
+	_ dice.ServiceMetricsRecorder               = Recorder{}
+	_ room.ServiceMetricsRecorder               = Recorder{}
+	_ user.ServiceMetricsRecorder               = Recorder{}
+	_ user.ServiceMetricsRecorder               = Recorder{}
+	_ storage.DiceRollRepositoryMetricsRecorder = Recorder{}
+	_ storage.RoomRepositoryMetricsRecorder     = Recorder{}
+	_ storage.UserRepositoryMetricsRecorder     = Recorder{}
 )

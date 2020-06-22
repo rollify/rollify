@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
+	gohttmetrics "github.com/slok/go-http-metrics/middleware"
 
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/log"
@@ -14,11 +15,12 @@ import (
 
 // Config is the configuration to serve the API.
 type Config struct {
-	DiceAppService dice.Service
-	RoomAppService room.Service
-	UserAppService user.Service
-	ServePefix     string
-	Logger         log.Logger
+	DiceAppService  dice.Service
+	RoomAppService  room.Service
+	UserAppService  user.Service
+	MetricsRecorder MetricsRecorder
+	ServePefix      string
+	Logger          log.Logger
 }
 
 func (c *Config) defaults() error {
@@ -34,10 +36,6 @@ func (c *Config) defaults() error {
 		return fmt.Errorf("user.Service application service is required")
 	}
 
-	if c.ServePefix == "" {
-		c.ServePefix = "/api/v1"
-	}
-
 	if c.Logger == nil {
 		c.Logger = log.Dummy
 	}
@@ -46,16 +44,26 @@ func (c *Config) defaults() error {
 		"prefix": c.ServePefix,
 	})
 
+	if c.MetricsRecorder == nil {
+		c.MetricsRecorder = noopMetricsRecorder
+		c.Logger.Warningf("metrics recorder disabled")
+	}
+
+	if c.ServePefix == "" {
+		c.ServePefix = "/api/v1"
+	}
+
 	return nil
 }
 
 type apiv1 struct {
-	diceAppSvc    dice.Service
-	roomAppSvc    room.Service
-	UserAppSvc    user.Service
-	logger        log.Logger
-	apiws         *restful.WebService
-	restContainer *restful.Container
+	diceAppSvc        dice.Service
+	roomAppSvc        room.Service
+	UserAppSvc        user.Service
+	logger            log.Logger
+	apiws             *restful.WebService
+	restContainer     *restful.Container
+	metricsMiddleware gohttmetrics.Middleware
 }
 
 // New returns API v1 HTTP handler.
@@ -79,6 +87,12 @@ func New(cfg Config) (http.Handler, error) {
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 	a.restContainer.Add(a.apiws)
+
+	// Create metrics middleware instance.
+	a.metricsMiddleware = gohttmetrics.New(gohttmetrics.Config{
+		Recorder: cfg.MetricsRecorder,
+		Service:  "apiv1",
+	})
 
 	// Register routes.
 	a.registerRoutes(cfg.ServePefix)

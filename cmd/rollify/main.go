@@ -12,12 +12,14 @@ import (
 	"time"
 
 	"github.com/oklog/run"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/http/apiv1"
 	"github.com/rollify/rollify/internal/log"
+	metrics "github.com/rollify/rollify/internal/metrics/prometheus"
 	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/storage"
 	"github.com/rollify/rollify/internal/storage/memory"
@@ -52,6 +54,9 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		"app":     "rollify",
 		"version": Version,
 	})
+
+	// Set up metrics with default metrics recorder.
+	metricsRecorder := metrics.NewRecorder(prometheus.DefaultRegisterer)
 
 	// Create storage.
 	var (
@@ -109,10 +114,11 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 
 		// API.
 		apiv1Handler, err := apiv1.New(apiv1.Config{
-			DiceAppService: diceAppService,
-			RoomAppService: roomAppService,
-			UserAppService: userAppService,
-			Logger:         logger,
+			DiceAppService:  diceAppService,
+			RoomAppService:  roomAppService,
+			UserAppService:  userAppService,
+			MetricsRecorder: metricsRecorder,
+			Logger:          logger,
 		})
 		if err != nil {
 			return fmt.Errorf("could not create apiv1 handler: %w", err)

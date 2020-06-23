@@ -75,6 +75,14 @@ func (m measuredRoomRepository) CreateRoom(ctx context.Context, r model.Room) (e
 	return m.next.CreateRoom(ctx, r)
 }
 
+func (m measuredRoomRepository) GetRoom(ctx context.Context, id string) (room *model.Room, err error) {
+	defer func(t0 time.Time) {
+		m.rec.MeasureRoomRepoOpDuration(ctx, m.storageType, "GetRoom", err == nil, time.Since(t0))
+	}(time.Now())
+
+	return m.next.GetRoom(ctx, id)
+}
+
 func (m measuredRoomRepository) RoomExists(ctx context.Context, id string) (exists bool, err error) {
 	defer func(t0 time.Time) {
 		m.rec.MeasureRoomRepoOpDuration(ctx, m.storageType, "RoomExists", err == nil, time.Since(t0))

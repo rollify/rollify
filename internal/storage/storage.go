@@ -39,6 +39,9 @@ type RoomRepository interface {
 	// If the room data is missing or not valid it will return a internalerrors.NotValid error kind.
 	// If the room already exists it returns a internalerrors.AlreadyExists error kind.
 	CreateRoom(ctx context.Context, r model.Room) error
+	// GetRoom returns the room information.
+	// If the room does not exist it returns internalerrors.ErrMissing.
+	GetRoom(ctx context.Context, id string) (*model.Room, error)
 	// RoomExists returns true if the room exists.
 	RoomExists(ctx context.Context, id string) (exists bool, err error)
 }
@@ -60,10 +63,10 @@ type UserRepository interface {
 	// ListRoomUsers returns the user list of a room.
 	ListRoomUsers(ctx context.Context, roomID string) (*UserList, error)
 	// UserExists returns true if the ID of the user exists.
-	UserExists(ctx context.Context, userID string) (bool, error)
+	UserExists(ctx context.Context, userID string) (exists bool, err error)
 	// UserExistsByNameInsensitive checks if a user exists in a room using the username
 	// in case insensitive mode.
-	UserExistsByNameInsensitive(ctx context.Context, roomID, username string) (bool, error)
+	UserExistsByNameInsensitive(ctx context.Context, roomID, username string) (exists bool, err error)
 }
 
 //go:generate mockery -case underscore -output storagemock -outpkg storagemock -name UserRepository

@@ -46,6 +46,19 @@ func (r *RoomRepository) CreateRoom(_ context.Context, room model.Room) error {
 	return nil
 }
 
+// GetRoom satisfies room.Repository interface.
+func (r *RoomRepository) GetRoom(_ context.Context, id string) (room *model.Room, err error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	room, ok := r.RoomsByID[id]
+	if !ok {
+		return nil, internalerrors.ErrMissing
+	}
+
+	return room, nil
+}
+
 // RoomExists satisfies room.Repository interface.
 func (r *RoomRepository) RoomExists(_ context.Context, id string) (exists bool, err error) {
 	r.mu.Lock()

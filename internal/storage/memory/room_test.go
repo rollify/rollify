@@ -96,7 +96,7 @@ func TestRoomRepositoryGetRoom(t *testing.T) {
 			expErr: internalerrors.ErrMissing,
 		},
 
-		"Having a room ID that exists in the repository, it should return exists.": {
+		"Having a room ID that exists in the repository, it should return the room.": {
 			repo: func() *memory.RoomRepository {
 				r := memory.NewRoomRepository()
 				r.RoomsByID = map[string]*model.Room{

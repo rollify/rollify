@@ -37,10 +37,10 @@ func (a apiv1) registerRoutes(prefix string) {
 		To(a.listDiceRolls()).
 		Metadata(restfulspec.KeyOpenAPITags, []string{"dice"}).
 		Doc("lists dice rolls").
-		Param(a.apiws.PathParameter(listDiceRollsParamUserID, "identifier of the user")).
-		Param(a.apiws.PathParameter(listDiceRollsParamRoomID, "identifier of the room")).
-		Param(a.apiws.PathParameter(listDiceRollsPaginationCursor, "cursor for next page of dice rolls")).
-		Param(a.apiws.PathParameter(listDiceRollsPaginationOrder, "order of the cursor, 'desc' or 'asc'")).
+		Param(a.apiws.QueryParameter(listDiceRollsParamUserID, "identifier of the user").DataType("string")).
+		Param(a.apiws.QueryParameter(listDiceRollsParamRoomID, "identifier of the room").DataType("string")).
+		Param(a.apiws.QueryParameter(listDiceRollsPaginationCursor, "cursor for next page of dice rolls").DataType("string")).
+		Param(a.apiws.QueryParameter(listDiceRollsPaginationOrder, "order of the cursor, 'desc' or 'asc'").DataType("string")).
 		Writes(listDiceRollsResponse{}).
 		Returns(http.StatusOK, "OK", listDiceRollsResponse{}).
 		Returns(http.StatusBadRequest, "", nil))
@@ -54,6 +54,16 @@ func (a apiv1) registerRoutes(prefix string) {
 		Returns(http.StatusCreated, "Created", createRoomResponse{}).
 		Returns(http.StatusBadRequest, "", nil).
 		Returns(http.StatusConflict, "room already exists", nil))
+
+	a.apiws.Route(a.wrapWSGet("/rooms/{id}").
+		To(a.getRoom()).
+		Metadata(restfulspec.KeyOpenAPITags, []string{"room"}).
+		Doc("gets a room").
+		Param(a.apiws.PathParameter("id", "identifier of the room").DataType("string")).
+		Writes(createRoomResponse{}).
+		Returns(http.StatusOK, "OK", getRoomResponse{}).
+		Returns(http.StatusBadRequest, "", nil).
+		Returns(http.StatusNotFound, "room does not exists", nil))
 
 	a.apiws.Route(a.wrapWSPost("/users").
 		To(a.createUser()).
@@ -69,7 +79,7 @@ func (a apiv1) registerRoutes(prefix string) {
 		To(a.listUsers()).
 		Metadata(restfulspec.KeyOpenAPITags, []string{"user"}).
 		Doc("list room users").
-		Param(a.apiws.PathParameter(listUsersParamRoomID, "identifier of the room")).
+		Param(a.apiws.QueryParameter(listUsersParamRoomID, "identifier of the room").DataType("string")).
 		Writes(listUsersResponse{}).
 		Returns(http.StatusOK, "OK", listUsersResponse{}).
 		Returns(http.StatusBadRequest, "", nil))

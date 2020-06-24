@@ -233,6 +233,34 @@ func mapAPIToModelCreateRoom(r createRoomRequest) (*room.CreateRoomRequest, erro
 	}, nil
 }
 
+type getRoomResponse struct {
+	ID string `json:"id"`
+	// Representation in RFC3339.
+	CreateAt string `json:"created_at"`
+	Name     string `json:"name"`
+}
+
+func mapModelToAPIGetRoom(r room.GetRoomResponse) getRoomResponse {
+	return getRoomResponse{
+		ID:       r.Room.ID,
+		CreateAt: r.Room.CreatedAt.Format(time.RFC3339),
+		Name:     r.Room.Name,
+	}
+}
+
+const getRoomParamRoomID = "id"
+
+func mapAPIToModelGetRoom(params map[string]string) (*room.GetRoomRequest, error) {
+	id, ok := params[getRoomParamRoomID]
+	if !ok {
+		return nil, fmt.Errorf("room id is required")
+	}
+
+	return &room.GetRoomRequest{
+		ID: id,
+	}, nil
+}
+
 type createUserResponse struct {
 	ID string `json:"id"`
 	// Representation in RFC3339.

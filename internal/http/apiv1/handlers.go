@@ -148,6 +148,36 @@ func (a *apiv1) createRoom() restful.RouteFunction {
 	}
 }
 
+func (a *apiv1) getRoom() restful.RouteFunction {
+	logger := a.logger.WithKV(log.KV{"handler": "getRoom"})
+
+	return func(req *restful.Request, resp *restful.Response) {
+		logger.Debugf("handler called")
+
+		// Map request.
+		mReq, err := mapAPIToModelGetRoom(req.PathParameters())
+		if err != nil {
+			writeResponseError(logger, resp, http.StatusBadRequest, err)
+			return
+		}
+
+		// Execute.
+		mResp, err := a.roomAppSvc.GetRoom(req.Request.Context(), *mReq)
+		if err != nil {
+			writeResponseError(logger, resp, errToStatusCode(err), err)
+			logger.Warningf("error processing request: %s", err)
+			return
+		}
+
+		// Map response.
+		r := mapModelToAPIGetRoom(*mResp)
+		err = resp.WriteHeaderAndEntity(http.StatusOK, r)
+		if err != nil {
+			logger.Errorf("could not write http response: %w", err)
+		}
+	}
+}
+
 func (a *apiv1) createUser() restful.RouteFunction {
 	logger := a.logger.WithKV(log.KV{"handler": "createUser"})
 

@@ -93,3 +93,75 @@ func TestServiceCreateRoom(t *testing.T) {
 		})
 	}
 }
+
+func TestServiceGetRoom(t *testing.T) {
+	tests := map[string]struct {
+		config  room.ServiceConfig
+		mock    func(r *storagemock.RoomRepository)
+		req     func() room.GetRoomRequest
+		expResp func() *room.GetRoomResponse
+		expErr  bool
+	}{
+		"Having a get request without id, should fail.": {
+			mock: func(r *storagemock.RoomRepository) {},
+			req: func() room.GetRoomRequest {
+				return room.GetRoomRequest{ID: ""}
+			},
+			expErr: true,
+		},
+
+		"Having a get request without a correct room, should return the room.": {
+			mock: func(r *storagemock.RoomRepository) {
+				room := &model.Room{
+					ID:   "test",
+					Name: "test-room",
+				}
+				r.On("GetRoom", mock.Anything, "test").Once().Return(room, nil)
+			},
+			req: func() room.GetRoomRequest {
+				return room.GetRoomRequest{ID: "test"}
+			},
+			expResp: func() *room.GetRoomResponse {
+				return &room.GetRoomResponse{
+					Room: model.Room{
+						ID:   "test",
+						Name: "test-room",
+					},
+				}
+			},
+		},
+
+		"Having a get request with an error from the repository, should fail.": {
+			mock: func(r *storagemock.RoomRepository) {
+				r.On("GetRoom", mock.Anything, mock.Anything).Once().Return(nil, errors.New("wanted error"))
+			},
+			req: func() room.GetRoomRequest {
+				return room.GetRoomRequest{ID: "test"}
+			},
+			expErr: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			// Mocks
+			mr := &storagemock.RoomRepository{}
+			test.mock(mr)
+
+			test.config.RoomRepository = mr
+			svc, err := room.NewService(test.config)
+			require.NoError(err)
+
+			gotResp, err := svc.GetRoom(context.TODO(), test.req())
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expResp(), gotResp)
+			}
+		})
+	}
+}

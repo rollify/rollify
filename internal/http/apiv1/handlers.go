@@ -256,6 +256,8 @@ func errToStatusCode(err error) int {
 	case err == nil:
 		return http.StatusOK
 	case errors.Is(err, internalerrors.ErrNotValid):
+		return http.StatusBadRequest
+	case errors.Is(err, internalerrors.ErrMissing):
 		return http.StatusNotFound
 	case errors.Is(err, internalerrors.ErrAlreadyExists):
 		return http.StatusConflict

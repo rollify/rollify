@@ -112,6 +112,23 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			expErr: true,
 		},
 
+		"Having a dice roll request with too much dice should fail.": {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+			},
+			req: func() dice.CreateDiceRollRequest {
+				ds := []model.DieType{}
+				for i := 0; i < 101; i++ {
+					ds = append(ds, model.DieTypeD10)
+				}
+				return dice.CreateDiceRollRequest{
+					RoomID: "room-id",
+					UserID: "test-id",
+					Dice:   ds,
+				}
+			},
+			expErr: true,
+		},
+
 		"Having a dice roll request with a room that does not exists it should fail.": {
 			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
 				roomRepo.On("RoomExists", mock.Anything, "test-room").Once().Return(false, nil)

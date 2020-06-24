@@ -61,7 +61,7 @@ func (a apiv1) registerRoutes(prefix string) {
 		Doc("gets a room").
 		Param(a.apiws.PathParameter("id", "identifier of the room").DataType("string")).
 		Writes(createRoomResponse{}).
-		Returns(http.StatusOK, "OK", createRoomResponse{}).
+		Returns(http.StatusOK, "OK", getRoomResponse{}).
 		Returns(http.StatusBadRequest, "", nil).
 		Returns(http.StatusNotFound, "room does not exists", nil))
 

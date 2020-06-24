@@ -571,6 +571,83 @@ func TestAPIV1CreateRoom(t *testing.T) {
 	}
 }
 
+func TestAPIV1GetRoom(t *testing.T) {
+	t0, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:03Z")
+
+	tests := map[string]struct {
+		mock          func(*roommock.Service)
+		req           func() *http.Request
+		expStatusCode int
+		expBody       string
+	}{
+		"Having an error while getting the room should fail.": {
+			mock: func(m *roommock.Service) {
+				m.On("GetRoom", mock.Anything, mock.Anything).Once().Return(nil, fmt.Errorf("wanted error"))
+			},
+			req: func() *http.Request {
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/rooms/test-id", nil)
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusInternalServerError,
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
+		},
+
+		"Having a correct request should get the room.": {
+			mock: func(m *roommock.Service) {
+				exp := room.GetRoomRequest{ID: "test-id"}
+				resp := &room.GetRoomResponse{Room: model.Room{
+					Name:      "test-room",
+					CreatedAt: t0,
+					ID:        "room-id",
+				}}
+				m.On("GetRoom", mock.Anything, exp).Once().Return(resp, nil)
+			},
+			req: func() *http.Request {
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/rooms/test-id", nil)
+				r.Header.Set("Content-Type", "application/json")
+				return r
+			},
+			expStatusCode: http.StatusOK,
+			expBody: `{
+ "id": "room-id",
+ "created_at": "1912-06-23T01:02:03Z",
+ "name": "test-room"
+}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			mr := &roommock.Service{}
+			test.mock(mr)
+
+			// Prepare.
+			cfg := apiv1.Config{
+				DiceAppService: &dicemock.Service{},
+				RoomAppService: mr,
+				UserAppService: &usermock.Service{},
+			}
+			h, err := apiv1.New(cfg)
+			require.NoError(err)
+
+			// Execute.
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, test.req())
+
+			// Check.
+			res := w.Result()
+			gotBody, err := ioutil.ReadAll(res.Body)
+			require.NoError(err)
+			assert.Equal(test.expStatusCode, res.StatusCode)
+			assert.Equal(test.expBody, string(gotBody))
+		})
+	}
+}
+
 func TestAPIV1CreateUser(t *testing.T) {
 	t0, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:03Z")
 

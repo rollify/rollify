@@ -152,7 +152,6 @@ func TestServiceGetRoom(t *testing.T) {
 			test.mock(mr)
 
 			test.config.RoomRepository = mr
-
 			svc, err := room.NewService(test.config)
 			require.NoError(err)
 

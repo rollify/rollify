@@ -18,6 +18,7 @@ import (
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/dice/dicemock"
 	"github.com/rollify/rollify/internal/http/apiv1"
+	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/room/roommock"
@@ -49,6 +50,88 @@ func TestAPIV1Pong(t *testing.T) {
 			// Prepare.
 			cfg := apiv1.Config{
 				DiceAppService: &dicemock.Service{},
+				RoomAppService: &roommock.Service{},
+				UserAppService: &usermock.Service{},
+			}
+			h, err := apiv1.New(cfg)
+			require.NoError(err)
+
+			// Execute.
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, test.req())
+
+			// Check.
+			res := w.Result()
+			gotBody, err := ioutil.ReadAll(res.Body)
+			require.NoError(err)
+			assert.Equal(test.expStatusCode, res.StatusCode)
+			assert.Equal(test.expBody, string(gotBody))
+		})
+	}
+}
+
+// TesTestAPIV1ErrorMappings using one of the HTTP endpoints, checks if the
+// internalerror error mappings to HTTP status codes are correct. We should check
+// all possible errors on every handler, but this adds a lot of complexity, so
+// at least we check the mappings are correct.
+func TestAPIV1ErrorMappings(t *testing.T) {
+	tests := map[string]struct {
+		mock          func(*dicemock.Service)
+		req           func() *http.Request
+		expStatusCode int
+		expBody       string
+	}{
+		"Having no ErrNotValid, should return 400.": {
+			mock: func(m *dicemock.Service) {
+				r := &dice.ListDiceTypesResponse{}
+				m.On("ListDiceTypes", mock.Anything).Once().Return(r, fmt.Errorf("wanted error: %w", internalerrors.ErrNotValid))
+			},
+			req: func() *http.Request {
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/types", nil)
+				return r
+			},
+			expStatusCode: http.StatusBadRequest,
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"wanted error: not valid\"\n}",
+		},
+
+		"Having no ErrMissing, should return 404.": {
+			mock: func(m *dicemock.Service) {
+				r := &dice.ListDiceTypesResponse{}
+				m.On("ListDiceTypes", mock.Anything).Once().Return(r, fmt.Errorf("wanted error: %w", internalerrors.ErrMissing))
+			},
+			req: func() *http.Request {
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/types", nil)
+				return r
+			},
+			expStatusCode: http.StatusNotFound,
+			expBody:       "{\n \"Code\": 404,\n \"Message\": \"wanted error: is missing\"\n}",
+		},
+
+		"Having no ErrAlreadyExists, should return 409.": {
+			mock: func(m *dicemock.Service) {
+				r := &dice.ListDiceTypesResponse{}
+				m.On("ListDiceTypes", mock.Anything).Once().Return(r, fmt.Errorf("wanted error: %w", internalerrors.ErrAlreadyExists))
+			},
+			req: func() *http.Request {
+				r, _ := http.NewRequest(http.MethodGet, "/api/v1/dice/types", nil)
+				return r
+			},
+			expStatusCode: http.StatusConflict,
+			expBody:       "{\n \"Code\": 409,\n \"Message\": \"wanted error: already exists\"\n}",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			md := &dicemock.Service{}
+			test.mock(md)
+
+			// Prepare.
+			cfg := apiv1.Config{
+				DiceAppService: md,
 				RoomAppService: &roommock.Service{},
 				UserAppService: &usermock.Service{},
 			}

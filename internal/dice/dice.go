@@ -135,6 +135,10 @@ func (r CreateDiceRollRequest) validate() error {
 		return fmt.Errorf("minimum config.Dice quantity is 1")
 	}
 
+	if len(r.Dice) > 100 {
+		return fmt.Errorf("max config.Dice quantity is 100, got %d", r.Dice)
+	}
+
 	return nil
 }
 

@@ -16,6 +16,7 @@ import (
 // Service is the application service of dice logic.
 type Service interface {
 	CreateRoom(ctx context.Context, r CreateRoomRequest) (*CreateRoomResponse, error)
+	GetRoom(ctx context.Context, r GetRoomRequest) (*GetRoomResponse, error)
 }
 
 //go:generate mockery -case underscore -output roommock -outpkg roommock -name Service
@@ -110,5 +111,39 @@ func (s service) CreateRoom(ctx context.Context, r CreateRoomRequest) (*CreateRo
 
 	return &CreateRoomResponse{
 		Room: room,
+	}, nil
+}
+
+// GetRoomRequest is the request to GetRoom.
+type GetRoomRequest struct {
+	ID string
+}
+
+func (r GetRoomRequest) validate() error {
+	if r.ID == "" {
+		return fmt.Errorf("id is required")
+	}
+
+	return nil
+}
+
+// GetRoomResponse is the response to the GetRoom request.
+type GetRoomResponse struct {
+	Room model.Room
+}
+
+func (s service) GetRoom(ctx context.Context, r GetRoomRequest) (*GetRoomResponse, error) {
+	err := r.validate()
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", internalerrors.ErrNotValid, err)
+	}
+
+	room, err := s.roomRepo.GetRoom(ctx, r.ID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get room: %w", err)
+	}
+
+	return &GetRoomResponse{
+		Room: *room,
 	}, nil
 }

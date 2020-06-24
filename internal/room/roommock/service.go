@@ -36,3 +36,26 @@ func (_m *Service) CreateRoom(ctx context.Context, r room.CreateRoomRequest) (*r
 
 	return r0, r1
 }
+
+// GetRoom provides a mock function with given fields: ctx, r
+func (_m *Service) GetRoom(ctx context.Context, r room.GetRoomRequest) (*room.GetRoomResponse, error) {
+	ret := _m.Called(ctx, r)
+
+	var r0 *room.GetRoomResponse
+	if rf, ok := ret.Get(0).(func(context.Context, room.GetRoomRequest) *room.GetRoomResponse); ok {
+		r0 = rf(ctx, r)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*room.GetRoomResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, room.GetRoomRequest) error); ok {
+		r1 = rf(ctx, r)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

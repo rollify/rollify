@@ -23,9 +23,14 @@ type RoomRepositoryConfig struct {
 }
 
 func (c *RoomRepositoryConfig) defaults() error {
+	if c.DBClient == nil {
+		return fmt.Errorf("config.DBClient is required")
+	}
+
 	if c.Table == "" {
 		c.Table = "room"
 	}
+
 	if c.Logger == nil {
 		c.Logger = log.Dummy
 	}
@@ -68,7 +73,6 @@ func (r *RoomRepository) CreateRoom(ctx context.Context, room model.Room) error 
 	_, err := r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		if isDuplicateKeyError(err) {
-			r.logger.Warningf("duplicate room on MySQL insertion: %s", err)
 			return fmt.Errorf("%w: %s", internalerrors.ErrAlreadyExists, err)
 		}
 
@@ -118,7 +122,7 @@ func (r *RoomRepository) RoomExists(ctx context.Context, id string) (bool, error
 	exists := false
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, fmt.Errorf("could not get room: %w", err)
+		return false, fmt.Errorf("could not check room exists: %w", err)
 	}
 
 	return exists, nil

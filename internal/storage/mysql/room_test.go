@@ -208,7 +208,6 @@ func TestRoomRepositoryGetRoom(t *testing.T) {
 }
 
 func TestRoomRepositoryRoomExists(t *testing.T) {
-	//t0, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:03Z")
 	wantedErr := fmt.Errorf("wanted error")
 
 	tests := map[string]struct {
@@ -228,12 +227,10 @@ func TestRoomRepositoryRoomExists(t *testing.T) {
 			expErr: wantedErr,
 		},
 
-		"Retrieving a existing room using custom table should return exists.": {
-			config: mysql.RoomRepositoryConfig{
-				Table: "custom-table",
-			},
+		"Retrieving a existing room should return exists.": {
+			config: mysql.RoomRepositoryConfig{},
 			mock: func(m *mysqlmock.DBClient) {
-				expQuery := "SELECT(EXISTS(SELECT * FROM custom-table WHERE id = ?))"
+				expQuery := "SELECT(EXISTS(SELECT * FROM room WHERE id = ?))"
 				row := sqlmockRowsToStdRow(sqlmock.NewRows([]string{""}).AddRow(1))
 
 				m.On("QueryRowContext", mock.Anything, expQuery, "test-id").Once().Return(row)

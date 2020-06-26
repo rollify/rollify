@@ -14,6 +14,13 @@ func sqlmockRowsToStdRow(mRows *sqlmock.Rows) *sql.Row {
 	return db.QueryRow("select")
 }
 
+func sqlmockRowsToStdRows(mRows *sqlmock.Rows) *sql.Rows {
+	db, mock, _ := sqlmock.New()
+	mock.ExpectQuery("select").WillReturnRows(mRows)
+	r, _ := db.Query("select")
+	return r
+}
+
 func sqlRowErr(err error) *sql.Row {
 	db, mock, _ := sqlmock.New()
 	mock.ExpectQuery("select").WillReturnError(err)

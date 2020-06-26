@@ -15,7 +15,7 @@ import (
 	"github.com/rollify/rollify/internal/storage"
 )
 
-// RoomRepositoryConfig is the RoomRepository configuration
+// RoomRepositoryConfig is the RoomRepository configuration.
 type RoomRepositoryConfig struct {
 	DBClient DBClient
 	Table    string
@@ -34,11 +34,13 @@ func (c *RoomRepositoryConfig) defaults() error {
 	if c.Logger == nil {
 		c.Logger = log.Dummy
 	}
-	c.Logger.WithKV(log.KV{
+
+	c.Logger = c.Logger.WithKV(log.KV{
 		"repository":      "room",
 		"repository-type": "mysql",
 		"db-table":        c.Table,
 	})
+
 	return nil
 }
 
@@ -110,12 +112,12 @@ func (r *RoomRepository) GetRoom(ctx context.Context, id string) (*model.Room, e
 // RoomExists satisfies room.Repository interface.
 func (r *RoomRepository) RoomExists(ctx context.Context, id string) (bool, error) {
 	// Create query.
-	sb := roomSQLBuilder.SelectFrom(r.table).Select("*")
-	sb.Where(sb.Equal("id", id))
+	sb := sqlbuilder.NewSelectBuilder()
+	sb.Select("*").From(r.table).Where(sb.Equal("id", id))
 
 	// Build and wrap for exists.
-	query, args := sb.Build()
-	query = fmt.Sprintf("SELECT(EXISTS(%s))", query)
+	b := sqlbuilder.Buildf("SELECT(EXISTS(%s))", sb)
+	query, args := b.Build()
 
 	// Get from database.
 	row := r.db.QueryRowContext(ctx, query, args...)

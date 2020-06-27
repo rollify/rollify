@@ -136,7 +136,7 @@ func (r CreateDiceRollRequest) validate() error {
 	}
 
 	if len(r.Dice) > 100 {
-		return fmt.Errorf("max config.Dice quantity is 100, got %d", r.Dice)
+		return fmt.Errorf("max config.Dice quantity is 100, got %d", len(r.Dice))
 	}
 
 	return nil

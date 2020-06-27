@@ -36,7 +36,6 @@ func (c *UserRepositoryConfig) defaults() error {
 	c.Logger = c.Logger.WithKV(log.KV{
 		"repository":      "user",
 		"repository-type": "mysql",
-		"db-table":        c.Table,
 	})
 
 	return nil
@@ -96,7 +95,7 @@ func (r *UserRepository) ListRoomUsers(ctx context.Context, roomID string) (*sto
 	defer rows.Close()
 
 	users := []model.User{}
-	su := &sqlUser{} // Reuse this, when mapping to model we will have a new instace.
+	su := &sqlUser{} // Reuse this, when mapping to model we will have a new instance.
 	for rows.Next() {
 		err := rows.Scan(userSQLBuilder.Addr(su)...)
 		if err != nil {

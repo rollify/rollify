@@ -82,7 +82,6 @@ func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.P
 	var items []*model.DiceRoll
 	// If no user means all room.
 	if filterOpts.UserID == "" {
-
 		items = r.DiceRollsByRoom[filterOpts.RoomID]
 	} else {
 		items = r.DiceRollsByRoomAndUser[filterOpts.RoomID+filterOpts.UserID]
@@ -146,7 +145,7 @@ func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.P
 	}
 
 	// Create our cursors.
-	fistCursor := ""
+	firstCursor := ""
 	lastCursor := ""
 	if len(filteredItems) > 0 {
 		c := cursor{Serial: int(filteredItems[0].Serial)}
@@ -154,7 +153,7 @@ func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.P
 		if err != nil {
 			return nil, fmt.Errorf("could not marshal cursor: %w", err)
 		}
-		fistCursor = base64.StdEncoding.EncodeToString([]byte(jc))
+		firstCursor = base64.StdEncoding.EncodeToString([]byte(jc))
 
 		c = cursor{Serial: int(filteredItems[len(filteredItems)-1].Serial)}
 		jc, err = json.Marshal(c)
@@ -172,7 +171,7 @@ func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.P
 	return &storage.DiceRollList{
 		Items: resultItems,
 		Cursors: model.PaginationCursors{
-			FirstCursor: fistCursor,
+			FirstCursor: firstCursor,
 			LastCursor:  lastCursor,
 			HasPrevious: startIndex != 0, // If we are not the first means that we have previous.
 			HasNext:     hasNext,

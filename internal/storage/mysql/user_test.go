@@ -126,7 +126,7 @@ func TestUserRepositoryListUsers(t *testing.T) {
 		expUserList *storage.UserList
 		expErr      error
 	}{
-		"Having an error while retrieving the room should fail.": {
+		"Having an error while retrieving listing the users, should fail.": {
 			config: mysql.UserRepositoryConfig{},
 			mock: func(m *mysqlmock.DBClient) {
 				m.On("QueryContext", mock.Anything, mock.Anything, mock.Anything).Once().Return(nil, wantedErr)

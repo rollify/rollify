@@ -38,7 +38,6 @@ func (c *RoomRepositoryConfig) defaults() error {
 	c.Logger = c.Logger.WithKV(log.KV{
 		"repository":      "room",
 		"repository-type": "mysql",
-		"db-table":        c.Table,
 	})
 
 	return nil
@@ -65,7 +64,7 @@ func NewRoomRepository(cfg RoomRepositoryConfig) (*RoomRepository, error) {
 	}, nil
 }
 
-// CreateRoom satisfies room.Repository interface.
+// CreateRoom satisfies storage.RoomRepository interface.
 func (r *RoomRepository) CreateRoom(ctx context.Context, room model.Room) error {
 	// Map and create query.
 	sqlRoom := modelToSQLRoom(room)
@@ -84,7 +83,7 @@ func (r *RoomRepository) CreateRoom(ctx context.Context, room model.Room) error 
 	return nil
 }
 
-// GetRoom satisfies room.Repository interface.
+// GetRoom satisfies storage.RoomRepository interface.
 func (r *RoomRepository) GetRoom(ctx context.Context, id string) (*model.Room, error) {
 	// Create query.
 	sb := roomSQLBuilder.SelectFrom(r.table)
@@ -109,7 +108,7 @@ func (r *RoomRepository) GetRoom(ctx context.Context, id string) (*model.Room, e
 	return room, nil
 }
 
-// RoomExists satisfies room.Repository interface.
+// RoomExists satisfies storage.RoomRepository interface.
 func (r *RoomRepository) RoomExists(ctx context.Context, id string) (bool, error) {
 	// Create query.
 	sb := sqlbuilder.NewSelectBuilder()

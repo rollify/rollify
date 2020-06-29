@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -23,6 +25,7 @@ import (
 	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/storage"
 	"github.com/rollify/rollify/internal/storage/memory"
+	"github.com/rollify/rollify/internal/storage/mysql"
 	"github.com/rollify/rollify/internal/user"
 )
 
@@ -65,17 +68,55 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		userRepo     storage.UserRepository
 	)
 	switch cmdCfg.StorageType {
+	// Memory storage.
 	case StorageTypeMemory:
 		diceRollRepo = memory.NewDiceRollRepository()
 		roomRepo = memory.NewRoomRepository()
 		userRepo = memory.NewUserRepository()
+
+	// MySQL storage.
+	case StorageTypeMySQL:
+		db, err := createMySQLConnection(*cmdCfg)
+		if err != nil {
+			return fmt.Errorf("could not create mysql connection: %w", err)
+		}
+
+		roomRepo, err = mysql.NewRoomRepository(mysql.RoomRepositoryConfig{
+			DBClient: db,
+			Logger:   logger,
+		})
+		if err != nil {
+			return fmt.Errorf("could not create mysql room repository: %w", err)
+		}
+
+		userRepo, err = mysql.NewUserRepository(mysql.UserRepositoryConfig{
+			DBClient: db,
+			Logger:   logger,
+		})
+		if err != nil {
+			return fmt.Errorf("could not create mysql user repository: %w", err)
+		}
+
+		diceRollRepo, err = mysql.NewDiceRollRepository(mysql.DiceRollRepositoryConfig{
+			DBClient: db,
+			Logger:   logger,
+		})
+		if err != nil {
+			return fmt.Errorf("could not create mysql user repository: %w", err)
+		}
+
+	// Unsuported storage type.
 	default:
 		return fmt.Errorf("storage type '%s' unknown", cmdCfg.StorageType)
 	}
 
-	diceRollRepo = storage.NewMeasuredDiceRollRepository(cmdCfg.StorageType, metricsRecorder, diceRollRepo)
-	roomRepo = storage.NewMeasuredRoomRepository(cmdCfg.StorageType, metricsRecorder, roomRepo)
-	userRepo = storage.NewMeasuredUserRepository(cmdCfg.StorageType, metricsRecorder, userRepo)
+	// Wrap repositories.
+	diceRollRepo = storage.NewMeasuredDiceRollRepository(cmdCfg.StorageType, metricsRecorder,
+		storage.NewTimeoutDiceRollRepository(cmdCfg.MySQL.OpTimeout, diceRollRepo))
+	roomRepo = storage.NewMeasuredRoomRepository(cmdCfg.StorageType, metricsRecorder,
+		storage.NewTimeoutRoomRepository(cmdCfg.MySQL.OpTimeout, roomRepo))
+	userRepo = storage.NewMeasuredUserRepository(cmdCfg.StorageType, metricsRecorder,
+		storage.NewTimeoutUserRepository(cmdCfg.MySQL.OpTimeout, userRepo))
 
 	// Roller.
 	roller := dice.NewRandomRoller()
@@ -237,6 +278,26 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	}
 
 	return nil
+}
+
+func createMySQLConnection(cfg CmdConfig) (*sql.DB, error) {
+	conn := fmt.Sprintf("%s:%s@%s(%s)/%s?%s",
+		cfg.MySQL.Username,
+		cfg.MySQL.Password,
+		cfg.MySQL.Dial,
+		cfg.MySQL.Address,
+		cfg.MySQL.Database,
+		cfg.MySQL.Params,
+	)
+	db, err := sql.Open("mysql", conn)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetConnMaxLifetime(cfg.MySQL.ConnMaxLifetime)
+	db.SetMaxIdleConns(cfg.MySQL.MaxIdleConns)
+	db.SetMaxOpenConns(cfg.MySQL.MaxOpenConns)
+	return db, nil
 }
 
 func main() {

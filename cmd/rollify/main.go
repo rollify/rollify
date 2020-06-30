@@ -102,7 +102,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 			Logger:   logger,
 		})
 		if err != nil {
-			return fmt.Errorf("could not create mysql user repository: %w", err)
+			return fmt.Errorf("could not create mysql dice roll repository: %w", err)
 		}
 
 	// Unsuported storage type.

@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/rollify/rollify/internal/event"
 	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/log"
 	"github.com/rollify/rollify/internal/model"
@@ -31,6 +32,7 @@ type ServiceConfig struct {
 	RoomRepository     storage.RoomRepository
 	UserRepository     storage.UserRepository
 	Roller             Roller
+	EventNotifier      event.Notifier
 	Logger             log.Logger
 	IDGenerator        func() string
 	TimeNowFunc        func() time.Time
@@ -51,6 +53,10 @@ func (c *ServiceConfig) defaults() error {
 
 	if c.Roller == nil {
 		return fmt.Errorf("dice.Roller is required")
+	}
+
+	if c.EventNotifier == nil {
+		return fmt.Errorf("event.Notifier is required")
 	}
 
 	if c.Logger == nil {
@@ -74,6 +80,7 @@ type service struct {
 	roomRepository     storage.RoomRepository
 	userRepository     storage.UserRepository
 	roller             Roller
+	eventNotifier      event.Notifier
 	logger             log.Logger
 	idGen              func() string
 	timeNow            func() time.Time
@@ -91,6 +98,7 @@ func NewService(cfg ServiceConfig) (Service, error) {
 		roomRepository:     cfg.RoomRepository,
 		userRepository:     cfg.UserRepository,
 		roller:             cfg.Roller,
+		eventNotifier:      cfg.EventNotifier,
 		logger:             cfg.Logger,
 		idGen:              cfg.IDGenerator,
 		timeNow:            cfg.TimeNowFunc,
@@ -200,7 +208,12 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 		return nil, fmt.Errorf("could not store dice roll: %w", err)
 	}
 
-	// TODO(slok): Notify the roll.
+	// Send dice roll event.
+	// TODO(slok): should this be returned as an error?.
+	err = s.eventNotifier.SendDiceRollCreated(ctx, *dr)
+	if err != nil {
+		return nil, fmt.Errorf("could not send dice roll created event: %w", err)
+	}
 
 	return &CreateDiceRollResponse{
 		DiceRoll: *dr,

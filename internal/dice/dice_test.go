@@ -207,7 +207,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 				userRepo.On("UserExists", mock.Anything, "user-id").Once().Return(true, nil)
 				roller.On("Roll", mock.Anything, exp).Once().Return(nil)
 				diceRollRepo.On("CreateDiceRoll", mock.Anything, *exp).Once().Return(nil)
-				notifier.On("SendDiceRollCreated", mock.Anything, *exp).Once().Return(nil)
+				notifier.On("NotifyDiceRollCreated", mock.Anything, *exp).Once().Return(nil)
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -276,7 +276,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 				userRepo.On("UserExists", mock.Anything, mock.Anything).Once().Return(true, nil)
 				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(nil)
 				diceRollRepo.On("CreateDiceRoll", mock.Anything, mock.Anything).Once().Return(nil)
-				notifier.On("SendDiceRollCreated", mock.Anything, mock.Anything).Once().Return(errors.New("wanted error"))
+				notifier.On("NotifyDiceRollCreated", mock.Anything, mock.Anything).Once().Return(errors.New("wanted error"))
 
 			},
 			req: func() dice.CreateDiceRollRequest {

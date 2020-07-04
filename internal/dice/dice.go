@@ -210,7 +210,7 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 
 	// Send dice roll event.
 	// TODO(slok): should this be returned as an error?.
-	err = s.eventNotifier.SendDiceRollCreated(ctx, *dr)
+	err = s.eventNotifier.NotifyDiceRollCreated(ctx, *dr)
 	if err != nil {
 		return nil, fmt.Errorf("could not send dice roll created event: %w", err)
 	}

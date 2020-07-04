@@ -15,8 +15,8 @@ type Notifier struct {
 	mock.Mock
 }
 
-// SendDiceRollCreated provides a mock function with given fields: ctx, d
-func (_m *Notifier) SendDiceRollCreated(ctx context.Context, d model.DiceRoll) error {
+// NotifyDiceRollCreated provides a mock function with given fields: ctx, d
+func (_m *Notifier) NotifyDiceRollCreated(ctx context.Context, d model.DiceRoll) error {
 	ret := _m.Called(ctx, d)
 
 	var r0 error

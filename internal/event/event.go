@@ -8,15 +8,15 @@ import (
 
 // Notifier knows how to notify events.
 type Notifier interface {
-	NotifyDiceRollCreated(ctx context.Context, d model.DiceRoll) error
+	NotifyDiceRollCreated(ctx context.Context, e model.EventDiceRollCreated) error
 }
 
 //go:generate mockery -case underscore -output eventmock -outpkg eventmock -name Notifier
 
 // Subscriber knows how to subscribe to events.
 type Subscriber interface {
-	SubscribeDiceRollCreated(roomID, userID string, h func(context.Context, model.DiceRoll) error) error
-	UnsubscribeDiceRollCreated(roomID, userID string) error
+	SubscribeDiceRollCreated(subscribeID, roomID string, h func(context.Context, model.EventDiceRollCreated) error) error
+	UnsubscribeDiceRollCreated(subscribeID, roomID string) error
 }
 
 //go:generate mockery -case underscore -output eventmock -outpkg eventmock -name Subscriber

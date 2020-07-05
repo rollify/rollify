@@ -15,13 +15,13 @@ type Notifier struct {
 	mock.Mock
 }
 
-// NotifyDiceRollCreated provides a mock function with given fields: ctx, d
-func (_m *Notifier) NotifyDiceRollCreated(ctx context.Context, d model.DiceRoll) error {
-	ret := _m.Called(ctx, d)
+// NotifyDiceRollCreated provides a mock function with given fields: ctx, e
+func (_m *Notifier) NotifyDiceRollCreated(ctx context.Context, e model.EventDiceRollCreated) error {
+	ret := _m.Called(ctx, e)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, model.DiceRoll) error); ok {
-		r0 = rf(ctx, d)
+	if rf, ok := ret.Get(0).(func(context.Context, model.EventDiceRollCreated) error); ok {
+		r0 = rf(ctx, e)
 	} else {
 		r0 = ret.Error(0)
 	}

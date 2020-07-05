@@ -84,3 +84,11 @@ func (m measuredService) ListDiceRolls(ctx context.Context, r ListDiceRollsReque
 
 	return m.next.ListDiceRolls(ctx, r)
 }
+
+func (m measuredService) SubscribeDiceRollCreated(ctx context.Context, r SubscribeDiceRollCreatedRequest) (resp *SubscribeDiceRollCreatedResponse, err error) {
+	defer func(t0 time.Time) {
+		m.rec.MeasureDiceServiceOpDuration(ctx, "SubscribeDiceRollCreated", err == nil, time.Since(t0))
+	}(time.Now())
+
+	return m.next.SubscribeDiceRollCreated(ctx, r)
+}

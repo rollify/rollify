@@ -22,6 +22,8 @@ type Service interface {
 	CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*CreateDiceRollResponse, error)
 	// ListDiceRolls lists dice rolls.
 	ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (*ListDiceRollsResponse, error)
+	// Subscribes to a diceroll created events
+	SubscribeDiceRollCreated(ctx context.Context, r SubscribeDiceRollCreatedRequest) (*SubscribeDiceRollCreatedResponse, error)
 }
 
 //go:generate mockery -case underscore -output dicemock -outpkg dicemock -name Service
@@ -33,6 +35,7 @@ type ServiceConfig struct {
 	UserRepository     storage.UserRepository
 	Roller             Roller
 	EventNotifier      event.Notifier
+	EventSubscriber    event.Subscriber
 	Logger             log.Logger
 	IDGenerator        func() string
 	TimeNowFunc        func() time.Time
@@ -59,6 +62,10 @@ func (c *ServiceConfig) defaults() error {
 		return fmt.Errorf("event.Notifier is required")
 	}
 
+	if c.EventSubscriber == nil {
+		return fmt.Errorf("event.Subscriber is required")
+	}
+
 	if c.Logger == nil {
 		c.Logger = log.Dummy
 	}
@@ -81,6 +88,7 @@ type service struct {
 	userRepository     storage.UserRepository
 	roller             Roller
 	eventNotifier      event.Notifier
+	eventSubscriber    event.Subscriber
 	logger             log.Logger
 	idGen              func() string
 	timeNow            func() time.Time
@@ -99,6 +107,7 @@ func NewService(cfg ServiceConfig) (Service, error) {
 		userRepository:     cfg.UserRepository,
 		roller:             cfg.Roller,
 		eventNotifier:      cfg.EventNotifier,
+		eventSubscriber:    cfg.EventSubscriber,
 		logger:             cfg.Logger,
 		idGen:              cfg.IDGenerator,
 		timeNow:            cfg.TimeNowFunc,
@@ -210,7 +219,8 @@ func (s service) CreateDiceRoll(ctx context.Context, r CreateDiceRollRequest) (*
 
 	// Send dice roll event.
 	// TODO(slok): should this be returned as an error?.
-	err = s.eventNotifier.NotifyDiceRollCreated(ctx, *dr)
+	ev := model.EventDiceRollCreated{DiceRoll: *dr}
+	err = s.eventNotifier.NotifyDiceRollCreated(ctx, ev)
 	if err != nil {
 		return nil, fmt.Errorf("could not send dice roll created event: %w", err)
 	}
@@ -235,7 +245,7 @@ func (r ListDiceRollsRequest) validate() error {
 	return nil
 }
 
-// ListDiceRollsResponse is the response  for ListDiceRolls.
+// ListDiceRollsResponse is the response for ListDiceRolls.
 type ListDiceRollsResponse struct {
 	DiceRolls []model.DiceRoll
 	Cursors   model.PaginationCursors
@@ -268,4 +278,57 @@ func (s service) ListDiceRolls(ctx context.Context, r ListDiceRollsRequest) (*Li
 		DiceRolls: drs.Items,
 		Cursors:   drs.Cursors,
 	}, nil
+}
+
+// SubscribeDiceRollCreatedRequest is the request for SubscribeDiceRollCreated.
+type SubscribeDiceRollCreatedRequest struct {
+	RoomID       string
+	EventHandler func(context.Context, model.EventDiceRollCreated) error
+}
+
+func (r SubscribeDiceRollCreatedRequest) validate() error {
+	if r.RoomID == "" {
+		return fmt.Errorf("roomID is required")
+	}
+
+	if r.EventHandler == nil {
+		return fmt.Errorf("eventHandler is required")
+	}
+
+	return nil
+}
+
+// SubscribeDiceRollCreatedResponse is the response for SubscribeDiceRollCreated.
+type SubscribeDiceRollCreatedResponse struct {
+	UnsubscribeFunc func() error
+}
+
+func (s service) SubscribeDiceRollCreated(ctx context.Context, r SubscribeDiceRollCreatedRequest) (*SubscribeDiceRollCreatedResponse, error) {
+	err := r.validate()
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", internalerrors.ErrNotValid, err)
+	}
+
+	// Check the room exists.
+	roomExists, err := s.roomRepository.RoomExists(ctx, r.RoomID)
+	if err != nil {
+		return nil, fmt.Errorf("could not check if room exists: %w", err)
+	}
+	if !roomExists {
+		return nil, fmt.Errorf("room does not exists: %w", internalerrors.ErrNotValid)
+	}
+
+	// Create a subscription ID and subscribe.
+	subscriptionID := s.idGen()
+	err = s.eventSubscriber.SubscribeDiceRollCreated(subscriptionID, r.RoomID, r.EventHandler)
+	if err != nil {
+		return nil, fmt.Errorf("could not subscribe to diceRollCreated events: %w", err)
+	}
+
+	return &SubscribeDiceRollCreatedResponse{
+		UnsubscribeFunc: func() error {
+			return s.eventSubscriber.UnsubscribeDiceRollCreated(subscriptionID, r.RoomID)
+		},
+	}, nil
+
 }

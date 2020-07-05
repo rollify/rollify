@@ -51,6 +51,7 @@ func TestServiceListDiceTypes(t *testing.T) {
 			test.config.RoomRepository = &storagemock.RoomRepository{}
 			test.config.UserRepository = &storagemock.UserRepository{}
 			test.config.EventNotifier = &eventmock.Notifier{}
+			test.config.EventSubscriber = &eventmock.Subscriber{}
 			svc, err := dice.NewService(test.config)
 			require.NoError(err)
 
@@ -207,7 +208,8 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 				userRepo.On("UserExists", mock.Anything, "user-id").Once().Return(true, nil)
 				roller.On("Roll", mock.Anything, exp).Once().Return(nil)
 				diceRollRepo.On("CreateDiceRoll", mock.Anything, *exp).Once().Return(nil)
-				notifier.On("NotifyDiceRollCreated", mock.Anything, *exp).Once().Return(nil)
+				expEv := model.EventDiceRollCreated{DiceRoll: *exp}
+				notifier.On("NotifyDiceRollCreated", mock.Anything, expEv).Once().Return(nil)
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -308,6 +310,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			test.config.RoomRepository = mrrep
 			test.config.UserRepository = murep
 			test.config.EventNotifier = mevn
+			test.config.EventSubscriber = &eventmock.Subscriber{}
 			test.config.IDGenerator = func() string { return "test" }
 			test.config.TimeNowFunc = func() time.Time { return t0 }
 
@@ -485,6 +488,7 @@ func TestServiceListDiceRolls(t *testing.T) {
 			test.config.RoomRepository = mrrep
 			test.config.UserRepository = &storagemock.UserRepository{}
 			test.config.EventNotifier = &eventmock.Notifier{}
+			test.config.EventSubscriber = &eventmock.Subscriber{}
 			test.config.IDGenerator = func() string { return "test" }
 
 			svc, err := dice.NewService(test.config)
@@ -496,6 +500,121 @@ func TestServiceListDiceRolls(t *testing.T) {
 				assert.Error(err)
 			} else if assert.NoError(err) {
 				assert.Equal(test.expResp(), gotResp)
+			}
+		})
+	}
+}
+
+func TestSubscribeDiceRollCreated(t *testing.T) {
+	tests := map[string]struct {
+		config dice.ServiceConfig
+		mock   func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber)
+		req    func() dice.SubscribeDiceRollCreatedRequest
+		expErr bool
+	}{
+		"Having a subscription request without room should fail.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID:       "",
+					EventHandler: func(context.Context, model.EventDiceRollCreated) error { return nil },
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a subscription request without event handler should fail.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID: "room-id",
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a subscription request that fails while checking the room, should fail.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
+				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(false, errors.New("wanted error"))
+			},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID:       "room-id",
+					EventHandler: func(context.Context, model.EventDiceRollCreated) error { return nil },
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a subscription request of an non-existent room, should fail.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
+				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(false, nil)
+			},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID:       "room-id",
+					EventHandler: func(context.Context, model.EventDiceRollCreated) error { return nil },
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a subscription request with an error while subscribing to the bus to the event bus.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
+				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(true, nil)
+				eventSubscriber.On("SubscribeDiceRollCreated", "test", "room-id", mock.Anything).Once().Return(errors.New("wanted error"))
+			},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID:       "room-id",
+					EventHandler: func(context.Context, model.EventDiceRollCreated) error { return nil },
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a subscription request should subscribe to the event bus.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
+				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(true, nil)
+				eventSubscriber.On("SubscribeDiceRollCreated", "test", "room-id", mock.Anything).Once().Return(nil)
+			},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID:       "room-id",
+					EventHandler: func(context.Context, model.EventDiceRollCreated) error { return nil },
+				}
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			// Mocks
+			mrrep := &storagemock.RoomRepository{}
+			mevsub := &eventmock.Subscriber{}
+			test.mock(mrrep, mevsub)
+
+			test.config.Roller = &dicemock.Roller{}
+			test.config.DiceRollRepository = &storagemock.DiceRollRepository{}
+			test.config.RoomRepository = mrrep
+			test.config.UserRepository = &storagemock.UserRepository{}
+			test.config.EventNotifier = &eventmock.Notifier{}
+			test.config.EventSubscriber = mevsub
+			test.config.IDGenerator = func() string { return "test" }
+
+			svc, err := dice.NewService(test.config)
+			require.NoError(err)
+
+			gotResp, err := svc.SubscribeDiceRollCreated(context.TODO(), test.req())
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.NotNil(gotResp)
+				assert.NotNil(gotResp.UnsubscribeFunc)
 			}
 		})
 	}

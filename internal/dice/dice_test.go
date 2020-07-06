@@ -573,10 +573,11 @@ func TestSubscribeDiceRollCreated(t *testing.T) {
 			expErr: true,
 		},
 
-		"Having a subscription request should subscribe to the event bus.": {
+		"Having a subscription request should subscribe to the event bus, and the user should (be able to) call unsubscribe.": {
 			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
 				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(true, nil)
 				eventSubscriber.On("SubscribeDiceRollCreated", "test", "room-id", mock.Anything).Once().Return(nil)
+				eventSubscriber.On("UnsubscribeDiceRollCreated", "test", "room-id").Once().Return(nil)
 			},
 			req: func() dice.SubscribeDiceRollCreatedRequest {
 				return dice.SubscribeDiceRollCreatedRequest{
@@ -614,7 +615,8 @@ func TestSubscribeDiceRollCreated(t *testing.T) {
 				assert.Error(err)
 			} else if assert.NoError(err) {
 				assert.NotNil(gotResp)
-				assert.NotNil(gotResp.UnsubscribeFunc)
+				unsubErr := gotResp.UnsubscribeFunc()
+				assert.NoError(unsubErr)
 			}
 		})
 	}

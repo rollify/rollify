@@ -970,7 +970,7 @@ func TestAPIV1WSRoomEvents(t *testing.T) {
 					})
 				})
 			},
-			expBody: "{\"metadata\":{\"type\":\"diceRollCreated\"}}\n",
+			expBody: "{\"metadata\":{\"type\":\"EventDiceRollCreated\"}}\n",
 		},
 
 		"Having an error while subscribing should return a websocket error.": {

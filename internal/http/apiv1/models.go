@@ -346,7 +346,7 @@ type wsDiceRollCreatedEvent struct {
 func mapModelToAPIWSDiceRollCreatedEvent(e model.EventDiceRollCreated) wsDiceRollCreatedEvent {
 	return wsDiceRollCreatedEvent{
 		Metadata: wsEventMeta{
-			Type: "diceRollCreated",
+			Type: "EventDiceRollCreated",
 		},
 	}
 }

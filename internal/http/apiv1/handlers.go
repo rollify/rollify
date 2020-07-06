@@ -292,7 +292,7 @@ func (a *apiv1) wsRoomEvents() restful.RouteFunction {
 		}()
 
 		// We don't plan to receive any message from the websocket, only send,
-		// that's why we use `CloseRead` and wait until we are one.
+		// that's why we use `CloseRead` and wait until we are done.
 		ctx := c.CloseRead(req.Request.Context())
 		<-ctx.Done()
 		c.Close(websocket.StatusNormalClosure, "")

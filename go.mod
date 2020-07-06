@@ -15,4 +15,5 @@ require (
 	github.com/slok/go-http-metrics v0.8.0
 	github.com/stretchr/testify v1.6.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
+	nhooyr.io/websocket v1.8.6
 )

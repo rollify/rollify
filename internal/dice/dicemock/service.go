@@ -82,3 +82,26 @@ func (_m *Service) ListDiceTypes(ctx context.Context) (*dice.ListDiceTypesRespon
 
 	return r0, r1
 }
+
+// SubscribeDiceRollCreated provides a mock function with given fields: ctx, r
+func (_m *Service) SubscribeDiceRollCreated(ctx context.Context, r dice.SubscribeDiceRollCreatedRequest) (*dice.SubscribeDiceRollCreatedResponse, error) {
+	ret := _m.Called(ctx, r)
+
+	var r0 *dice.SubscribeDiceRollCreatedResponse
+	if rf, ok := ret.Get(0).(func(context.Context, dice.SubscribeDiceRollCreatedRequest) *dice.SubscribeDiceRollCreatedResponse); ok {
+		r0 = rf(ctx, r)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dice.SubscribeDiceRollCreatedResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, dice.SubscribeDiceRollCreatedRequest) error); ok {
+		r1 = rf(ctx, r)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

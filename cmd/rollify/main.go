@@ -19,12 +19,13 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/rollify/rollify/internal/dice"
+	eventmemory "github.com/rollify/rollify/internal/event/memory"
 	"github.com/rollify/rollify/internal/http/apiv1"
 	"github.com/rollify/rollify/internal/log"
 	metrics "github.com/rollify/rollify/internal/metrics/prometheus"
 	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/storage"
-	"github.com/rollify/rollify/internal/storage/memory"
+	storagememory "github.com/rollify/rollify/internal/storage/memory"
 	"github.com/rollify/rollify/internal/storage/mysql"
 	"github.com/rollify/rollify/internal/user"
 )
@@ -70,9 +71,9 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	switch cmdCfg.StorageType {
 	// Memory storage.
 	case StorageTypeMemory:
-		diceRollRepo = memory.NewDiceRollRepository()
-		roomRepo = memory.NewRoomRepository()
-		userRepo = memory.NewUserRepository()
+		diceRollRepo = storagememory.NewDiceRollRepository()
+		roomRepo = storagememory.NewRoomRepository()
+		userRepo = storagememory.NewUserRepository()
 
 	// MySQL storage.
 	case StorageTypeMySQL:
@@ -122,12 +123,17 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	roller := dice.NewRandomRoller()
 	roller = dice.NewMeasureRoller("random", metricsRecorder, roller)
 
+	// Events.
+	hub := eventmemory.NewHub(logger)
+
 	// Create app services.
 	diceAppService, err := dice.NewService(dice.ServiceConfig{
 		DiceRollRepository: diceRollRepo,
 		RoomRepository:     roomRepo,
 		UserRepository:     userRepo,
 		Roller:             roller,
+		EventNotifier:      hub,
+		EventSubscriber:    hub,
 		Logger:             logger,
 	})
 	if err != nil {

@@ -1,13 +1,18 @@
 package apiv1
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
 	"github.com/emicklei/go-restful"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 
+	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/log"
+	"github.com/rollify/rollify/internal/model"
 )
 
 func (a *apiv1) pong() restful.RouteFunction {
@@ -198,7 +203,7 @@ func (a *apiv1) createUser() restful.RouteFunction {
 		}
 
 		// Execute.
-		mResp, err := a.UserAppSvc.CreateUser(req.Request.Context(), *mReq)
+		mResp, err := a.userAppSvc.CreateUser(req.Request.Context(), *mReq)
 		if err != nil {
 			writeResponseError(logger, resp, errToStatusCode(err), err)
 			logger.Warningf("error processing request: %s", err)
@@ -228,7 +233,7 @@ func (a *apiv1) listUsers() restful.RouteFunction {
 		}
 
 		// Execute.
-		mResp, err := a.UserAppSvc.ListUsers(req.Request.Context(), *mReq)
+		mResp, err := a.userAppSvc.ListUsers(req.Request.Context(), *mReq)
 		if err != nil {
 			writeResponseError(logger, resp, errToStatusCode(err), err)
 			logger.Warningf("error processing request: %s", err)
@@ -241,6 +246,56 @@ func (a *apiv1) listUsers() restful.RouteFunction {
 		if err != nil {
 			logger.Errorf("could not write http response: %w", err)
 		}
+	}
+}
+
+func (a *apiv1) wsRoomEvents() restful.RouteFunction {
+	const wsRoomEventsRoomID = "id"
+
+	logger := a.logger.WithKV(log.KV{"handler": "wsRoomEvents"})
+
+	return func(req *restful.Request, resp *restful.Response) {
+		logger.Debugf("handler called")
+
+		// Get correct data.
+		roomID := req.PathParameters()[wsRoomEventsRoomID]
+
+		// Upgrade connection to websocket.
+		c, err := websocket.Accept(resp.ResponseWriter, req.Request, nil)
+		if err != nil {
+			writeResponseError(logger, resp, errToStatusCode(err), err)
+			logger.Warningf("error processing websocket request: %s", err)
+			return
+		}
+		defer c.Close(websocket.StatusInternalError, "")
+		logger.Debugf("websocket connected")
+		defer logger.Debugf("websocket disconnected")
+
+		// Subscribe user to room events.
+		modelReq := dice.SubscribeDiceRollCreatedRequest{
+			RoomID: roomID,
+			EventHandler: func(ctx context.Context, e model.EventDiceRollCreated) error {
+				resp := mapModelToAPIWSDiceRollCreatedEvent(e)
+				return wsjson.Write(ctx, c, resp)
+			},
+		}
+		modelResp, err := a.diceAppSvc.SubscribeDiceRollCreated(req.Request.Context(), modelReq)
+		if err != nil {
+			logger.Warningf("error subscribing websocket to dice roll created events: %s", err)
+			return
+		}
+		defer func() {
+			err := modelResp.UnsubscribeFunc()
+			if err != nil {
+				logger.Warningf("error subscribing websocket to dice roll created events: %s", err)
+			}
+		}()
+
+		// We don't plan to receive any message from the websocket, only send,
+		// that's why we use `CloseRead` and wait until we are done.
+		ctx := c.CloseRead(req.Request.Context())
+		<-ctx.Done()
+		c.Close(websocket.StatusNormalClosure, "")
 	}
 }
 

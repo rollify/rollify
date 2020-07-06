@@ -84,6 +84,12 @@ func (a apiv1) registerRoutes(prefix string) {
 		Returns(http.StatusOK, "OK", listUsersResponse{}).
 		Returns(http.StatusBadRequest, "", nil))
 
+	a.apiws.Route(a.wrapWSGet("/ws/rooms/{id}").
+		To(a.wsRoomEvents()).
+		Metadata(restfulspec.KeyOpenAPITags, []string{"websocket"}).
+		Doc("websocket connection for room events").
+		Param(a.apiws.PathParameter("id", "identifier of the room").DataType("string")))
+
 	// Register docs.
 	// Important: Needs to be the last route registed, because it needs to know what were
 	// the registered endpoints.

@@ -1,6 +1,7 @@
 package apiv1_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -14,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"nhooyr.io/websocket"
 
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/dice/dicemock"
@@ -948,6 +950,74 @@ func TestAPIV1ListUsers(t *testing.T) {
 			require.NoError(err)
 			assert.Equal(test.expStatusCode, res.StatusCode)
 			assert.Equal(test.expBody, string(gotBody))
+		})
+	}
+}
+
+func TestAPIV1WSRoomEvents(t *testing.T) {
+	tests := map[string]struct {
+		mock    func(*dicemock.Service)
+		expBody string
+		expErr  bool
+	}{
+		"Subscribing to dice roll created events in a room using websocket should subscribe and use the handler to send the events.": {
+			mock: func(m *dicemock.Service) {
+				// Expect subscription and send a dice roll created event in the moment the subscription is made.
+				m.On("SubscribeDiceRollCreated", mock.Anything, mock.Anything).Once().Return(&dice.SubscribeDiceRollCreatedResponse{}, nil).Run(func(args mock.Arguments) {
+					req := args[1].(dice.SubscribeDiceRollCreatedRequest)
+					_ = req.EventHandler(context.TODO(), model.EventDiceRollCreated{
+						DiceRoll: model.DiceRoll{},
+					})
+				})
+			},
+			expBody: "{\"metadata\":{\"type\":\"EventDiceRollCreated\"}}\n",
+		},
+
+		"Having an error while subscribing should return a websocket error.": {
+			mock: func(m *dicemock.Service) {
+				// Expect subscription and send a dice roll created event in the moment the subscription is made.
+				m.On("SubscribeDiceRollCreated", mock.Anything, mock.Anything).Once().Return(&dice.SubscribeDiceRollCreatedResponse{}, errors.New("wanted error"))
+			},
+			expErr: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			md := &dicemock.Service{}
+			test.mock(md)
+
+			// Prepare.
+			cfg := apiv1.Config{
+				DiceAppService: md,
+				RoomAppService: &roommock.Service{},
+				UserAppService: &usermock.Service{},
+			}
+			h, err := apiv1.New(cfg)
+			require.NoError(err)
+
+			// Prepare server and run, We use the server instead the regular handler because
+			// we need a full websocket handshake.
+			server := httptest.NewServer(h)
+			defer server.Close()
+
+			// Create a websocket connection.
+			c, _, err := websocket.Dial(context.TODO(), server.URL+"/api/v1/ws/rooms/test-id", nil)
+			require.NoError(err)
+			defer c.Close(websocket.StatusNormalClosure, "")
+
+			// Read a single message.
+			_, gotBody, err := c.Read(context.TODO())
+
+			// Check.
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expBody, string(gotBody))
+			}
 		})
 	}
 }

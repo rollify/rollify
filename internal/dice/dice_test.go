@@ -13,6 +13,7 @@ import (
 
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/dice/dicemock"
+	"github.com/rollify/rollify/internal/event/eventmock"
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/storage"
 	"github.com/rollify/rollify/internal/storage/storagemock"
@@ -49,6 +50,8 @@ func TestServiceListDiceTypes(t *testing.T) {
 			test.config.DiceRollRepository = &storagemock.DiceRollRepository{}
 			test.config.RoomRepository = &storagemock.RoomRepository{}
 			test.config.UserRepository = &storagemock.UserRepository{}
+			test.config.EventNotifier = &eventmock.Notifier{}
+			test.config.EventSubscriber = &eventmock.Subscriber{}
 			svc, err := dice.NewService(test.config)
 			require.NoError(err)
 
@@ -68,13 +71,13 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 
 	tests := map[string]struct {
 		config  dice.ServiceConfig
-		mock    func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository)
+		mock    func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier)
 		req     func() dice.CreateDiceRollRequest
 		expResp func() *dice.CreateDiceRollResponse
 		expErr  bool
 	}{
 		"Having a dice roll request without room should fail.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -87,7 +90,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request without user should fail.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -100,7 +103,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request without dice should fail.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -113,7 +116,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request with too much dice should fail.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 			},
 			req: func() dice.CreateDiceRollRequest {
 				ds := []model.DieType{}
@@ -130,7 +133,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request with a room that does not exists it should fail.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 				roomRepo.On("RoomExists", mock.Anything, "test-room").Once().Return(false, nil)
 			},
 			req: func() dice.CreateDiceRollRequest {
@@ -144,7 +147,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request if checking if the room exists fail, it should fail.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 				roomRepo.On("RoomExists", mock.Anything, "test-room").Once().Return(false, fmt.Errorf("wanted error"))
 			},
 			req: func() dice.CreateDiceRollRequest {
@@ -158,7 +161,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request with a user that does not exists it should fail.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 				roomRepo.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
 				userRepo.On("UserExists", mock.Anything, "user-id").Once().Return(false, nil)
 			},
@@ -173,7 +176,7 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 		},
 
 		"Having a dice roll request if checking if the user exists fail, it should fail.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 				roomRepo.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
 				userRepo.On("UserExists", mock.Anything, "user-id").Once().Return(false, fmt.Errorf("wanted error"))
 			},
@@ -187,8 +190,8 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			expErr: true,
 		},
 
-		"Having a dice roll request it should create a dice roll, roll them and store.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+		"Having a dice roll request it should create a dice roll, roll them, store and notify.": {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 				// Expexted dice roll call.
 				exp := &model.DiceRoll{
 					ID:        "test",
@@ -205,6 +208,8 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 				userRepo.On("UserExists", mock.Anything, "user-id").Once().Return(true, nil)
 				roller.On("Roll", mock.Anything, exp).Once().Return(nil)
 				diceRollRepo.On("CreateDiceRoll", mock.Anything, *exp).Once().Return(nil)
+				expEv := model.EventDiceRollCreated{DiceRoll: *exp}
+				notifier.On("NotifyDiceRollCreated", mock.Anything, expEv).Once().Return(nil)
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -234,8 +239,24 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			},
 		},
 
+		"Having a dice roll request and failing the dice roll process, it should fail.": {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
+				roomRepo.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
+				userRepo.On("UserExists", mock.Anything, mock.Anything).Once().Return(true, nil)
+				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(fmt.Errorf("wanted error"))
+			},
+			req: func() dice.CreateDiceRollRequest {
+				return dice.CreateDiceRollRequest{
+					RoomID: "test-room",
+					UserID: "user-id",
+					Dice:   []model.DieType{model.DieTypeD6},
+				}
+			},
+			expErr: true,
+		},
+
 		"Having a dice roll request if storage fails, it should fail.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 				roomRepo.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
 				userRepo.On("UserExists", mock.Anything, mock.Anything).Once().Return(true, nil)
 				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(nil)
@@ -251,11 +272,14 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			expErr: true,
 		},
 
-		"Having a dice roll request and failing the dice roll process, it should fail.": {
-			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository) {
+		"Having a dice roll request if notification fails, it should fail.": {
+			mock: func(roller *dicemock.Roller, diceRollRepo *storagemock.DiceRollRepository, roomRepo *storagemock.RoomRepository, userRepo *storagemock.UserRepository, notifier *eventmock.Notifier) {
 				roomRepo.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
 				userRepo.On("UserExists", mock.Anything, mock.Anything).Once().Return(true, nil)
-				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(fmt.Errorf("wanted error"))
+				roller.On("Roll", mock.Anything, mock.Anything).Once().Return(nil)
+				diceRollRepo.On("CreateDiceRoll", mock.Anything, mock.Anything).Once().Return(nil)
+				notifier.On("NotifyDiceRollCreated", mock.Anything, mock.Anything).Once().Return(errors.New("wanted error"))
+
 			},
 			req: func() dice.CreateDiceRollRequest {
 				return dice.CreateDiceRollRequest{
@@ -278,12 +302,15 @@ func TestServiceCreateDiceRoll(t *testing.T) {
 			mdrrep := &storagemock.DiceRollRepository{}
 			mrrep := &storagemock.RoomRepository{}
 			murep := &storagemock.UserRepository{}
-			test.mock(mrol, mdrrep, mrrep, murep)
+			mevn := &eventmock.Notifier{}
+			test.mock(mrol, mdrrep, mrrep, murep, mevn)
 
 			test.config.Roller = mrol
 			test.config.DiceRollRepository = mdrrep
 			test.config.RoomRepository = mrrep
 			test.config.UserRepository = murep
+			test.config.EventNotifier = mevn
+			test.config.EventSubscriber = &eventmock.Subscriber{}
 			test.config.IDGenerator = func() string { return "test" }
 			test.config.TimeNowFunc = func() time.Time { return t0 }
 
@@ -460,6 +487,8 @@ func TestServiceListDiceRolls(t *testing.T) {
 			test.config.DiceRollRepository = mdrrep
 			test.config.RoomRepository = mrrep
 			test.config.UserRepository = &storagemock.UserRepository{}
+			test.config.EventNotifier = &eventmock.Notifier{}
+			test.config.EventSubscriber = &eventmock.Subscriber{}
 			test.config.IDGenerator = func() string { return "test" }
 
 			svc, err := dice.NewService(test.config)
@@ -471,6 +500,123 @@ func TestServiceListDiceRolls(t *testing.T) {
 				assert.Error(err)
 			} else if assert.NoError(err) {
 				assert.Equal(test.expResp(), gotResp)
+			}
+		})
+	}
+}
+
+func TestSubscribeDiceRollCreated(t *testing.T) {
+	tests := map[string]struct {
+		config dice.ServiceConfig
+		mock   func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber)
+		req    func() dice.SubscribeDiceRollCreatedRequest
+		expErr bool
+	}{
+		"Having a subscription request without room should fail.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID:       "",
+					EventHandler: func(context.Context, model.EventDiceRollCreated) error { return nil },
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a subscription request without event handler should fail.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID: "room-id",
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a subscription request that fails while checking the room, should fail.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
+				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(false, errors.New("wanted error"))
+			},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID:       "room-id",
+					EventHandler: func(context.Context, model.EventDiceRollCreated) error { return nil },
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a subscription request of an non-existent room, should fail.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
+				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(false, nil)
+			},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID:       "room-id",
+					EventHandler: func(context.Context, model.EventDiceRollCreated) error { return nil },
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a subscription request with an error while subscribing to the bus to the event bus.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
+				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(true, nil)
+				eventSubscriber.On("SubscribeDiceRollCreated", "test", "room-id", mock.Anything).Once().Return(errors.New("wanted error"))
+			},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID:       "room-id",
+					EventHandler: func(context.Context, model.EventDiceRollCreated) error { return nil },
+				}
+			},
+			expErr: true,
+		},
+
+		"Having a subscription request should subscribe to the event bus, and the user should (be able to) call unsubscribe.": {
+			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
+				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(true, nil)
+				eventSubscriber.On("SubscribeDiceRollCreated", "test", "room-id", mock.Anything).Once().Return(nil)
+				eventSubscriber.On("UnsubscribeDiceRollCreated", "test", "room-id").Once().Return(nil)
+			},
+			req: func() dice.SubscribeDiceRollCreatedRequest {
+				return dice.SubscribeDiceRollCreatedRequest{
+					RoomID:       "room-id",
+					EventHandler: func(context.Context, model.EventDiceRollCreated) error { return nil },
+				}
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			// Mocks
+			mrrep := &storagemock.RoomRepository{}
+			mevsub := &eventmock.Subscriber{}
+			test.mock(mrrep, mevsub)
+
+			test.config.Roller = &dicemock.Roller{}
+			test.config.DiceRollRepository = &storagemock.DiceRollRepository{}
+			test.config.RoomRepository = mrrep
+			test.config.UserRepository = &storagemock.UserRepository{}
+			test.config.EventNotifier = &eventmock.Notifier{}
+			test.config.EventSubscriber = mevsub
+			test.config.IDGenerator = func() string { return "test" }
+
+			svc, err := dice.NewService(test.config)
+			require.NoError(err)
+
+			gotResp, err := svc.SubscribeDiceRollCreated(context.TODO(), test.req())
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.NotNil(gotResp)
+				unsubErr := gotResp.UnsubscribeFunc()
+				assert.NoError(unsubErr)
 			}
 		})
 	}

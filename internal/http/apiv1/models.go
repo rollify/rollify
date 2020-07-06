@@ -334,3 +334,19 @@ func mapAPIToModelListUsers(p url.Values) (*user.ListUsersRequest, error) {
 		RoomID: roomID,
 	}, nil
 }
+
+type wsEventMeta struct {
+	Type string `json:"type"`
+}
+
+type wsDiceRollCreatedEvent struct {
+	Metadata wsEventMeta `json:"metadata"`
+}
+
+func mapModelToAPIWSDiceRollCreatedEvent(e model.EventDiceRollCreated) wsDiceRollCreatedEvent {
+	return wsDiceRollCreatedEvent{
+		Metadata: wsEventMeta{
+			Type: "diceRollCreated",
+		},
+	}
+}

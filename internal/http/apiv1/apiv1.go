@@ -59,7 +59,7 @@ func (c *Config) defaults() error {
 type apiv1 struct {
 	diceAppSvc        dice.Service
 	roomAppSvc        room.Service
-	UserAppSvc        user.Service
+	userAppSvc        user.Service
 	logger            log.Logger
 	apiws             *restful.WebService
 	restContainer     *restful.Container
@@ -76,7 +76,7 @@ func New(cfg Config) (http.Handler, error) {
 	a := apiv1{
 		diceAppSvc: cfg.DiceAppService,
 		roomAppSvc: cfg.RoomAppService,
-		UserAppSvc: cfg.UserAppService,
+		userAppSvc: cfg.UserAppService,
 		logger:     cfg.Logger,
 	}
 

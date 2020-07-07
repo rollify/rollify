@@ -10,6 +10,7 @@ import (
 	gohttpmetricsprom "github.com/slok/go-http-metrics/metrics/prometheus"
 
 	"github.com/rollify/rollify/internal/dice"
+	"github.com/rollify/rollify/internal/event"
 	"github.com/rollify/rollify/internal/http/apiv1"
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/room"
@@ -35,6 +36,7 @@ type Recorder struct {
 	diceRollRepoOPDuration *prometheus.HistogramVec
 	roomRepoOPDuration     *prometheus.HistogramVec
 	userRepoOPDuration     *prometheus.HistogramVec
+	notifierOPDuration     *prometheus.HistogramVec
 }
 
 // NewRecorder returns a new recorder implementation for prometheus.
@@ -98,6 +100,13 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 			Name:      "operation_duration_seconds",
 			Help:      "The duration of user storage repository operations.",
 		}, []string{"storage_type", "op", "success"}),
+
+		notifierOPDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: prefix,
+			Subsystem: "notifier",
+			Name:      "operation_duration_seconds",
+			Help:      "The duration of notifier operations.",
+		}, []string{"notifier_type", "op", "success"}),
 	}
 
 	reg.MustRegister(
@@ -109,6 +118,7 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 		r.diceRollRepoOPDuration,
 		r.roomRepoOPDuration,
 		r.userRepoOPDuration,
+		r.notifierOPDuration,
 	)
 
 	return r
@@ -154,6 +164,11 @@ func (r Recorder) MeasureUserRepoOpDuration(ctx context.Context, storageType, op
 	r.userRepoOPDuration.WithLabelValues(storageType, op, strconv.FormatBool(success)).Observe(t.Seconds())
 }
 
+// MeasureNotifyOpDuration satisfies event.NotifierMetricsRecorder interface.
+func (r Recorder) MeasureNotifyOpDuration(ctx context.Context, notifierType, op string, success bool, t time.Duration) {
+	r.notifierOPDuration.WithLabelValues(notifierType, op, strconv.FormatBool(success)).Observe(t.Seconds())
+}
+
 var (
 	_ apiv1.MetricsRecorder                     = Recorder{}
 	_ dice.RollerMetricsRecorder                = Recorder{}
@@ -164,4 +179,5 @@ var (
 	_ storage.DiceRollRepositoryMetricsRecorder = Recorder{}
 	_ storage.RoomRepositoryMetricsRecorder     = Recorder{}
 	_ storage.UserRepositoryMetricsRecorder     = Recorder{}
+	_ event.NotifierMetricsRecorder             = Recorder{}
 )

@@ -19,6 +19,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/rollify/rollify/internal/dice"
+	"github.com/rollify/rollify/internal/event"
 	eventmemory "github.com/rollify/rollify/internal/event/memory"
 	"github.com/rollify/rollify/internal/http/apiv1"
 	"github.com/rollify/rollify/internal/log"
@@ -125,6 +126,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 
 	// Events.
 	hub := eventmemory.NewHub(logger)
+	notifier := event.NewMeasuredNotifier("memory", metricsRecorder, hub)
 
 	// Create app services.
 	diceAppService, err := dice.NewService(dice.ServiceConfig{
@@ -132,7 +134,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		RoomRepository:     roomRepo,
 		UserRepository:     userRepo,
 		Roller:             roller,
-		EventNotifier:      hub,
+		EventNotifier:      notifier,
 		EventSubscriber:    hub,
 		Logger:             logger,
 	})

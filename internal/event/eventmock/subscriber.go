@@ -15,13 +15,13 @@ type Subscriber struct {
 	mock.Mock
 }
 
-// SubscribeDiceRollCreated provides a mock function with given fields: subscribeID, roomID, h
-func (_m *Subscriber) SubscribeDiceRollCreated(subscribeID string, roomID string, h func(context.Context, model.EventDiceRollCreated) error) error {
-	ret := _m.Called(subscribeID, roomID, h)
+// SubscribeDiceRollCreated provides a mock function with given fields: ctx, subscribeID, roomID, h
+func (_m *Subscriber) SubscribeDiceRollCreated(ctx context.Context, subscribeID string, roomID string, h func(context.Context, model.EventDiceRollCreated) error) error {
+	ret := _m.Called(ctx, subscribeID, roomID, h)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, func(context.Context, model.EventDiceRollCreated) error) error); ok {
-		r0 = rf(subscribeID, roomID, h)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, func(context.Context, model.EventDiceRollCreated) error) error); ok {
+		r0 = rf(ctx, subscribeID, roomID, h)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -29,13 +29,13 @@ func (_m *Subscriber) SubscribeDiceRollCreated(subscribeID string, roomID string
 	return r0
 }
 
-// UnsubscribeDiceRollCreated provides a mock function with given fields: subscribeID, roomID
-func (_m *Subscriber) UnsubscribeDiceRollCreated(subscribeID string, roomID string) error {
-	ret := _m.Called(subscribeID, roomID)
+// UnsubscribeDiceRollCreated provides a mock function with given fields: ctx, subscribeID, roomID
+func (_m *Subscriber) UnsubscribeDiceRollCreated(ctx context.Context, subscribeID string, roomID string) error {
+	ret := _m.Called(ctx, subscribeID, roomID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string) error); ok {
-		r0 = rf(subscribeID, roomID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, subscribeID, roomID)
 	} else {
 		r0 = ret.Error(0)
 	}

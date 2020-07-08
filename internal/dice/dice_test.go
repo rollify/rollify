@@ -562,7 +562,7 @@ func TestSubscribeDiceRollCreated(t *testing.T) {
 		"Having a subscription request with an error while subscribing to the bus to the event bus.": {
 			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
 				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(true, nil)
-				eventSubscriber.On("SubscribeDiceRollCreated", "test", "room-id", mock.Anything).Once().Return(errors.New("wanted error"))
+				eventSubscriber.On("SubscribeDiceRollCreated", mock.Anything, "test", "room-id", mock.Anything).Once().Return(errors.New("wanted error"))
 			},
 			req: func() dice.SubscribeDiceRollCreatedRequest {
 				return dice.SubscribeDiceRollCreatedRequest{
@@ -576,8 +576,8 @@ func TestSubscribeDiceRollCreated(t *testing.T) {
 		"Having a subscription request should subscribe to the event bus, and the user should (be able to) call unsubscribe.": {
 			mock: func(roomRepo *storagemock.RoomRepository, eventSubscriber *eventmock.Subscriber) {
 				roomRepo.On("RoomExists", mock.Anything, "room-id").Once().Return(true, nil)
-				eventSubscriber.On("SubscribeDiceRollCreated", "test", "room-id", mock.Anything).Once().Return(nil)
-				eventSubscriber.On("UnsubscribeDiceRollCreated", "test", "room-id").Once().Return(nil)
+				eventSubscriber.On("SubscribeDiceRollCreated", mock.Anything, "test", "room-id", mock.Anything).Once().Return(nil)
+				eventSubscriber.On("UnsubscribeDiceRollCreated", mock.Anything, "test", "room-id").Once().Return(nil)
 			},
 			req: func() dice.SubscribeDiceRollCreatedRequest {
 				return dice.SubscribeDiceRollCreatedRequest{

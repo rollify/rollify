@@ -127,6 +127,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	// Events.
 	hub := eventmemory.NewHub(logger)
 	notifier := event.NewMeasuredNotifier("memory", metricsRecorder, hub)
+	subscriber := event.NewMeasuredSubscriber("memory", metricsRecorder, hub)
 
 	// Create app services.
 	diceAppService, err := dice.NewService(dice.ServiceConfig{
@@ -135,7 +136,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		UserRepository:     userRepo,
 		Roller:             roller,
 		EventNotifier:      notifier,
-		EventSubscriber:    hub,
+		EventSubscriber:    subscriber,
 		Logger:             logger,
 	})
 	if err != nil {

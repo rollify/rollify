@@ -101,7 +101,7 @@ func TestHubDiceRollCreatedEventsFlow(t *testing.T) {
 
 			// Subscribe with our check.
 			gotEvents := []model.EventDiceRollCreated{}
-			err := hub.SubscribeDiceRollCreated(test.id, test.roomID, func(_ context.Context, e model.EventDiceRollCreated) error {
+			err := hub.SubscribeDiceRollCreated(context.TODO(), test.id, test.roomID, func(_ context.Context, e model.EventDiceRollCreated) error {
 				gotEvents = append(gotEvents, e)
 				return nil
 			})
@@ -109,7 +109,7 @@ func TestHubDiceRollCreatedEventsFlow(t *testing.T) {
 
 			// In case we want to unsubscribe after subscription.
 			if test.unsubscribe {
-				err := hub.UnsubscribeDiceRollCreated(test.id, test.roomID)
+				err := hub.UnsubscribeDiceRollCreated(context.TODO(), test.id, test.roomID)
 				require.NoError(err)
 			}
 

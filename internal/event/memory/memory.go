@@ -59,7 +59,7 @@ func (h *Hub) NotifyDiceRollCreated(ctx context.Context, e model.EventDiceRollCr
 }
 
 // SubscribeDiceRollCreated satisfies event.Subscriber interface.
-func (h *Hub) SubscribeDiceRollCreated(subscribeID, roomID string, handler func(context.Context, model.EventDiceRollCreated) error) error {
+func (h *Hub) SubscribeDiceRollCreated(ctx context.Context, subscribeID, roomID string, handler func(context.Context, model.EventDiceRollCreated) error) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	logger := h.logger.WithKV(log.KV{"event": "DiceRollCreated"})
@@ -77,7 +77,7 @@ func (h *Hub) SubscribeDiceRollCreated(subscribeID, roomID string, handler func(
 }
 
 // UnsubscribeDiceRollCreated satisfies event.Subscriber interface.
-func (h *Hub) UnsubscribeDiceRollCreated(subscribeID, roomID string) error {
+func (h *Hub) UnsubscribeDiceRollCreated(ctx context.Context, subscribeID, roomID string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	logger := h.logger.WithKV(log.KV{"event": "DiceRollCreated"})

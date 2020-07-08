@@ -28,15 +28,18 @@ type httpRecorder gohttpmetrics.Recorder
 type Recorder struct {
 	httpRecorder
 
-	diceRollQuantity       *prometheus.HistogramVec
-	dieRollResult          *prometheus.CounterVec
-	diceServiceOPDuration  *prometheus.HistogramVec
-	roomServiceOPDuration  *prometheus.HistogramVec
-	userServiceOPDuration  *prometheus.HistogramVec
-	diceRollRepoOPDuration *prometheus.HistogramVec
-	roomRepoOPDuration     *prometheus.HistogramVec
-	userRepoOPDuration     *prometheus.HistogramVec
-	notifierOPDuration     *prometheus.HistogramVec
+	diceRollQuantity                *prometheus.HistogramVec
+	dieRollResult                   *prometheus.CounterVec
+	diceServiceOPDuration           *prometheus.HistogramVec
+	roomServiceOPDuration           *prometheus.HistogramVec
+	userServiceOPDuration           *prometheus.HistogramVec
+	diceRollRepoOPDuration          *prometheus.HistogramVec
+	roomRepoOPDuration              *prometheus.HistogramVec
+	userRepoOPDuration              *prometheus.HistogramVec
+	notifierOPDuration              *prometheus.HistogramVec
+	subscriberSubscribeOPDuration   *prometheus.HistogramVec
+	subscriberUnsubscribeOPDuration *prometheus.HistogramVec
+	subscriberEvHandleOPDuration    *prometheus.HistogramVec
 }
 
 // NewRecorder returns a new recorder implementation for prometheus.
@@ -107,6 +110,27 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 			Name:      "operation_duration_seconds",
 			Help:      "The duration of notifier operations.",
 		}, []string{"notifier_type", "op", "success"}),
+
+		subscriberSubscribeOPDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: prefix,
+			Subsystem: "subscriber",
+			Name:      "subscribe_duration_seconds",
+			Help:      "The duration of subscriber subscribe operations.",
+		}, []string{"subscriber_type", "subscription", "success"}),
+
+		subscriberUnsubscribeOPDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: prefix,
+			Subsystem: "subscriber",
+			Name:      "unsubscribe_duration_seconds",
+			Help:      "The duration of subscriber unsubscribe operations.",
+		}, []string{"subscriber_type", "subscription", "success"}),
+
+		subscriberEvHandleOPDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: prefix,
+			Subsystem: "subscriber",
+			Name:      "event_handler_duration_seconds",
+			Help:      "The duration of subscriber event handler execution.",
+		}, []string{"subscriber_type", "subscription", "success"}),
 	}
 
 	reg.MustRegister(
@@ -119,6 +143,9 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 		r.roomRepoOPDuration,
 		r.userRepoOPDuration,
 		r.notifierOPDuration,
+		r.subscriberSubscribeOPDuration,
+		r.subscriberUnsubscribeOPDuration,
+		r.subscriberEvHandleOPDuration,
 	)
 
 	return r
@@ -169,6 +196,21 @@ func (r Recorder) MeasureNotifyOpDuration(ctx context.Context, notifierType, op 
 	r.notifierOPDuration.WithLabelValues(notifierType, op, strconv.FormatBool(success)).Observe(t.Seconds())
 }
 
+// MeasureSubscriberSubscribeOpDuration satisfies event.SubscriberMetricsRecorder interface.
+func (r Recorder) MeasureSubscriberSubscribeOpDuration(ctx context.Context, subscriberType, subscription string, success bool, t time.Duration) {
+	r.subscriberSubscribeOPDuration.WithLabelValues(subscriberType, subscription, strconv.FormatBool(success)).Observe(t.Seconds())
+}
+
+// MeasureSubscriberUnsubscribeOpDuration satisfies event.SubscriberMetricsRecorder interface.
+func (r Recorder) MeasureSubscriberUnsubscribeOpDuration(ctx context.Context, subscriberType, subscription string, success bool, t time.Duration) {
+	r.subscriberUnsubscribeOPDuration.WithLabelValues(subscriberType, subscription, strconv.FormatBool(success)).Observe(t.Seconds())
+}
+
+// MeasureSubscriberEventHandleOpDuration satisfies event.SubscriberMetricsRecorder interface.
+func (r Recorder) MeasureSubscriberEventHandleOpDuration(ctx context.Context, subscriberType, subscription string, success bool, t time.Duration) {
+	r.subscriberEvHandleOPDuration.WithLabelValues(subscriberType, subscription, strconv.FormatBool(success)).Observe(t.Seconds())
+}
+
 var (
 	_ apiv1.MetricsRecorder                     = Recorder{}
 	_ dice.RollerMetricsRecorder                = Recorder{}
@@ -180,4 +222,5 @@ var (
 	_ storage.RoomRepositoryMetricsRecorder     = Recorder{}
 	_ storage.UserRepositoryMetricsRecorder     = Recorder{}
 	_ event.NotifierMetricsRecorder             = Recorder{}
+	_ event.SubscriberMetricsRecorder           = Recorder{}
 )

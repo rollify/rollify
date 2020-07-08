@@ -15,8 +15,8 @@ type Notifier interface {
 
 // Subscriber knows how to subscribe to events.
 type Subscriber interface {
-	SubscribeDiceRollCreated(subscribeID, roomID string, h func(context.Context, model.EventDiceRollCreated) error) error
-	UnsubscribeDiceRollCreated(subscribeID, roomID string) error
+	SubscribeDiceRollCreated(ctx context.Context, subscribeID, roomID string, h func(context.Context, model.EventDiceRollCreated) error) error
+	UnsubscribeDiceRollCreated(ctx context.Context, subscribeID, roomID string) error
 }
 
 //go:generate mockery -case underscore -output eventmock -outpkg eventmock -name Subscriber

@@ -34,3 +34,50 @@ func (m measuredNotifier) NotifyDiceRollCreated(ctx context.Context, e model.Eve
 
 	return m.next.NotifyDiceRollCreated(ctx, e)
 }
+
+// SubscriberMetricsRecorder knows how to measure Subscriber.
+type SubscriberMetricsRecorder interface {
+	MeasureSubscriberSubscribeOpDuration(ctx context.Context, subscriberType, subscription string, success bool, t time.Duration)
+	MeasureSubscriberUnsubscribeOpDuration(ctx context.Context, subscriberType, subscription string, success bool, t time.Duration)
+	MeasureSubscriberEventHandleOpDuration(ctx context.Context, subscriberType, subscription string, success bool, t time.Duration)
+}
+
+type measuredSubscriber struct {
+	subscriberType string
+	rec            SubscriberMetricsRecorder
+	next           Subscriber
+}
+
+// NewMeasuredSubscriber wraps a Subscriber and measures.
+func NewMeasuredSubscriber(subscriberType string, rec SubscriberMetricsRecorder, next Subscriber) Subscriber {
+	return &measuredSubscriber{
+		subscriberType: subscriberType,
+		rec:            rec,
+		next:           next,
+	}
+}
+
+func (m measuredSubscriber) SubscribeDiceRollCreated(ctx context.Context, subscribeID, roomID string, h func(context.Context, model.EventDiceRollCreated) error) (err error) {
+	defer func(t0 time.Time) {
+		m.rec.MeasureSubscriberSubscribeOpDuration(ctx, m.subscriberType, "DiceRollCreated", err == nil, time.Since(t0))
+	}(time.Now())
+
+	// Wrap also the handler so it measures handle of events.
+	measuredHandler := func(ctx context.Context, e model.EventDiceRollCreated) (err error) {
+		defer func(t0 time.Time) {
+			m.rec.MeasureSubscriberEventHandleOpDuration(ctx, m.subscriberType, "DiceRollCreated", err == nil, time.Since(t0))
+		}(time.Now())
+
+		return h(ctx, e)
+	}
+
+	return m.next.SubscribeDiceRollCreated(ctx, subscribeID, roomID, measuredHandler)
+}
+
+func (m measuredSubscriber) UnsubscribeDiceRollCreated(ctx context.Context, subscribeID, roomID string) (err error) {
+	defer func(t0 time.Time) {
+		m.rec.MeasureSubscriberUnsubscribeOpDuration(ctx, m.subscriberType, "DiceRollCreated", err == nil, time.Since(t0))
+	}(time.Now())
+
+	return m.next.UnsubscribeDiceRollCreated(ctx, subscribeID, roomID)
+}

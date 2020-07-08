@@ -320,14 +320,14 @@ func (s service) SubscribeDiceRollCreated(ctx context.Context, r SubscribeDiceRo
 
 	// Create a subscription ID and subscribe.
 	subscriptionID := s.idGen()
-	err = s.eventSubscriber.SubscribeDiceRollCreated(subscriptionID, r.RoomID, r.EventHandler)
+	err = s.eventSubscriber.SubscribeDiceRollCreated(ctx, subscriptionID, r.RoomID, r.EventHandler)
 	if err != nil {
 		return nil, fmt.Errorf("could not subscribe to diceRollCreated events: %w", err)
 	}
 
 	return &SubscribeDiceRollCreatedResponse{
 		UnsubscribeFunc: func() error {
-			return s.eventSubscriber.UnsubscribeDiceRollCreated(subscriptionID, r.RoomID)
+			return s.eventSubscriber.UnsubscribeDiceRollCreated(ctx, subscriptionID, r.RoomID)
 		},
 	}, nil
 

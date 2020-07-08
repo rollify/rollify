@@ -393,6 +393,126 @@ func TestRecorder(t *testing.T) {
 				`rollify_notifier_operation_duration_seconds_count{notifier_type="t2",op="op2",success="false"} 1`,
 			},
 		},
+
+		"Measure subscriber subscribe duration.": {
+			measure: func(r metrics.Recorder) {
+				r.MeasureSubscriberSubscribeOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureSubscriberSubscribeOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureSubscriberSubscribeOpDuration(context.TODO(), "t1", "op1", true, 6*time.Second)
+				r.MeasureSubscriberSubscribeOpDuration(context.TODO(), "t2", "op2", false, 143*time.Millisecond)
+			},
+			expMetrics: []string{
+				`# HELP rollify_subscriber_subscribe_duration_seconds The duration of subscriber subscribe operations.`,
+				`# TYPE rollify_subscriber_subscribe_duration_seconds histogram`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.005"} 0`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.01"} 0`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.025"} 0`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.05"} 0`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.1"} 2`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.25"} 2`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.5"} 2`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="1"} 2`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="2.5"} 2`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="5"} 2`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="10"} 3`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="+Inf"} 3`,
+				`rollify_subscriber_subscribe_duration_seconds_count{subscriber_type="t1",subscription="op1",success="true"} 3`,
+
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.005"} 0`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.01"} 0`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.025"} 0`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.05"} 0`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.1"} 0`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.25"} 1`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.5"} 1`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="1"} 1`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="2.5"} 1`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="5"} 1`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="10"} 1`,
+				`rollify_subscriber_subscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="+Inf"} 1`,
+				`rollify_subscriber_subscribe_duration_seconds_count{subscriber_type="t2",subscription="op2",success="false"} 1`,
+			},
+		},
+
+		"Measure subscriber unsubscribe duration.": {
+			measure: func(r metrics.Recorder) {
+				r.MeasureSubscriberUnsubscribeOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureSubscriberUnsubscribeOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureSubscriberUnsubscribeOpDuration(context.TODO(), "t1", "op1", true, 6*time.Second)
+				r.MeasureSubscriberUnsubscribeOpDuration(context.TODO(), "t2", "op2", false, 143*time.Millisecond)
+			},
+			expMetrics: []string{
+				`# HELP rollify_subscriber_unsubscribe_duration_seconds The duration of subscriber unsubscribe operations.`,
+				`# TYPE rollify_subscriber_unsubscribe_duration_seconds histogram`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.005"} 0`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.01"} 0`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.025"} 0`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.05"} 0`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.1"} 2`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.25"} 2`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.5"} 2`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="1"} 2`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="2.5"} 2`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="5"} 2`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="10"} 3`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="+Inf"} 3`,
+				`rollify_subscriber_unsubscribe_duration_seconds_count{subscriber_type="t1",subscription="op1",success="true"} 3`,
+
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.005"} 0`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.01"} 0`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.025"} 0`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.05"} 0`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.1"} 0`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.25"} 1`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.5"} 1`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="1"} 1`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="2.5"} 1`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="5"} 1`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="10"} 1`,
+				`rollify_subscriber_unsubscribe_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="+Inf"} 1`,
+				`rollify_subscriber_unsubscribe_duration_seconds_count{subscriber_type="t2",subscription="op2",success="false"} 1`,
+			},
+		},
+
+		"Measure subscriber event handler duration.": {
+			measure: func(r metrics.Recorder) {
+				r.MeasureSubscriberEventHandleOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureSubscriberEventHandleOpDuration(context.TODO(), "t1", "op1", true, 55*time.Millisecond)
+				r.MeasureSubscriberEventHandleOpDuration(context.TODO(), "t1", "op1", true, 6*time.Second)
+				r.MeasureSubscriberEventHandleOpDuration(context.TODO(), "t2", "op2", false, 143*time.Millisecond)
+			},
+			expMetrics: []string{
+				`# HELP rollify_subscriber_event_handler_duration_seconds The duration of subscriber event handler execution.`,
+				`# TYPE rollify_subscriber_event_handler_duration_seconds histogram`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.005"} 0`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.01"} 0`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.025"} 0`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.05"} 0`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.1"} 2`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.25"} 2`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="0.5"} 2`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="1"} 2`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="2.5"} 2`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="5"} 2`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="10"} 3`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t1",subscription="op1",success="true",le="+Inf"} 3`,
+				`rollify_subscriber_event_handler_duration_seconds_count{subscriber_type="t1",subscription="op1",success="true"} 3`,
+
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.005"} 0`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.01"} 0`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.025"} 0`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.05"} 0`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.1"} 0`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.25"} 1`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="0.5"} 1`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="1"} 1`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="2.5"} 1`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="5"} 1`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="10"} 1`,
+				`rollify_subscriber_event_handler_duration_seconds_bucket{subscriber_type="t2",subscription="op2",success="false",le="+Inf"} 1`,
+				`rollify_subscriber_event_handler_duration_seconds_count{subscriber_type="t2",subscription="op2",success="false"} 1`,
+			},
+		},
 	}
 
 	for name, test := range tests {

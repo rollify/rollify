@@ -11,6 +11,10 @@ const (
 	StorageTypeMemory = "memory"
 	// StorageTypeMySQL is the mysql storage type.
 	StorageTypeMySQL = "mysql"
+	// EventSubsTypeMemory is the memory event subscription type.
+	EventSubsTypeMemory = "memory"
+	// EventSubsNATS is the NATS event subscription type.
+	EventSubsNATS = "nats"
 )
 
 // CmdConfig represents the configuration of the command.
@@ -34,6 +38,12 @@ type CmdConfig struct {
 		MaxIdleConns    int
 		MaxOpenConns    int
 		OpTimeout       time.Duration
+	}
+	EventSubsType string
+	NATS          struct {
+		Username string
+		Password string
+		Address  string
 	}
 }
 
@@ -69,6 +79,12 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	app.Flag("mysql.max-idle-conns", "the max iddle connections for MySQL.").Default("20").IntVar(&c.MySQL.MaxIdleConns)
 	app.Flag("mysql.max-open-conns", "the max open connections for MySQL.").Default("25").IntVar(&c.MySQL.MaxOpenConns)
 	app.Flag("mysql.operations-timeout", "timeout duration for MySQL operations.").Default("1s").DurationVar(&c.MySQL.OpTimeout)
+
+	// Event subscription.
+	app.Flag("event-subscription-type", "the event subscription type used on the application.").Default(EventSubsTypeMemory).EnumVar(&c.EventSubsType, EventSubsTypeMemory, EventSubsNATS)
+	app.Flag("nats.username", "the username for NATS connection.").StringVar(&c.NATS.Username)
+	app.Flag("nats.password", "the password for NATS connection.").StringVar(&c.NATS.Password)
+	app.Flag("nats.address", "the address for NATS connection.").Default("localhost:4222").StringVar(&c.NATS.Address)
 
 	_, err := app.Parse(args[1:])
 	if err != nil {

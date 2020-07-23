@@ -17,7 +17,7 @@ type diceRollCreatedFunc func(context.Context, model.EventDiceRollCreated) error
 //
 // TODO(slok): Split in queues and make it async the send process with the reception.
 type Hub struct {
-	// diceRollCreatedHandlers are the channels stored by roomID, then UserID
+	// diceRollCreatedHandlers are the funcs stored by roomID, then UserID
 	diceRollCreatedHandlers map[string]map[string]diceRollCreatedFunc
 	logger                  log.Logger
 	mu                      sync.Mutex

@@ -261,7 +261,7 @@ func (a *apiv1) wsRoomEvents() restful.RouteFunction {
 		roomID := req.PathParameters()[wsRoomEventsRoomID]
 
 		// Upgrade connection to websocket.
-		c, err := websocket.Accept(resp.ResponseWriter, req.Request, nil)
+		c, err := websocket.Accept(resp.ResponseWriter, req.Request, &websocket.AcceptOptions{InsecureSkipVerify: true})
 		if err != nil {
 			writeResponseError(logger, resp, errToStatusCode(err), err)
 			logger.Warningf("error processing websocket request: %s", err)

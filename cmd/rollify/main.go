@@ -13,6 +13,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/nats-io/nats.go"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -21,6 +22,7 @@ import (
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/event"
 	eventmemory "github.com/rollify/rollify/internal/event/memory"
+	eventnats "github.com/rollify/rollify/internal/event/nats"
 	"github.com/rollify/rollify/internal/http/apiv1"
 	"github.com/rollify/rollify/internal/log"
 	metrics "github.com/rollify/rollify/internal/metrics/prometheus"
@@ -38,6 +40,10 @@ var (
 
 // Run runs the main application.
 func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
+	// Ensure our context will end if any of the func uses as the main context.
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	// Load command flags and arguments.
 	cmdCfg, err := NewCmdConfig(args)
 	if err != nil {
@@ -125,9 +131,41 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	roller = dice.NewMeasureRoller("random", metricsRecorder, roller)
 
 	// Events.
-	hub := eventmemory.NewHub(logger)
-	notifier := event.NewMeasuredNotifier("memory", metricsRecorder, hub)
-	subscriber := event.NewMeasuredSubscriber("memory", metricsRecorder, hub)
+	var notifier event.Notifier
+	var subscriber event.Subscriber
+
+	switch cmdCfg.EventSubsType {
+	// Memory event subscriber.
+	case EventSubsTypeMemory:
+		hub := eventmemory.NewHub(logger)
+		notifier = hub
+		subscriber = hub
+
+	// NATS event subscriber.
+	case EventSubsNATS:
+		natsConn, err := createNATSConnection(*cmdCfg)
+		if err != nil {
+			return fmt.Errorf("could not create NATS connnection: %w", err)
+		}
+
+		hub, err := eventnats.NewHub(eventnats.HubConfig{
+			Ctx:        ctx,
+			NATSClient: natsConn,
+			Logger:     logger,
+		})
+		if err != nil {
+			return fmt.Errorf("could not create a NATS event hub: %w", err)
+		}
+		notifier = hub
+		subscriber = hub
+
+	// Unsuported event subscriber type.
+	default:
+		return fmt.Errorf("event subscriber type '%s' unknown", cmdCfg.EventSubsType)
+	}
+
+	notifier = event.NewMeasuredNotifier(cmdCfg.EventSubsType, metricsRecorder, notifier)
+	subscriber = event.NewMeasuredSubscriber(cmdCfg.EventSubsType, metricsRecorder, subscriber)
 
 	// Create app services.
 	diceAppService, err := dice.NewService(dice.ServiceConfig{
@@ -307,6 +345,15 @@ func createMySQLConnection(cfg CmdConfig) (*sql.DB, error) {
 	db.SetMaxIdleConns(cfg.MySQL.MaxIdleConns)
 	db.SetMaxOpenConns(cfg.MySQL.MaxOpenConns)
 	return db, nil
+}
+
+func createNATSConnection(cfg CmdConfig) (*nats.Conn, error) {
+	c, err := nats.Connect(cfg.NATS.Address, nats.UserInfo(cfg.NATS.Username, cfg.NATS.Password))
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 func main() {

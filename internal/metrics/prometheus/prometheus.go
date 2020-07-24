@@ -40,6 +40,7 @@ type Recorder struct {
 	subscriberSubscribeOPDuration   *prometheus.HistogramVec
 	subscriberUnsubscribeOPDuration *prometheus.HistogramVec
 	subscriberEvHandleOPDuration    *prometheus.HistogramVec
+	subscriberQuantity              *prometheus.GaugeVec
 }
 
 // NewRecorder returns a new recorder implementation for prometheus.
@@ -131,6 +132,13 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 			Name:      "event_handler_duration_seconds",
 			Help:      "The duration of subscriber event handler execution.",
 		}, []string{"subscriber_type", "subscription", "success"}),
+
+		subscriberQuantity: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Namespace: prefix,
+			Subsystem: "subscriber",
+			Name:      "subscribers_subscribed",
+			Help:      "The quantity of subscribed subscribers.",
+		}, []string{"subscriber_type", "subscription"}),
 	}
 
 	reg.MustRegister(
@@ -146,6 +154,7 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 		r.subscriberSubscribeOPDuration,
 		r.subscriberUnsubscribeOPDuration,
 		r.subscriberEvHandleOPDuration,
+		r.subscriberQuantity,
 	)
 
 	return r
@@ -209,6 +218,11 @@ func (r Recorder) MeasureSubscriberUnsubscribeOpDuration(ctx context.Context, su
 // MeasureSubscriberEventHandleOpDuration satisfies event.SubscriberMetricsRecorder interface.
 func (r Recorder) MeasureSubscriberEventHandleOpDuration(ctx context.Context, subscriberType, subscription string, success bool, t time.Duration) {
 	r.subscriberEvHandleOPDuration.WithLabelValues(subscriberType, subscription, strconv.FormatBool(success)).Observe(t.Seconds())
+}
+
+// AddSubscriberQuantity satisfies event.SubscriberMetricsRecorder interface.
+func (r Recorder) AddSubscriberQuantity(ctx context.Context, subscriberType, subscription string, quantity int) {
+	r.subscriberQuantity.WithLabelValues(subscriberType, subscription).Add(float64(quantity))
 }
 
 var (

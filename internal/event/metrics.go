@@ -40,6 +40,7 @@ type SubscriberMetricsRecorder interface {
 	MeasureSubscriberSubscribeOpDuration(ctx context.Context, subscriberType, subscription string, success bool, t time.Duration)
 	MeasureSubscriberUnsubscribeOpDuration(ctx context.Context, subscriberType, subscription string, success bool, t time.Duration)
 	MeasureSubscriberEventHandleOpDuration(ctx context.Context, subscriberType, subscription string, success bool, t time.Duration)
+	AddSubscriberQuantity(ctx context.Context, subscriberType, subscription string, quantity int)
 }
 
 type measuredSubscriber struct {
@@ -62,6 +63,12 @@ func (m measuredSubscriber) SubscribeDiceRollCreated(ctx context.Context, subscr
 		m.rec.MeasureSubscriberSubscribeOpDuration(ctx, m.subscriberType, "DiceRollCreated", err == nil, time.Since(t0))
 	}(time.Now())
 
+	defer func() {
+		if err == nil {
+			m.rec.AddSubscriberQuantity(ctx, m.subscriberType, "DiceRollCreated", 1)
+		}
+	}()
+
 	// Wrap also the handler so it measures handle of events.
 	measuredHandler := func(ctx context.Context, e model.EventDiceRollCreated) (err error) {
 		defer func(t0 time.Time) {
@@ -78,6 +85,12 @@ func (m measuredSubscriber) UnsubscribeDiceRollCreated(ctx context.Context, subs
 	defer func(t0 time.Time) {
 		m.rec.MeasureSubscriberUnsubscribeOpDuration(ctx, m.subscriberType, "DiceRollCreated", err == nil, time.Since(t0))
 	}(time.Now())
+
+	defer func() {
+		if err == nil {
+			m.rec.AddSubscriberQuantity(ctx, m.subscriberType, "DiceRollCreated", -1)
+		}
+	}()
 
 	return m.next.UnsubscribeDiceRollCreated(ctx, subscribeID, roomID)
 }

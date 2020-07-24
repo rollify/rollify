@@ -513,6 +513,22 @@ func TestRecorder(t *testing.T) {
 				`rollify_subscriber_event_handler_duration_seconds_count{subscriber_type="t2",subscription="op2",success="false"} 1`,
 			},
 		},
+
+		"Measure subscribed subscribers quantity.": {
+			measure: func(r metrics.Recorder) {
+				r.AddSubscriberQuantity(context.TODO(), "t1", "op1", 1)
+				r.AddSubscriberQuantity(context.TODO(), "t1", "op1", 1)
+				r.AddSubscriberQuantity(context.TODO(), "t1", "op1", -1)
+				r.AddSubscriberQuantity(context.TODO(), "t2", "op2", 10)
+				r.AddSubscriberQuantity(context.TODO(), "t2", "op2", -5)
+			},
+			expMetrics: []string{
+				`# HELP rollify_subscriber_subscribers_subscribed The quantity of subscribed subscribers.`,
+				`# TYPE rollify_subscriber_subscribers_subscribed gauge`,
+				`rollify_subscriber_subscribers_subscribed{subscriber_type="t1",subscription="op1"} 1`,
+				`rollify_subscriber_subscribers_subscribed{subscriber_type="t2",subscription="op2"} 5`,
+			},
+		},
 	}
 
 	for name, test := range tests {

@@ -55,7 +55,7 @@ Rollify supports multiple storage types
 
 #### Memory
 
-By default it will run with memory based storage, this is useful for development, because you dpon't need to set up a MySQL database (although if you are developing MySQL storage features you will need to use this storage).
+By default it will run with memory based storage, this is useful for development, because you don't need to set up a MySQL database (although if you are developing MySQL storage features you will need to use this storage).
 
 If you want to run a cheap rollify for you and your friends with ephemeral dice rolls, you can run this with a single instance and will do the job.
 
@@ -63,9 +63,26 @@ If you want to run a cheap rollify for you and your friends with ephemeral dice 
 
 You have the schema in [schema][db-schema].
 
+### Events
+
+Rollify uses websockets to notify the clients using events, for example when there is a new dice roll.
+
+#### Memory
+
+By default it will run with a memory based event system, this is useful for development, because you don't need to set up a NATS server.
+
+As with the memory database, this can be used for cheap rollify deployments that only have one instance and don't need to communicate with other rollify instances.
+
+#### NATS
+
+In order that all the users connected to the different Rollify instances receive the events, the publisher needs to notify all the instances, this is done with a NATS pubsub system.
+
 ### Scalability
 
-At this moment using MySQL you can scale horizontally rollify with multiple instances, the frontend uses polling to get the dice rolls every few seconds (websockets usage is being developed at this moment).
+At this moment Rollify scales horizontally, for this you will need:
+
+- MySQL storage for the database.
+- NATS message system for the events delivery.
 
 ### Metrics
 

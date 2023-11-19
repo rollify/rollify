@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -64,7 +64,7 @@ func TestAPIV1Pong(t *testing.T) {
 
 			// Check.
 			res := w.Result()
-			gotBody, err := ioutil.ReadAll(res.Body)
+			gotBody, err := io.ReadAll(res.Body)
 			require.NoError(err)
 			assert.Equal(test.expStatusCode, res.StatusCode)
 			assert.Equal(test.expBody, string(gotBody))
@@ -93,7 +93,7 @@ func TestAPIV1ErrorMappings(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"wanted error: not valid\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"wanted error: not valid\",\n \"Header\": null\n}",
 		},
 
 		"Having no ErrMissing, should return 404.": {
@@ -106,7 +106,7 @@ func TestAPIV1ErrorMappings(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusNotFound,
-			expBody:       "{\n \"Code\": 404,\n \"Message\": \"wanted error: is missing\"\n}",
+			expBody:       "{\n \"Code\": 404,\n \"Message\": \"wanted error: is missing\",\n \"Header\": null\n}",
 		},
 
 		"Having no ErrAlreadyExists, should return 409.": {
@@ -119,7 +119,7 @@ func TestAPIV1ErrorMappings(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusConflict,
-			expBody:       "{\n \"Code\": 409,\n \"Message\": \"wanted error: already exists\"\n}",
+			expBody:       "{\n \"Code\": 409,\n \"Message\": \"wanted error: already exists\",\n \"Header\": null\n}",
 		},
 	}
 
@@ -146,7 +146,7 @@ func TestAPIV1ErrorMappings(t *testing.T) {
 
 			// Check.
 			res := w.Result()
-			gotBody, err := ioutil.ReadAll(res.Body)
+			gotBody, err := io.ReadAll(res.Body)
 			require.NoError(err)
 			assert.Equal(test.expStatusCode, res.StatusCode)
 			assert.Equal(test.expBody, string(gotBody))
@@ -184,7 +184,7 @@ func TestAPIV1ListDiceTypes(t *testing.T) {
 }`,
 		},
 
-		"Having an internal error on the applicaiton service should return an internal error.": {
+		"Having an internal error on the application service should return an internal error.": {
 			mock: func(m *dicemock.Service) {
 				m.On("ListDiceTypes", mock.Anything).Once().Return(nil, errors.New("wanted error"))
 			},
@@ -193,7 +193,7 @@ func TestAPIV1ListDiceTypes(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\",\n \"Header\": null\n}",
 		},
 	}
 
@@ -220,7 +220,7 @@ func TestAPIV1ListDiceTypes(t *testing.T) {
 
 			// Check.
 			res := w.Result()
-			gotBody, err := ioutil.ReadAll(res.Body)
+			gotBody, err := io.ReadAll(res.Body)
 			require.NoError(err)
 			assert.Equal(test.expStatusCode, res.StatusCode)
 			assert.Equal(test.expBody, string(gotBody))
@@ -246,7 +246,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"user_id is required\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"user_id is required\",\n \"Header\": null\n}",
 		},
 
 		"Having a request without room ID should fail.": {
@@ -258,7 +258,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room_id is required\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room_id is required\",\n \"Header\": null\n}",
 		},
 
 		"Having a request without dice types should fail.": {
@@ -270,7 +270,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"dice_type_ids are required\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"dice_type_ids are required\",\n \"Header\": null\n}",
 		},
 
 		"Having a request with invalid dice types should fail .": {
@@ -282,7 +282,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"d99999 die type is not valid\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"d99999 die type is not valid\",\n \"Header\": null\n}",
 		},
 
 		"Having a correct request that fails creating the roll should fail.": {
@@ -296,7 +296,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\",\n \"Header\": null\n}",
 		},
 
 		"Having a correct request should create the dice roll correctly.": {
@@ -371,7 +371,7 @@ func TestAPIV1CreateDiceRoll(t *testing.T) {
 
 			// Check.
 			res := w.Result()
-			gotBody, err := ioutil.ReadAll(res.Body)
+			gotBody, err := io.ReadAll(res.Body)
 			require.NoError(err)
 			assert.Equal(test.expStatusCode, res.StatusCode)
 			assert.Equal(test.expBody, string(gotBody))
@@ -400,7 +400,7 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room-id is required\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room-id is required\",\n \"Header\": null\n}",
 		},
 
 		"Having a wrong order query should fail.": {
@@ -416,7 +416,7 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"pagination order 'wrong' is invalid\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"pagination order 'wrong' is invalid\",\n \"Header\": null\n}",
 		},
 
 		"Having a request with an error form the app service, should fail.": {
@@ -433,7 +433,7 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\",\n \"Header\": null\n}",
 		},
 
 		"Having a request should return dice rolls.": {
@@ -557,7 +557,7 @@ func TestAPIV1ListDiceRolls(t *testing.T) {
 
 			// Check.
 			res := w.Result()
-			gotBody, err := ioutil.ReadAll(res.Body)
+			gotBody, err := io.ReadAll(res.Body)
 			require.NoError(err)
 			assert.Equal(test.expStatusCode, res.StatusCode)
 			assert.Equal(test.expBody, string(gotBody))
@@ -583,7 +583,7 @@ func TestAPIV1CreateRoom(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"name is required\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"name is required\",\n \"Header\": null\n}",
 		},
 
 		"Having a correct request that fails creating the the room should fail.": {
@@ -597,7 +597,7 @@ func TestAPIV1CreateRoom(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\",\n \"Header\": null\n}",
 		},
 
 		"Having a correct request should create the room.": {
@@ -648,7 +648,7 @@ func TestAPIV1CreateRoom(t *testing.T) {
 
 			// Check.
 			res := w.Result()
-			gotBody, err := ioutil.ReadAll(res.Body)
+			gotBody, err := io.ReadAll(res.Body)
 			require.NoError(err)
 			assert.Equal(test.expStatusCode, res.StatusCode)
 			assert.Equal(test.expBody, string(gotBody))
@@ -675,7 +675,7 @@ func TestAPIV1GetRoom(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\",\n \"Header\": null\n}",
 		},
 
 		"Having a correct request should get the room.": {
@@ -725,7 +725,7 @@ func TestAPIV1GetRoom(t *testing.T) {
 
 			// Check.
 			res := w.Result()
-			gotBody, err := ioutil.ReadAll(res.Body)
+			gotBody, err := io.ReadAll(res.Body)
 			require.NoError(err)
 			assert.Equal(test.expStatusCode, res.StatusCode)
 			assert.Equal(test.expBody, string(gotBody))
@@ -751,7 +751,7 @@ func TestAPIV1CreateUser(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"name is required\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"name is required\",\n \"Header\": null\n}",
 		},
 
 		"Having a request without room id should fail.": {
@@ -763,7 +763,7 @@ func TestAPIV1CreateUser(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room_id is required\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room_id is required\",\n \"Header\": null\n}",
 		},
 
 		"Having a correct request that fails creating the the user should fail.": {
@@ -777,7 +777,7 @@ func TestAPIV1CreateUser(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\",\n \"Header\": null\n}",
 		},
 
 		"Having a correct request should create the user.": {
@@ -830,7 +830,7 @@ func TestAPIV1CreateUser(t *testing.T) {
 
 			// Check.
 			res := w.Result()
-			gotBody, err := ioutil.ReadAll(res.Body)
+			gotBody, err := io.ReadAll(res.Body)
 			require.NoError(err)
 			assert.Equal(test.expStatusCode, res.StatusCode)
 			assert.Equal(test.expBody, string(gotBody))
@@ -858,7 +858,7 @@ func TestAPIV1ListUsers(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusBadRequest,
-			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room-id is required\"\n}",
+			expBody:       "{\n \"Code\": 400,\n \"Message\": \"room-id is required\",\n \"Header\": null\n}",
 		},
 
 		"Having a request that fails while listing users, should fail.": {
@@ -874,7 +874,7 @@ func TestAPIV1ListUsers(t *testing.T) {
 				return r
 			},
 			expStatusCode: http.StatusInternalServerError,
-			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\"\n}",
+			expBody:       "{\n \"Code\": 500,\n \"Message\": \"wanted error\",\n \"Header\": null\n}",
 		},
 
 		"Having a request should list the users.": {
@@ -946,7 +946,7 @@ func TestAPIV1ListUsers(t *testing.T) {
 
 			// Check.
 			res := w.Result()
-			gotBody, err := ioutil.ReadAll(res.Body)
+			gotBody, err := io.ReadAll(res.Body)
 			require.NoError(err)
 			assert.Equal(test.expStatusCode, res.StatusCode)
 			assert.Equal(test.expBody, string(gotBody))

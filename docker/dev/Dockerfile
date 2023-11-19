@@ -1,14 +1,13 @@
-FROM golang:1.14
+FROM golang:1.21.3
 
-ARG GOLANGCI_LINT_VERSION="1.27.0"
-ARG MOCKERY_VERSION="2.0.0-alpha.2"
+ARG GOLANGCI_LINT_VERSION="1.54.2"
+ARG MOCKERY_VERSION="2.33.1"
 ARG ostype=Linux
 
 RUN apt-get update && apt-get install -y \
     git \
     bash \
     zip
-
 
 RUN wget https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz && \
     tar zxvf golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz --strip 1 -C /usr/local/bin/ && \
@@ -27,12 +26,14 @@ RUN bash -c 'if [ ${ostype} == Linux ]; then addgroup -gid $gid app; else addgro
     adduser --disabled-password -uid $uid --ingroup app --gecos "" app && \
     chown app:app -R /go'
 
-# Fill go mod cache.
-RUN mkdir /tmp/cache
-COPY go.mod /tmp/cache
-COPY go.sum /tmp/cache
+# Prepare for Go cache:
+RUN mkdir -p /tmp/cache
 RUN chown app:app -R /tmp/cache
 USER app
+
+# Fill cache.
+COPY go.mod /tmp/cache
+COPY go.sum /tmp/cache
 RUN cd /tmp/cache && \
     go mod download
 

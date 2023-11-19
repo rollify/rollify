@@ -12,7 +12,7 @@ import (
 
 // RoomRepository is a fake repository based on memory.
 // This repository exposes the storage to the public so the users can
-// check the internal data in and maniputale it (e.g tests)
+// check the internal data in and maniputale it (e.g tests).
 type RoomRepository struct {
 	// RoomsByID is where the room data is stored by ID. Not thread safe.
 	RoomsByID map[string]*model.Room

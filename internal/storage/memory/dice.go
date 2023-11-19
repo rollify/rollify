@@ -15,7 +15,7 @@ import (
 
 // DiceRollRepository is a fake repository based on memory.
 // This repository exposes the storage to the public so the users can
-// check the internal data in and maniputale it (e.g tests)
+// check the internal data in and maniputale it (e.g tests).
 type DiceRollRepository struct {
 	// DiceRollsByID is where the dice roll data is stored by ID. Not thread safe.
 	DiceRollsByID map[string]*model.DiceRoll
@@ -136,7 +136,7 @@ func (r *DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.P
 	}
 
 	// Filter the list from the starting point that we got with the cursor and
-	// then cut wiht the size limit.
+	// then cut with the size limit.
 	filteredItems := items[startIndex:]
 	hasNext := false
 	if len(filteredItems) > int(pageOpts.Size) {

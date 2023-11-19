@@ -3,8 +3,8 @@ package apiv1
 import (
 	"net/http"
 
-	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	"github.com/emicklei/go-restful/v3"
 	gohttpmetrics "github.com/slok/go-http-metrics/middleware/gorestful"
 )
 
@@ -91,7 +91,7 @@ func (a apiv1) registerRoutes(prefix string) {
 		Param(a.apiws.PathParameter("id", "identifier of the room").DataType("string")))
 
 	// Register docs.
-	// Important: Needs to be the last route registed, because it needs to know what were
+	// Important: Needs to be the last route registered, because it needs to know what were
 	// the registered endpoints.
 	a.restContainer.Add(restfulspec.NewOpenAPIService(restfulspec.Config{
 		WebServices: a.restContainer.RegisteredWebServices(),

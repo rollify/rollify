@@ -13,7 +13,7 @@ import (
 
 // UserRepository is a fake repository based on memory.
 // This repository exposes the storage to the public so the users can
-// check the internal data in and maniputale it (e.g tests)
+// check the internal data in and maniputale it (e.g tests).
 type UserRepository struct {
 	// UsersByRoom is where the users data is stored by room. Not thread safe.
 	UsersByRoom map[string]map[string]*model.User

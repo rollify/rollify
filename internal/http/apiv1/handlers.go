@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 

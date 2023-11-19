@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	gohttmetrics "github.com/slok/go-http-metrics/middleware"
 
 	"github.com/rollify/rollify/internal/dice"

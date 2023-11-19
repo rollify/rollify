@@ -141,7 +141,7 @@ func (r *UserRepository) UserExists(ctx context.Context, userID string) (bool, e
 // We can directly check without any special query or transformation because:
 // we use case insensitive collation for the specific name column:
 // - Table is: CHARACTER SET utf8mb4 COLLATE utf8mb4_bin
-// - Column `name` is: ... NOT NULL COLLATE utf8mb4_0900_ai_ci
+// - Column `name` is: ... NOT NULL COLLATE utf8mb4_0900_ai_ci.
 func (r *UserRepository) UserExistsByNameInsensitive(ctx context.Context, roomID, username string) (bool, error) {
 	// Create query.
 	sb := sqlbuilder.NewSelectBuilder()

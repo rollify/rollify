@@ -28,7 +28,7 @@ type diceRollCreatedFunc = func(context.Context, model.EventDiceRollCreated) err
 type HubConfig struct {
 	// NATSClient is the client to connect to NATS server.
 	NATSClient Client
-	// Ctx is used to controll the event loop, when the context is done,
+	// Ctx is used to control the event loop, when the context is done,
 	// the Hub will stop subscriptions and event handling and a new Hub is required.
 	Ctx context.Context
 	// Logger is the logger.

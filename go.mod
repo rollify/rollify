@@ -9,7 +9,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.11.0
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/google/uuid v1.4.0
-	github.com/huandu/go-sqlbuilder v1.23.0
+	github.com/huandu/go-sqlbuilder v1.24.0
 	github.com/nats-io/nats.go v1.31.0
 	github.com/oklog/run v1.1.0
 	github.com/prometheus/client_golang v1.17.0

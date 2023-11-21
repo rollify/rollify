@@ -24,6 +24,8 @@ import (
 	eventmemory "github.com/rollify/rollify/internal/event/memory"
 	eventnats "github.com/rollify/rollify/internal/event/nats"
 	"github.com/rollify/rollify/internal/http/apiv1"
+	"github.com/rollify/rollify/internal/http/ui"
+	httpui "github.com/rollify/rollify/internal/http/ui"
 	"github.com/rollify/rollify/internal/log"
 	metrics "github.com/rollify/rollify/internal/metrics/prometheus"
 	"github.com/rollify/rollify/internal/room"
@@ -204,11 +206,12 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	// Prepare our main runner.
 	var g run.Group
 
-	// Serving API HTTP server.
+	// Serving HTTP server.
 	{
 		logger := logger.WithKV(log.KV{
 			"addr":  cmdCfg.APIListenAddr,
 			"apiv1": true,
+			"ui":    true,
 		})
 
 		// API.
@@ -223,10 +226,27 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 			return fmt.Errorf("could not create apiv1 handler: %w", err)
 		}
 
+		// UI.
+		uiHandler, err := ui.New(httpui.Config{
+			DiceAppService:  diceAppService,
+			RoomAppService:  roomAppService,
+			UserAppService:  userAppService,
+			MetricsRecorder: metricsRecorder,
+			Logger:          logger,
+		})
+		if err != nil {
+			return fmt.Errorf("could not create ui handler: %w", err)
+		}
+
+		// Server.
+		mux := http.NewServeMux()
+		mux.Handle("/api/v1/", apiv1Handler)
+		mux.Handle("/u/", uiHandler)
+
 		// Create server.
 		server := &http.Server{
 			Addr:    cmdCfg.APIListenAddr,
-			Handler: apiv1Handler,
+			Handler: mux,
 		}
 
 		g.Add(

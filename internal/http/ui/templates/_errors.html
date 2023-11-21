@@ -1,0 +1,11 @@
+{{define "_errors"}}
+{{if .Errors}}
+<div>
+    <ul>
+        {{range .Errors}}
+        <li>{{.}}</li>
+        {{end}}
+    </ul>
+</div>
+{{end}}
+{{end}}

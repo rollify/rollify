@@ -1,0 +1,30 @@
+{{define "create_room_form"}}
+<div id="createRoomFormSection">
+    <hgroup>
+        <h1>New room</h1>
+        <h2>Let's throw some dice</h2>
+    </hgroup>
+
+    {{if .FormErrors}}
+    <div class="form-errors">
+        <ul>
+            {{range .FormErrors}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+    </div>
+    {{end}}
+
+    <form
+        id="createRoomForm"
+        hx-post="{{ .URLPrefix }}/create-room"
+        hx-swap="outerHTML"
+        hx-indicator="#spinner"
+        hx-target="#createRoomFormSection">
+
+        <input type="text" name="roomName" id="roomName" placeholder="Room name" required/>
+        
+        <button type="submit">Create</button>
+    </form>
+</div>
+{{end}}

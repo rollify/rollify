@@ -50,7 +50,7 @@ func TestHanderCreateRoom(t *testing.T) {
 
 			},
 			expHeaders: http.Header{
-				"Hx-Redirect": {"/u/login-room/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
+				"Hx-Redirect": {"/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
 			},
 			expCode: 200,
 			expBody: "",

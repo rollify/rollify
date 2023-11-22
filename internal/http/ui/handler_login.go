@@ -10,14 +10,14 @@ import (
 	"github.com/rollify/rollify/internal/user"
 )
 
-type tplDataLoginRoom struct {
+type tplDataLogin struct {
 	tplDataCommon
 	Users    []model.User
 	RoomID   string
 	RoomName string
 }
 
-func (u ui) loginRoom() http.HandlerFunc {
+func (u ui) login() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		roomID := chi.URLParam(r, paramRoomID)
 
@@ -35,12 +35,12 @@ func (u ui) loginRoom() http.HandlerFunc {
 			return
 		}
 
-		d := tplDataLoginRoom{
+		d := tplDataLogin{
 			tplDataCommon: u.tplCommonData(),
 			Users:         mresp.Users,
 			RoomID:        roomID,
 			RoomName:      room.Room.Name,
 		}
-		u.tplRender(w, "login_room", d)
+		u.tplRender(w, "login", d)
 	})
 }

@@ -1,7 +1,7 @@
-{{define "login_room_form"}}
-<div id="loginRoomFormSection">
-    <form id="LoginRoomForm"
-        hx-post="{{ .URLPrefix }}/login-room/{{ .RoomID}}/manage-user"
+{{define "login_form"}}
+<div id="loginFormSection">
+    <form id="LoginForm"
+        hx-post="{{ .URLPrefix }}/login/{{ .RoomID}}/manage-user"
         hx-swap="outerHTML"
         hx-indicator="#spinner">
 

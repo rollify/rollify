@@ -18,7 +18,7 @@ import (
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderLoginRoom(t *testing.T) {
+func TestHanderLogin(t *testing.T) {
 	type mocks struct {
 		md *dicemock.Service
 		mr *roommock.Service
@@ -34,7 +34,7 @@ func TestHanderLoginRoom(t *testing.T) {
 	}{
 		"Calling the login room without logged users should return the login template with no users.": {
 			request: func() *http.Request {
-				return httptest.NewRequest(http.MethodGet, "/u/login-room/e02b402d-c23b-45b2-a5ea-583a566a9a6b", nil)
+				return httptest.NewRequest(http.MethodGet, "/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b", nil)
 			},
 			mock: func(m mocks) {
 				rgr := room.GetRoomRequest{ID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
@@ -55,7 +55,7 @@ func TestHanderLoginRoom(t *testing.T) {
 
 		"Calling the login room with already logged users should return the login template with the current users loaded.": {
 			request: func() *http.Request {
-				return httptest.NewRequest(http.MethodGet, "/u/login-room/e02b402d-c23b-45b2-a5ea-583a566a9a6b", nil)
+				return httptest.NewRequest(http.MethodGet, "/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b", nil)
 			},
 			mock: func(m mocks) {
 				rgr := room.GetRoomRequest{ID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}

@@ -19,6 +19,7 @@ func (u ui) registerRoutes() {
 	u.wrapGet("/", u.index())
 	u.wrapPost("/create-room", u.createRoom())
 	u.wrapGet(fmt.Sprintf("/login/{%s:%s}", paramRoomID, uuidRegex), u.login())
+	u.wrapPost(fmt.Sprintf("/login/{%s:%s}/manage-user", paramRoomID, uuidRegex), u.manageUser())
 }
 
 func (u ui) wrapGet(pattern string, h http.HandlerFunc) {

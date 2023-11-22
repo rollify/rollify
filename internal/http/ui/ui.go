@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"net/http"
 	"text/template"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	gohttmetrics "github.com/slok/go-http-metrics/middleware"
@@ -30,6 +31,7 @@ type Config struct {
 	UserAppService  user.Service
 	MetricsRecorder MetricsRecorder
 	ServerPrefix    string
+	TimeNow         func() time.Time
 	Logger          log.Logger
 }
 
@@ -62,6 +64,10 @@ func (c *Config) defaults() error {
 		c.ServerPrefix = "/u"
 	}
 
+	if c.TimeNow == nil {
+		c.TimeNow = time.Now
+	}
+
 	return nil
 }
 
@@ -75,6 +81,7 @@ type ui struct {
 	templates         *template.Template
 	staticFS          fs.FS
 	metricsMiddleware gohttmetrics.Middleware
+	timeNow           func() time.Time
 }
 
 // New returns UI handler.
@@ -107,6 +114,7 @@ func New(cfg Config) (http.Handler, error) {
 			Recorder: cfg.MetricsRecorder,
 			Service:  "ui",
 		}),
+		timeNow: cfg.TimeNow,
 	}
 
 	a.registerRoutes()

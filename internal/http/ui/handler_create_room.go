@@ -40,6 +40,6 @@ func (u ui) createRoom() http.HandlerFunc {
 		}
 
 		// Room created, redirect to the room login.
-		htmx.NewResponse().WithRedirect(u.servePrefix + "/login-room/" + resp.Room.ID).SetHeaders(w)
+		htmx.NewResponse().WithRedirect(u.servePrefix + "/login/" + resp.Room.ID).SetHeaders(w)
 	})
 }

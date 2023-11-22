@@ -1,9 +1,16 @@
 package ui
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/slok/go-http-metrics/middleware/std"
+)
+
+const (
+	paramRoomID = "roomID"
+
+	uuidRegex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 )
 
 func (u ui) registerRoutes() {
@@ -11,7 +18,7 @@ func (u ui) registerRoutes() {
 
 	u.wrapGet("/", u.index())
 	u.wrapPost("/create-room", u.createRoom())
-
+	u.wrapGet(fmt.Sprintf("/login/{%s:%s}", paramRoomID, uuidRegex), u.login())
 }
 
 func (u ui) wrapGet(pattern string, h http.HandlerFunc) {

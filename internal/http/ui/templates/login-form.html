@@ -1,0 +1,30 @@
+{{define "login_form"}}
+<div id="loginFormSection">
+    <form id="LoginForm"
+        hx-post="{{ .URLPrefix }}/login/{{ .RoomID}}/manage-user"
+        hx-swap="outerHTML"
+        hx-indicator="#spinner">
+
+        {{if .Users }}
+        <div class="grid">
+            <h4>Existing user</h4>
+            <select id="userID" name="userID">
+                <option value="" disabled selected>Select</option>
+                {{range .Users}}
+                <option value="{{.ID}}">{{.Name}}</option>
+                {{end}}
+            </select>
+        </div>
+
+        </hr>
+        {{end}}
+
+        <div class="grid">
+            <h4>New user</h4>
+            <input type="text" name="username" id="username" placeholder="Username"/>
+        </div>
+        
+        <button type="submit">Login</button>
+    </form>
+</div>
+{{end}}

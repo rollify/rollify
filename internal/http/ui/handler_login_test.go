@@ -3,8 +3,6 @@ package ui_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,10 +14,11 @@ import (
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/room/roommock"
+	"github.com/rollify/rollify/internal/user"
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderCreateRoom(t *testing.T) {
+func TestHanderLogin(t *testing.T) {
 	type mocks struct {
 		md *dicemock.Service
 		mr *roommock.Service
@@ -33,38 +32,44 @@ func TestHanderCreateRoom(t *testing.T) {
 		expHeaders http.Header
 		expCode    int
 	}{
-		"Creating a new room, should create the room.": {
+		"Calling the login room without logged users should return the login template with no users.": {
 			request: func() *http.Request {
-				form := url.Values{}
-				form.Add("roomName", "test1")
-				req := httptest.NewRequest(http.MethodPost, "/u/create-room", strings.NewReader(form.Encode()))
-				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-				return req
+				return httptest.NewRequest(http.MethodGet, "/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b", nil)
 			},
 			mock: func(m mocks) {
-				rgr := room.CreateRoomRequest{Name: "test1"}
-				m.mr.On("CreateRoom", mock.Anything, rgr).Once().Return(&room.CreateRoomResponse{Room: model.Room{
+				rgr := room.GetRoomRequest{ID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
+				m.mr.On("GetRoom", mock.Anything, rgr).Once().Return(&room.GetRoomResponse{Room: model.Room{
 					ID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
 					Name: "test1",
 				}}, nil)
 
+				rlu := user.ListUsersRequest{RoomID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
+				m.mu.On("ListUsers", mock.Anything, rlu).Once().Return(&user.ListUsersResponse{Users: []model.User{}}, nil)
 			},
 			expHeaders: http.Header{
-				"Hx-Redirect": {"/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
+				"Content-Type": {"text/html; charset=utf-8"},
 			},
 			expCode: 200,
 			expBody: "",
 		},
 
-		"An empty room name should error.": {
+		"Calling the login room with already logged users should return the login template with the current users loaded.": {
 			request: func() *http.Request {
-				form := url.Values{}
-				form.Add("roomName", "      ")
-				req := httptest.NewRequest(http.MethodPost, "/u/create-room", strings.NewReader(form.Encode()))
-				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-				return req
+				return httptest.NewRequest(http.MethodGet, "/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b", nil)
 			},
 			mock: func(m mocks) {
+				rgr := room.GetRoomRequest{ID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
+				m.mr.On("GetRoom", mock.Anything, rgr).Once().Return(&room.GetRoomResponse{Room: model.Room{
+					ID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
+					Name: "test1",
+				}}, nil)
+
+				rlu := user.ListUsersRequest{RoomID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
+				m.mu.On("ListUsers", mock.Anything, rlu).Once().Return(&user.ListUsersResponse{Users: []model.User{
+					{ID: "user1", Name: "User 1"},
+					{ID: "user2", Name: "User 2"},
+					{ID: "user3", Name: "User 3"},
+				}}, nil)
 			},
 			expHeaders: http.Header{
 				"Content-Type": {"text/html; charset=utf-8"},

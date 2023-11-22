@@ -3,18 +3,23 @@ package ui_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/rollify/rollify/internal/dice/dicemock"
 	"github.com/rollify/rollify/internal/http/ui"
+	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/room/roommock"
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderIndex(t *testing.T) {
+func TestHanderCreateRoom(t *testing.T) {
 	type mocks struct {
 		md *dicemock.Service
 		mr *roommock.Service
@@ -28,11 +33,39 @@ func TestHanderIndex(t *testing.T) {
 		expHeaders http.Header
 		expCode    int
 	}{
-		"Calling the index directly should return the main index template.": {
+		"Creating a new room, should create the room.": {
 			request: func() *http.Request {
-				return httptest.NewRequest(http.MethodGet, "/u", nil)
+				form := url.Values{}
+				form.Add("roomName", "test1")
+				req := httptest.NewRequest(http.MethodPost, "/u/create-room", strings.NewReader(form.Encode()))
+				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+				return req
 			},
-			mock: func(m mocks) {},
+			mock: func(m mocks) {
+				rgr := room.CreateRoomRequest{Name: "test1"}
+				m.mr.On("CreateRoom", mock.Anything, rgr).Once().Return(&room.CreateRoomResponse{Room: model.Room{
+					ID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
+					Name: "test1",
+				}}, nil)
+
+			},
+			expHeaders: http.Header{
+				"Hx-Redirect": {"/u/login-room/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
+			},
+			expCode: 200,
+			expBody: "",
+		},
+
+		"An empty room name should error.": {
+			request: func() *http.Request {
+				form := url.Values{}
+				form.Add("roomName", "      ")
+				req := httptest.NewRequest(http.MethodPost, "/u/create-room", strings.NewReader(form.Encode()))
+				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+				return req
+			},
+			mock: func(m mocks) {
+			},
 			expHeaders: http.Header{
 				"Content-Type": {"text/html; charset=utf-8"},
 			},

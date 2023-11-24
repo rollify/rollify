@@ -3,6 +3,8 @@ package ui_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,12 +17,11 @@ import (
 	"github.com/rollify/rollify/internal/dice/dicemock"
 	"github.com/rollify/rollify/internal/http/ui"
 	"github.com/rollify/rollify/internal/model"
-	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/room/roommock"
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderdiceRollHistory(t *testing.T) {
+func TestHandlerSnippetNewDiceRoll(t *testing.T) {
 	t0, _ := time.Parse(time.RFC3339, "2023-01-21T11:05:45Z")
 	type mocks struct {
 		md *dicemock.Service
@@ -35,31 +36,34 @@ func TestHanderdiceRollHistory(t *testing.T) {
 		expHeaders http.Header
 		expCode    int
 	}{
-		"Asking for the dice roll history items should return the page with the list.": {
+		"Creating a new dice roll should render the dice roll and return the result as an HTML HTMX snippet .": {
 			request: func() *http.Request {
-				req := httptest.NewRequest(http.MethodGet, "/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history", nil)
+				form := url.Values{}
+				form.Add("d4", "2")
+				form.Add("d20", "1")
+				req := httptest.NewRequest(http.MethodPost, "/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/new-dice-roll", strings.NewReader(form.Encode()))
+				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 				req.AddCookie(&http.Cookie{Name: "_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b", Value: "user1", MaxAge: 999999999999})
 
 				return req
 			},
 			mock: func(m mocks) {
-				r1 := room.GetRoomRequest{ID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
-				m.mr.On("GetRoom", mock.Anything, r1).Once().Return(&room.GetRoomResponse{Room: model.Room{
-					ID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
-					Name: "test",
+				r := dice.CreateDiceRollRequest{UserID: "user1", RoomID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b", Dice: []model.DieType{
+					model.DieTypeD4,
+					model.DieTypeD4,
+					model.DieTypeD20,
+				}}
+				m.md.On("CreateDiceRoll", mock.Anything, r).Once().Return(&dice.CreateDiceRollResponse{DiceRoll: model.DiceRoll{
+					ID: "test1",
+					Dice: []model.DieRoll{
+						{ID: "1", Type: model.DieTypeD4, Side: 1},
+						{ID: "2", Type: model.DieTypeD4, Side: 2},
+						{ID: "3", Type: model.DieTypeD20, Side: 3},
+					},
 				}}, nil)
-
-				r2 := dice.ListDiceRollsRequest{
-					UserID:   "user1",
-					RoomID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
-					PageOpts: model.PaginationOpts{Size: 10},
-				}
-				m.md.On("ListDiceRolls", mock.Anything, r2).Once().Return(&dice.ListDiceRollsResponse{
-					DiceRolls: []model.DiceRoll{},
-				}, nil)
 			},
 			expHeaders: http.Header{
-				"Content-Type": {"text/html; charset=utf-8"},
+				"Content-Type": {"text/plain; charset=utf-8"},
 			},
 			expCode: 200,
 			expBody: "",

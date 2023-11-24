@@ -15,7 +15,7 @@ import (
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderIndex(t *testing.T) {
+func TestHanderFullIndex(t *testing.T) {
 	type mocks struct {
 		md *dicemock.Service
 		mr *roommock.Service

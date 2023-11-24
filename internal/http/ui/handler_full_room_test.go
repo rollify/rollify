@@ -19,7 +19,7 @@ import (
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderRoom(t *testing.T) {
+func TestHanderFullRoom(t *testing.T) {
 	t0, _ := time.Parse(time.RFC3339, "2023-01-21T11:05:45Z")
 	type mocks struct {
 		md *dicemock.Service

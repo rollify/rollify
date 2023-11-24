@@ -16,7 +16,7 @@ import (
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestDiceRollHistorySubscribe(t *testing.T) {
+func TestHandlerSubscribeDiceRollEvents(t *testing.T) {
 	t0, _ := time.Parse(time.RFC3339, "2023-01-21T11:05:45Z")
 	type mocks struct {
 		md *dicemock.Service

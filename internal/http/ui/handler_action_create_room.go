@@ -18,7 +18,7 @@ type tplDataCreateRoom struct {
 	FormErrors []string
 }
 
-func (u ui) createRoom() http.HandlerFunc {
+func (u ui) handlerActionCreateRoom() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Parse form.
 		roomName := r.FormValue(formFieldCreateRoomRoomName)

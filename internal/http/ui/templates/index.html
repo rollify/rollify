@@ -8,10 +8,19 @@
 
     <main class="container">
         {{template "_errors" .}}
-
-        <article class="grid">
-            {{template "create_room_form" .}}
-        </article>
+        <div class="hero">
+            <h1 id="index-title">The online dice roller for role players</h1>
+            <h3>Share your dice rolls in real time, check the dice roll history over time, be notified of new dice rolls, play role online without hassle</h3>
+        </div>
+        
+        <section></section>
+        <section></section>
+        
+        <div class="centeredSingleFormWrapper">
+            <article class="grid">
+                {{template "create_room_form" .}}
+            </article>
+        </div>
 
     </main>
 

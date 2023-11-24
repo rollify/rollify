@@ -31,4 +31,43 @@
     align-items: center;
     border-radius: 50%;
 }
-  
+
+/* Used in the index of the title */
+.hero h1 {
+    text-align: center;
+    font-weight: 800;
+    font-size: 3rem;
+    color: hsl(205, 30%, 15%);
+    margin-block-start: 0.67em;
+    margin-block-end: 0.67em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    box-sizing: border-box;
+        background-repeat: no-repeat;
+}
+
+.hero h2 {
+    text-align: center;
+    font-weight: 800;
+    font-size: 3rem;
+    color: hsl(205, 30%, 15%);
+}
+
+.hero h3 {
+    text-align: center;
+    font-weight: 400;
+    font-size: 1.5rem;
+    color: hsl(205, 10%, 50%);
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    box-sizing: border-box;
+    background-repeat: no-repeat;
+}
+
+/* Used for centered small forms containers */
+.centeredSingleFormWrapper {
+    padding-right: 200px;
+    padding-left: 200px;
+}

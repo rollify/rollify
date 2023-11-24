@@ -21,7 +21,7 @@ type tplDataNewDiceRoll struct {
 	DiceResult []diceResult
 }
 
-func (u ui) newDiceRoll() http.HandlerFunc {
+func (u ui) handlerSnippetNewDiceRoll() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		roomID := chi.URLParam(r, urlParamRoomID)
 		userID := cookies.GetUserID(r, roomID)

@@ -19,7 +19,7 @@ import (
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderLogin(t *testing.T) {
+func TestHanderFullLogin(t *testing.T) {
 	type mocks struct {
 		md *dicemock.Service
 		mr *roommock.Service

@@ -32,7 +32,7 @@ type tplDatadiceRollHistory struct {
 	Results        []userDiceRoll
 }
 
-func (u ui) diceRollHistory() http.HandlerFunc {
+func (u ui) handlerFullDiceRollHistory() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		roomID := chi.URLParam(r, urlParamRoomID)
 		userID := cookies.GetUserID(r, roomID)

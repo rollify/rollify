@@ -17,7 +17,7 @@ type tplDataLogin struct {
 	RoomName string
 }
 
-func (u ui) login() http.HandlerFunc {
+func (u ui) handlerFullLogin() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		roomID := chi.URLParam(r, urlParamRoomID)
 

@@ -33,7 +33,7 @@ func uiToModelManageUser(r *http.Request) (m *reqManageUser, errMsgs []string) {
 	}, nil
 }
 
-func (u ui) manageUser() http.HandlerFunc {
+func (u ui) handlerActionManageUser() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Parse form info and return validation errors if any.
 		m, errs := uiToModelManageUser(r)

@@ -19,7 +19,7 @@ type tplDataRoom struct {
 	SSEURL         string
 }
 
-func (u ui) room() http.HandlerFunc {
+func (u ui) handlerFullRoom() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		roomID := chi.URLParam(r, urlParamRoomID)
 		userID := cookies.GetUserID(r, roomID)

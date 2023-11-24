@@ -3,8 +3,6 @@ package ui_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strings"
 	"testing"
 	"time"
 
@@ -13,15 +11,16 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/dice/dicemock"
 	"github.com/rollify/rollify/internal/http/ui"
 	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/room/roommock"
-	"github.com/rollify/rollify/internal/user"
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderManageUser(t *testing.T) {
+func TestHandlerFullDiceRollHistory(t *testing.T) {
 	t0, _ := time.Parse(time.RFC3339, "2023-01-21T11:05:45Z")
 	type mocks struct {
 		md *dicemock.Service
@@ -36,43 +35,31 @@ func TestHanderManageUser(t *testing.T) {
 		expHeaders http.Header
 		expCode    int
 	}{
-		"Creating a new user should create a new user and redirect the to the room.": {
+		"Asking for the dice roll history items should return the page with the list.": {
 			request: func() *http.Request {
-				form := url.Values{}
-				form.Add("username", "user1")
-				req := httptest.NewRequest(http.MethodPost, "/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b/manage-user", strings.NewReader(form.Encode()))
-				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-				req.Header.Add("HX-Request", "true")
+				req := httptest.NewRequest(http.MethodGet, "/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history", nil)
+				req.AddCookie(&http.Cookie{Name: "_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b", Value: "user1", MaxAge: 999999999999})
+
 				return req
 			},
 			mock: func(m mocks) {
-				r := user.CreateUserRequest{Name: "user1", RoomID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
-				m.mu.On("CreateUser", mock.Anything, r).Once().Return(&user.CreateUserResponse{User: model.User{
-					ID:   "u1",
-					Name: "user1",
+				r1 := room.GetRoomRequest{ID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
+				m.mr.On("GetRoom", mock.Anything, r1).Once().Return(&room.GetRoomResponse{Room: model.Room{
+					ID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
+					Name: "test",
 				}}, nil)
-			},
-			expHeaders: http.Header{
-				"Hx-Redirect": {"/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
-				"Set-Cookie":  {"_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b=u1; Path=/; Expires=Sat, 04 Feb 2023 11:05:45 GMT"},
-			},
-			expCode: 200,
-			expBody: "",
-		},
 
-		"Using an existing user should select a the user and redirect the to the room.": {
-			request: func() *http.Request {
-				form := url.Values{}
-				form.Add("userID", "12345")
-				req := httptest.NewRequest(http.MethodPost, "/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b/manage-user", strings.NewReader(form.Encode()))
-				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-				req.Header.Add("HX-Request", "true")
-				return req
+				r2 := dice.ListDiceRollsRequest{
+					UserID:   "user1",
+					RoomID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
+					PageOpts: model.PaginationOpts{Size: 10},
+				}
+				m.md.On("ListDiceRolls", mock.Anything, r2).Once().Return(&dice.ListDiceRollsResponse{
+					DiceRolls: []model.DiceRoll{},
+				}, nil)
 			},
-			mock: func(m mocks) {},
 			expHeaders: http.Header{
-				"Hx-Redirect": {"/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
-				"Set-Cookie":  {"_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b=12345; Path=/; Expires=Sat, 04 Feb 2023 11:05:45 GMT"},
+				"Content-Type": {"text/html; charset=utf-8"},
 			},
 			expCode: 200,
 			expBody: "",

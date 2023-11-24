@@ -15,8 +15,7 @@ const (
 	sseStreamPrefixNotification = "notification-" // Used when we only want to be notified without the transportation of all the rendered HTML over the wire..
 )
 
-func (u ui) diceRollHistorySubscribe() http.Handler {
-
+func (u ui) handlerSubscribeDiceRollEvents() http.Handler {
 	type subcription struct {
 		appSubcriptionCancelFunc func() error
 	}

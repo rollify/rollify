@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	paramRoomID = "roomID"
+	urlParamRoomID      = "roomID"
+	queryParamSSEStream = "stream"
+	queryParamCursor    = "cursor"
 
 	uuidRegex = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 )
@@ -18,8 +20,13 @@ func (u ui) registerRoutes() {
 
 	u.wrapGet("/", u.index())
 	u.wrapPost("/create-room", u.createRoom())
-	u.wrapGet(fmt.Sprintf("/login/{%s:%s}", paramRoomID, uuidRegex), u.login())
-	u.wrapPost(fmt.Sprintf("/login/{%s:%s}/manage-user", paramRoomID, uuidRegex), u.manageUser())
+	u.wrapGet(fmt.Sprintf("/login/{%s:%s}", urlParamRoomID, uuidRegex), u.login())
+	u.wrapPost(fmt.Sprintf("/login/{%s:%s}/manage-user", urlParamRoomID, uuidRegex), u.manageUser())
+	u.wrapGet(fmt.Sprintf("/room/{%s:%s}", urlParamRoomID, uuidRegex), u.room())
+	u.wrapPost(fmt.Sprintf("/room/{%s:%s}/new-dice-roll", urlParamRoomID, uuidRegex), u.newDiceRoll())
+	u.wrapGet(fmt.Sprintf("/room/{%s:%s}/dice-roll-history", urlParamRoomID, uuidRegex), u.diceRollHistory())
+	u.wrapGet(fmt.Sprintf("/room/{%s:%s}/dice-roll-history/more-items", urlParamRoomID, uuidRegex), u.diceRollHistoryMoreItems())
+	u.router.Mount("/subscribe/room/dice-roll-history", u.diceRollHistorySubscribe())
 }
 
 func (u ui) wrapGet(pattern string, h http.HandlerFunc) {

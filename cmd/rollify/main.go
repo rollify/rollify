@@ -17,6 +17,7 @@ import (
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/r3labs/sse/v2"
 	"github.com/sirupsen/logrus"
 
 	"github.com/rollify/rollify/internal/dice"
@@ -227,11 +228,15 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		}
 
 		// UI.
+		sseServer := sse.New()
+		sseServer.AutoReplay = false
+
 		uiHandler, err := ui.New(httpui.Config{
 			DiceAppService:  diceAppService,
 			RoomAppService:  roomAppService,
 			UserAppService:  userAppService,
 			MetricsRecorder: metricsRecorder,
+			SSEServer:       sseServer,
 			Logger:          logger,
 		})
 		if err != nil {
@@ -256,11 +261,12 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 			},
 			func(_ error) {
 				logger.Infof("http server shutdown, draining connections...")
+				sseServer.Close()
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 				err := server.Shutdown(ctx)
 				if err != nil {
-					logger.Errorf("error shutting down server: %w", err)
+					logger.Errorf("error shutting down server: %s", err)
 				}
 
 				logger.Infof("connections drained")
@@ -309,7 +315,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 				defer cancel()
 				err := server.Shutdown(ctx)
 				if err != nil {
-					logger.Errorf("error shutting down server: %w", err)
+					logger.Errorf("error shutting down server: %s", err)
 				}
 
 				logger.Infof("connections drained")

@@ -1,0 +1,35 @@
+{{define "dice_roll_result"}}
+
+<figure id="dice-roll-result">
+<table role="grid">
+    <thead>
+        <tr>
+            {{range .DiceResult}}
+            {{if .Results}}
+            <th scope="col">
+                <svg xmlns="http://www.w3.org/2000/svg" width="100px"  viewBox="0 0 100 125" x="0px" y="0px">
+                    <title>{{.Dice.Name}}</title>
+                    <path fill="{{.Dice.Color}}" d="{{.Dice.SVG}}" />
+                </svg>
+            </th>
+            {{end}}
+            {{end}}
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            {{range .DiceResult}}
+            {{if .Results}}
+            <td>
+                {{range .Results}}
+                <kbd>{{.}}</kbd>
+                {{end}}
+            </td>
+            {{end}}
+            {{end}}
+        </tr>
+
+    </tbody>
+</table>
+</figure>
+{{end}}

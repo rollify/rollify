@@ -19,7 +19,6 @@
         id="createRoomForm"
         hx-post="{{ .URLPrefix }}/create-room"
         hx-swap="outerHTML"
-        hx-indicator="#spinner"
         hx-target="#createRoomFormSection">
 
         <input type="text" name="roomName" id="roomName" placeholder="Room name" required/>

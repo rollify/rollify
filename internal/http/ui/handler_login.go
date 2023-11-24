@@ -19,7 +19,7 @@ type tplDataLogin struct {
 
 func (u ui) login() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		roomID := chi.URLParam(r, paramRoomID)
+		roomID := chi.URLParam(r, urlParamRoomID)
 
 		// Get room name.
 		room, err := u.roomAppSvc.GetRoom(r.Context(), room.GetRoomRequest{ID: roomID})

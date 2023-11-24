@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/r3labs/sse/v2"
 	gohttmetrics "github.com/slok/go-http-metrics/middleware"
 
 	"github.com/rollify/rollify/internal/dice"
@@ -32,6 +33,7 @@ type Config struct {
 	MetricsRecorder MetricsRecorder
 	ServerPrefix    string
 	TimeNow         func() time.Time
+	SSEServer       *sse.Server
 	Logger          log.Logger
 }
 
@@ -46,6 +48,10 @@ func (c *Config) defaults() error {
 
 	if c.UserAppService == nil {
 		return fmt.Errorf("user.Service application service is required")
+	}
+
+	if c.SSEServer == nil {
+		return fmt.Errorf("an SSE server is required")
 	}
 
 	if c.Logger == nil {
@@ -81,6 +87,7 @@ type ui struct {
 	templates         *template.Template
 	staticFS          fs.FS
 	metricsMiddleware gohttmetrics.Middleware
+	sseServer         *sse.Server
 	timeNow           func() time.Time
 }
 
@@ -114,7 +121,8 @@ func New(cfg Config) (http.Handler, error) {
 			Recorder: cfg.MetricsRecorder,
 			Service:  "ui",
 		}),
-		timeNow: cfg.TimeNow,
+		sseServer: cfg.SSEServer,
+		timeNow:   cfg.TimeNow,
 	}
 
 	a.registerRoutes()

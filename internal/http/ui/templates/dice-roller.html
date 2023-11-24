@@ -1,0 +1,38 @@
+{{define "dice_roller"}}
+<div id="diceRollerSection">
+    <form id="diceRollerForm"
+        hx-post="{{ .URLPrefix }}/room/{{ .RoomID}}/new-dice-roll"
+        hx-swap="innerHTML"
+        hx-target="#diceRollResult">
+
+        <div class="grid">
+            {{range .Dice}}
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 125" x="0px" y="0px">
+                    <title>{{.Name}}</title>
+                    <path fill="{{.Color}}" d="{{.SVG}}" />
+                </svg>
+                <select id="{{.ID}}" name="{{.ID}}" class="diceRollerSelector">
+                    <option value="" disabled selected>{{.Name}}</option>
+                    {{ range .RangedQuantity }}
+                    <option value="{{.}}">{{.}}</option>
+                    {{end}}
+                </select>
+            </div>
+            {{end}}
+        </div>
+
+        <div class="grid">
+            <div></div>
+            <div class="container">
+                <a onclick="cleanDiceSelectors()" href="#" role="button" class="secondary">Clear</a>
+            </div>
+            <button type="submit">Roll</button>
+            <div></div>
+        </div>
+    </form>
+</div>
+<footer id="diceRollResult">
+<!-- will be replaced by HTMX on dice rolls-->
+</footer>
+{{end}}

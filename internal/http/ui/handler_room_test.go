@@ -3,9 +3,8 @@ package ui_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strings"
 	"testing"
+	"time"
 
 	"github.com/r3labs/sse/v2"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +19,8 @@ import (
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderCreateRoom(t *testing.T) {
+func TestHanderRoom(t *testing.T) {
+	t0, _ := time.Parse(time.RFC3339, "2023-01-21T11:05:45Z")
 	type mocks struct {
 		md *dicemock.Service
 		mr *roommock.Service
@@ -34,38 +34,20 @@ func TestHanderCreateRoom(t *testing.T) {
 		expHeaders http.Header
 		expCode    int
 	}{
-		"Creating a new room, should create the room.": {
+		"Entering on the room index should show the dice roller.": {
 			request: func() *http.Request {
-				form := url.Values{}
-				form.Add("roomName", "test1")
-				req := httptest.NewRequest(http.MethodPost, "/u/create-room", strings.NewReader(form.Encode()))
+				req := httptest.NewRequest(http.MethodGet, "/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b", nil)
 				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+				req.AddCookie(&http.Cookie{Name: "_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b", Value: "user1", MaxAge: 999999999999})
+
 				return req
 			},
 			mock: func(m mocks) {
-				rgr := room.CreateRoomRequest{Name: "test1"}
-				m.mr.On("CreateRoom", mock.Anything, rgr).Once().Return(&room.CreateRoomResponse{Room: model.Room{
+				r := room.GetRoomRequest{ID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
+				m.mr.On("GetRoom", mock.Anything, r).Once().Return(&room.GetRoomResponse{Room: model.Room{
 					ID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
-					Name: "test1",
+					Name: "test",
 				}}, nil)
-
-			},
-			expHeaders: http.Header{
-				"Hx-Redirect": {"/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
-			},
-			expCode: 200,
-			expBody: "",
-		},
-
-		"An empty room name should error.": {
-			request: func() *http.Request {
-				form := url.Values{}
-				form.Add("roomName", "      ")
-				req := httptest.NewRequest(http.MethodPost, "/u/create-room", strings.NewReader(form.Encode()))
-				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-				return req
-			},
-			mock: func(m mocks) {
 			},
 			expHeaders: http.Header{
 				"Content-Type": {"text/html; charset=utf-8"},
@@ -93,6 +75,7 @@ func TestHanderCreateRoom(t *testing.T) {
 				DiceAppService: m.md,
 				RoomAppService: m.mr,
 				UserAppService: m.mu,
+				TimeNow:        func() time.Time { return t0.UTC() },
 				SSEServer:      s,
 			})
 			require.NoError(err)

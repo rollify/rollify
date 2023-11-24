@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/r3labs/sse/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -41,6 +42,7 @@ func TestHanderManageUser(t *testing.T) {
 				form.Add("username", "user1")
 				req := httptest.NewRequest(http.MethodPost, "/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b/manage-user", strings.NewReader(form.Encode()))
 				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+				req.Header.Add("HX-Request", "true")
 				return req
 			},
 			mock: func(m mocks) {
@@ -64,6 +66,7 @@ func TestHanderManageUser(t *testing.T) {
 				form.Add("userID", "12345")
 				req := httptest.NewRequest(http.MethodPost, "/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b/manage-user", strings.NewReader(form.Encode()))
 				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+				req.Header.Add("HX-Request", "true")
 				return req
 			},
 			mock: func(m mocks) {},
@@ -88,11 +91,14 @@ func TestHanderManageUser(t *testing.T) {
 			}
 			test.mock(m)
 
+			s := sse.New()
+			defer s.Close()
 			h, err := ui.New(ui.Config{
 				DiceAppService: m.md,
 				RoomAppService: m.mr,
 				UserAppService: m.mu,
 				TimeNow:        func() time.Time { return t0.UTC() },
+				SSEServer:      s,
 			})
 			require.NoError(err)
 

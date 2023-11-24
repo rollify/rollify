@@ -14,6 +14,7 @@ require (
 	github.com/nats-io/nats.go v1.31.0
 	github.com/oklog/run v1.1.0
 	github.com/prometheus/client_golang v1.17.0
+	github.com/r3labs/sse/v2 v2.10.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/slok/go-http-metrics v0.11.0
 	github.com/stretchr/testify v1.8.4
@@ -46,7 +47,9 @@ require (
 	github.com/stretchr/objx v0.5.1 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	golang.org/x/crypto v0.15.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.14.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
+	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/rollify/rollify/internal/http/ui/htmx"
 	"github.com/rollify/rollify/internal/user"
 )
 
@@ -25,7 +24,7 @@ type reqManageUser struct {
 func uiToModelManageUser(r *http.Request) (m *reqManageUser, errMsgs []string) {
 	username := r.FormValue(formFieldManageUserUsername)
 	userID := r.FormValue(formFieldManageUserID)
-	roomID := chi.URLParam(r, paramRoomID)
+	roomID := chi.URLParam(r, urlParamRoomID)
 
 	return &reqManageUser{
 		Username: strings.TrimSpace(username),
@@ -71,8 +70,6 @@ func (u ui) manageUser() http.HandlerFunc {
 		cookies.SetUserID(w, m.RoomID, m.UserID, u.timeNow().Add(14*24*time.Hour))
 
 		// Redirect to the room.
-		htmx.NewResponse().
-			WithRedirect(u.servePrefix + "/room/" + m.RoomID).
-			SetHeaders(w)
+		u.redirectToURL(w, r, u.servePrefix+"/room/"+m.RoomID)
 	})
 }

@@ -1,0 +1,23 @@
+{{define "dice_roll_history_row"}}
+{{ if .NextItemsURL }}
+<tr id="history-dice-roll-row"
+  hx-trigger="revealed"
+  hx-get="{{.NextItemsURL}}"
+  hx-swap="afterend"
+>
+{{ else if .IsPushUpdate }}
+<tr id="history-dice-roll-row-push">
+{{ else }}
+<tr id="history-dice-roll-row">
+{{ end }}
+    <td>{{.Username}}</td>
+    <td>{{.TS}}</td>
+    {{range .DiceResults}}
+    <td>
+        {{range .Results}}
+        <kbd>{{.}}</kbd>
+        {{end}}
+    </td>
+    {{end}}
+</tr>
+{{end}}

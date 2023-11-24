@@ -3,15 +3,15 @@ package ui_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strings"
 	"testing"
+	"time"
 
 	"github.com/r3labs/sse/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/dice/dicemock"
 	"github.com/rollify/rollify/internal/http/ui"
 	"github.com/rollify/rollify/internal/model"
@@ -20,7 +20,8 @@ import (
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderCreateRoom(t *testing.T) {
+func TestHanderdiceRollHistory(t *testing.T) {
+	t0, _ := time.Parse(time.RFC3339, "2023-01-21T11:05:45Z")
 	type mocks struct {
 		md *dicemock.Service
 		mr *roommock.Service
@@ -34,38 +35,28 @@ func TestHanderCreateRoom(t *testing.T) {
 		expHeaders http.Header
 		expCode    int
 	}{
-		"Creating a new room, should create the room.": {
+		"Asking for the dice roll history items should return the page with the list.": {
 			request: func() *http.Request {
-				form := url.Values{}
-				form.Add("roomName", "test1")
-				req := httptest.NewRequest(http.MethodPost, "/u/create-room", strings.NewReader(form.Encode()))
-				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+				req := httptest.NewRequest(http.MethodGet, "/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history", nil)
+				req.AddCookie(&http.Cookie{Name: "_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b", Value: "user1", MaxAge: 999999999999})
+
 				return req
 			},
 			mock: func(m mocks) {
-				rgr := room.CreateRoomRequest{Name: "test1"}
-				m.mr.On("CreateRoom", mock.Anything, rgr).Once().Return(&room.CreateRoomResponse{Room: model.Room{
+				r1 := room.GetRoomRequest{ID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
+				m.mr.On("GetRoom", mock.Anything, r1).Once().Return(&room.GetRoomResponse{Room: model.Room{
 					ID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
-					Name: "test1",
+					Name: "test",
 				}}, nil)
 
-			},
-			expHeaders: http.Header{
-				"Hx-Redirect": {"/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
-			},
-			expCode: 200,
-			expBody: "",
-		},
-
-		"An empty room name should error.": {
-			request: func() *http.Request {
-				form := url.Values{}
-				form.Add("roomName", "      ")
-				req := httptest.NewRequest(http.MethodPost, "/u/create-room", strings.NewReader(form.Encode()))
-				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-				return req
-			},
-			mock: func(m mocks) {
+				r2 := dice.ListDiceRollsRequest{
+					UserID:   "user1",
+					RoomID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
+					PageOpts: model.PaginationOpts{Size: 10},
+				}
+				m.md.On("ListDiceRolls", mock.Anything, r2).Once().Return(&dice.ListDiceRollsResponse{
+					DiceRolls: []model.DiceRoll{},
+				}, nil)
 			},
 			expHeaders: http.Header{
 				"Content-Type": {"text/html; charset=utf-8"},
@@ -93,6 +84,7 @@ func TestHanderCreateRoom(t *testing.T) {
 				DiceAppService: m.md,
 				RoomAppService: m.mr,
 				UserAppService: m.mu,
+				TimeNow:        func() time.Time { return t0.UTC() },
 				SSEServer:      s,
 			})
 			require.NoError(err)

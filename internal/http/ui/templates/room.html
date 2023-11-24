@@ -1,0 +1,23 @@
+{{define "room"}}
+<!DOCTYPE html>
+<html lang="en">
+
+{{template "_head" .}}
+
+<body>
+    {{template "nav_room" .}}
+
+    <main class="container">
+        {{template "_errors" .}}
+
+        <article>
+            {{template "dice_roller" .}}
+        </article>
+
+    </main>
+
+    {{template "_footer" .}}
+</body>
+
+</html>
+{{end}}

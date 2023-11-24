@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/r3labs/sse/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -91,10 +92,13 @@ func TestHanderLogin(t *testing.T) {
 			}
 			test.mock(m)
 
+			s := sse.New()
+			defer s.Close()
 			h, err := ui.New(ui.Config{
 				DiceAppService: m.md,
 				RoomAppService: m.mr,
 				UserAppService: m.mu,
+				SSEServer:      s,
 			})
 			require.NoError(err)
 

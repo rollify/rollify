@@ -38,7 +38,7 @@ func (a apiv1) registerRoutes(prefix string) {
 		Metadata(restfulspec.KeyOpenAPITags, []string{"dice"}).
 		Doc("lists dice rolls").
 		Param(a.apiws.QueryParameter(listDiceRollsParamUserID, "identifier of the user").DataType("string")).
-		Param(a.apiws.QueryParameter(listDiceRollsParamRoomID, "identifier of the room").DataType("string")).
+		Param(a.apiws.QueryParameter(listDiceRollsurlParamRoomID, "identifier of the room").DataType("string")).
 		Param(a.apiws.QueryParameter(listDiceRollsPaginationCursor, "cursor for next page of dice rolls").DataType("string")).
 		Param(a.apiws.QueryParameter(listDiceRollsPaginationOrder, "order of the cursor, 'desc' or 'asc'").DataType("string")).
 		Writes(listDiceRollsResponse{}).
@@ -79,7 +79,7 @@ func (a apiv1) registerRoutes(prefix string) {
 		To(a.listUsers()).
 		Metadata(restfulspec.KeyOpenAPITags, []string{"user"}).
 		Doc("list room users").
-		Param(a.apiws.QueryParameter(listUsersParamRoomID, "identifier of the room").DataType("string")).
+		Param(a.apiws.QueryParameter(listUsersurlParamRoomID, "identifier of the room").DataType("string")).
 		Writes(listUsersResponse{}).
 		Returns(http.StatusOK, "OK", listUsersResponse{}).
 		Returns(http.StatusBadRequest, "", nil))

@@ -163,7 +163,7 @@ func mapModelToAPIListDiceRolls(r dice.ListDiceRollsResponse) listDiceRollsRespo
 
 const (
 	listDiceRollsParamUserID      = "user-id"
-	listDiceRollsParamRoomID      = "room-id"
+	listDiceRollsurlParamRoomID   = "room-id"
 	listDiceRollsPaginationCursor = "cursor"
 	listDiceRollsPaginationOrder  = "order"
 )
@@ -182,7 +182,7 @@ func mapAPIToModelPaginationOrder(order string) (model.PaginationOrder, error) {
 }
 
 func mapAPIToModelListDiceRolls(p url.Values) (*dice.ListDiceRollsRequest, error) {
-	roomID := p.Get(listDiceRollsParamRoomID)
+	roomID := p.Get(listDiceRollsurlParamRoomID)
 	if roomID == "" {
 		return nil, fmt.Errorf("room-id is required")
 	}
@@ -248,10 +248,10 @@ func mapModelToAPIGetRoom(r room.GetRoomResponse) getRoomResponse {
 	}
 }
 
-const getRoomParamRoomID = "id"
+const getRoomurlParamRoomID = "id"
 
 func mapAPIToModelGetRoom(params map[string]string) (*room.GetRoomRequest, error) {
-	id, ok := params[getRoomParamRoomID]
+	id, ok := params[getRoomurlParamRoomID]
 	if !ok {
 		return nil, fmt.Errorf("room id is required")
 	}
@@ -322,10 +322,10 @@ func mapModelToAPIListUsers(r user.ListUsersResponse) listUsersResponse {
 	}
 }
 
-const listUsersParamRoomID = "room-id"
+const listUsersurlParamRoomID = "room-id"
 
 func mapAPIToModelListUsers(p url.Values) (*user.ListUsersRequest, error) {
-	roomID := p.Get(listUsersParamRoomID)
+	roomID := p.Get(listUsersurlParamRoomID)
 	if roomID == "" {
 		return nil, fmt.Errorf("room-id is required")
 	}

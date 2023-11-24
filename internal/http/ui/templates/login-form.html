@@ -2,8 +2,7 @@
 <div id="loginFormSection">
     <form id="LoginForm"
         hx-post="{{ .URLPrefix }}/login/{{ .RoomID}}/manage-user"
-        hx-swap="outerHTML"
-        hx-indicator="#spinner">
+        hx-swap="outerHTML">
 
         {{if .Users }}
         <div class="grid">

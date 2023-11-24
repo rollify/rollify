@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/r3labs/sse/v2"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +16,8 @@ import (
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
-func TestHanderIndex(t *testing.T) {
+func TestDiceRollHistorySubscribe(t *testing.T) {
+	t0, _ := time.Parse(time.RFC3339, "2023-01-21T11:05:45Z")
 	type mocks struct {
 		md *dicemock.Service
 		mr *roommock.Service
@@ -29,17 +31,7 @@ func TestHanderIndex(t *testing.T) {
 		expHeaders http.Header
 		expCode    int
 	}{
-		"Calling the index directly should return the main index template.": {
-			request: func() *http.Request {
-				return httptest.NewRequest(http.MethodGet, "/u", nil)
-			},
-			mock: func(m mocks) {},
-			expHeaders: http.Header{
-				"Content-Type": {"text/html; charset=utf-8"},
-			},
-			expCode: 200,
-			expBody: "",
-		},
+		// TODO.
 	}
 
 	for name, test := range tests {
@@ -60,6 +52,7 @@ func TestHanderIndex(t *testing.T) {
 				DiceAppService: m.md,
 				RoomAppService: m.mr,
 				UserAppService: m.mu,
+				TimeNow:        func() time.Time { return t0.UTC() },
 				SSEServer:      s,
 			})
 			require.NoError(err)

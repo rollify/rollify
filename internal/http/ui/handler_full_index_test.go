@@ -3,6 +3,8 @@ package ui_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/r3labs/sse/v2"
@@ -15,6 +17,20 @@ import (
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
+var trimSpaceMultilineRegexp = regexp.MustCompile(`(?m)(^\s+|\s+$)`)
+
+func assertContainsHTTPResponseBody(t *testing.T, exp []string, resp *httptest.ResponseRecorder) {
+	// Sanitize got HTML so we make easier to check content.
+	got := resp.Body.String()
+	got = trimSpaceMultilineRegexp.ReplaceAllString(got, "")
+	got = strings.Replace(got, "\n", " ", -1)
+
+	// Check each expected snippet.
+	for _, e := range exp {
+		assert.Contains(t, got, e)
+	}
+}
+
 func TestHanderFullIndex(t *testing.T) {
 	type mocks struct {
 		md *dicemock.Service
@@ -25,7 +41,7 @@ func TestHanderFullIndex(t *testing.T) {
 	tests := map[string]struct {
 		request    func() *http.Request
 		mock       func(m mocks)
-		expBody    string
+		expBody    []string
 		expHeaders http.Header
 		expCode    int
 	}{
@@ -38,7 +54,14 @@ func TestHanderFullIndex(t *testing.T) {
 				"Content-Type": {"text/html; charset=utf-8"},
 			},
 			expCode: 200,
-			expBody: "",
+			expBody: []string{
+				`<h1 id="index-title">The online dice roller for role players</h1>`,                                          // Make sure we are on the index.
+				`<form id="createRoomForm" hx-post="/u/create-room" hx-swap="outerHTML" hx-target="#createRoomFormSection">`, // Check HTMX call is in place.
+				`<div id="createRoomFormSection">`,                                                    // HTMX swap Target.
+				`<input type="text" name="roomName" id="roomName" placeholder="Room name" required/>`, // Check The form has the important correct fields.
+				`<nav class="container-fluid">`,                                                       // We have a nav bar.
+				`<footer class="container-fluid">`,                                                    // We have a footer.
+			},
 		},
 	}
 
@@ -69,8 +92,7 @@ func TestHanderFullIndex(t *testing.T) {
 
 			assert.Equal(test.expCode, w.Code)
 			assert.Equal(test.expHeaders, w.Header())
-			// TODO(slok).
-			//assert.Equal(test.expBody, w.Body.String())
+			assertContainsHTTPResponseBody(t, test.expBody, w)
 		})
 	}
 }

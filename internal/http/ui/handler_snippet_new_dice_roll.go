@@ -86,7 +86,6 @@ func (u ui) handlerSnippetNewDiceRoll() http.HandlerFunc {
 			DiceResult:    drs,
 		}
 		u.tplRender(w, "dice_roll_result", d)
-
 	})
 }
 

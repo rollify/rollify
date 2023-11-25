@@ -32,6 +32,12 @@
     border-radius: 50%;
 }
 
+/* forms error styling */ 
+.form-error-message {
+    color: #c62828;
+
+}
+
 /* Used in the index of the title */
 .hero h1 {
     text-align: center;
@@ -43,7 +49,7 @@
     margin-inline-start: 0px;
     margin-inline-end: 0px;
     box-sizing: border-box;
-        background-repeat: no-repeat;
+    background-repeat: no-repeat;
 }
 
 .hero h2 {

@@ -5,10 +5,10 @@
         <h2>and start playing</h2>
     </hgroup>
     {{if .FormErrors}}
-    <div class="form-errors">
+    <div>
         <ul>
             {{range .FormErrors}}
-            <li>{{.}}</li>
+            <li class="form-error-message"><strong>{{.}}</strong></li>
             {{end}}
         </ul>
     </div>

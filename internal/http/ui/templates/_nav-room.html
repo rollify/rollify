@@ -11,21 +11,20 @@
         <nav aria-label="breadcrumb">
             <ul>
                 <li><strong>Rollify</strong></li>
-                <li>{{.RoomName}}</li>
+                <li>{{.Data.RoomName}}</li>
             </ul>
         </nav>
     </ul>
     <ul>
         <li>
-            {{if .IsDiceHistory}}
-            <a href="{{.NewDiceRollURL}}" role="button">Roll dice!</a>
+            {{if .Data.IsDiceHistory}}
+            <a href="{{.Data.NewDiceRollURL}}" role="button">Roll dice!</a>
             {{else}}
-            <a role="button" class="contrast" href="{{.DiceHistoryURL}}"
-            hx-ext="sse"
-            sse-connect="{{.SSEURL}}"
-            sse-swap="new_dice_roll"
-            hx-swap="none"
-            >
+            <a role="button" class="contrast" href="{{.Data.DiceHistoryURL}}"
+                hx-ext="sse"
+                sse-connect="{{.Data.SSEURL}}"
+                sse-swap="new_dice_roll"
+                hx-swap="none">
                 Dice roll history
                 <span id="notification-badge">0</span>
             </a>

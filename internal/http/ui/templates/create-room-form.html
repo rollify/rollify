@@ -1,13 +1,11 @@
 {{define "create_room_form"}}
 <div id="createRoomFormSection">
-    <hgroup>
-        <h1>Create a new room</h1>
-        <h2>and start playing</h2>
-    </hgroup>
-    {{if .FormErrors}}
+    <h1>Create a new room</h1>
+
+    {{if .Data.FormErrors}}
     <div>
         <ul>
-            {{range .FormErrors}}
+            {{range .Data.FormErrors}}
             <li class="form-error-message"><strong>{{.}}</strong></li>
             {{end}}
         </ul>
@@ -16,7 +14,7 @@
 
     <form
         id="createRoomForm"
-        hx-post="{{ .URLPrefix }}/create-room"
+        hx-post="{{ .Common.URLPrefix }}/create-room"
         hx-swap="outerHTML"
         hx-target="#createRoomFormSection">
 

@@ -22,7 +22,6 @@ type userDiceRoll struct {
 }
 
 type tplDatadiceRollHistory struct {
-	tplDataCommon
 	RoomName       string
 	RoomID         string
 	NewDiceRollURL string
@@ -59,10 +58,7 @@ func (u ui) handlerFullDiceRollHistory() http.HandlerFunc {
 			return
 		}
 
-		u.tplRender(w, "room_dice_roll_history", tplDatadiceRollHistory{
-			tplDataCommon: tplDataCommon{
-				URLPrefix: u.servePrefix,
-			},
+		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "room_dice_roll_history", tplDatadiceRollHistory{
 			RoomName:       room.Room.Name,
 			RoomID:         room.Room.Name,
 			NewDiceRollURL: u.servePrefix + "/room/" + room.Room.ID,

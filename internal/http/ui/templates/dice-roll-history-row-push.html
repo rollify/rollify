@@ -1,0 +1,13 @@
+{{define "dice_roll_history_row_push"}}
+<tr id="history-dice-roll-row-push">
+    <td>{{.Data.Username}}</td>
+    <td>{{.Data.TS}}</td>
+    {{range .Data.DiceResults}}
+    <td>
+        {{range .Results}}
+        <kbd>{{.}}</kbd>
+        {{end}}
+    </td>
+    {{end}}
+</tr>
+{{end}}

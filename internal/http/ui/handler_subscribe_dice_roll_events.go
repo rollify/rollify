@@ -61,7 +61,10 @@ func (u ui) handlerSubscribeDiceRollEvents() http.Handler {
 			RoomID: roomID,
 			EventHandler: func(ctx context.Context, e model.EventDiceRollCreated) error {
 
-				rendered := u.tplRenderS("dice_roll_history_row", u.mapDiceRollToTplModel(e.DiceRoll, true))
+				rendered, err := u.tplRenderer.withRoom(roomID).Render(ctx, "dice_roll_history_row_push", u.mapDiceRollToTplModel(e.DiceRoll, true))
+				if err != nil {
+					u.logger.Errorf("error rendering HTML: %s", err)
+				}
 				rendered = strings.ReplaceAll(rendered, "\n", "") // https://github.com/r3labs/sse/issues/62.
 
 				// Send to HTML and notification streams.

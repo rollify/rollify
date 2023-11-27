@@ -14,7 +14,6 @@ const (
 )
 
 type tplDataCreateRoom struct {
-	tplDataCommon
 	FormErrors []string
 }
 
@@ -25,10 +24,9 @@ func (u ui) handlerActionCreateRoom() http.HandlerFunc {
 		roomName = strings.TrimSpace(roomName)
 		if roomName == "" {
 			d := tplDataCreateRoom{
-				tplDataCommon: u.tplCommonData(),
-				FormErrors:    []string{"Room name can't be empty"},
+				FormErrors: []string{"Room name can't be empty"},
 			}
-			u.tplRender(w, "create_room_form", d)
+			u.tplRenderer.RenderResponse(r.Context(), w, "create_room_form", d)
 			return
 		}
 

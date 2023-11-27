@@ -4,7 +4,7 @@
 <table role="grid">
     <thead>
         <tr>
-            {{range .DiceResult}}
+            {{range .Data.DiceResult}}
             {{if .Results}}
             <th scope="col">
                 <svg xmlns="http://www.w3.org/2000/svg" width="100px"  viewBox="0 0 100 125" x="0px" y="0px">
@@ -18,7 +18,7 @@
     </thead>
     <tbody>
         <tr>
-            {{range .DiceResult}}
+            {{range .Data.DiceResult}}
             {{if .Results}}
             <td>
                 {{range .Results}}

@@ -30,16 +30,17 @@ func TestHandlerActionCreateRoom(t *testing.T) {
 	tests := map[string]struct {
 		request    func() *http.Request
 		mock       func(m mocks)
-		expBody    string
+		expBody    []string
 		expHeaders http.Header
 		expCode    int
 	}{
-		"Creating a new room, should create the room.": {
+		"Creating a new room, should create the room and redirect to the login page with HTMX.": {
 			request: func() *http.Request {
 				form := url.Values{}
 				form.Add("roomName", "test1")
 				req := httptest.NewRequest(http.MethodPost, "/u/create-room", strings.NewReader(form.Encode()))
 				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+				req.Header.Add("HX-Request", "true")
 				return req
 			},
 			mock: func(m mocks) {
@@ -54,10 +55,10 @@ func TestHandlerActionCreateRoom(t *testing.T) {
 				"Hx-Redirect": {"/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
 			},
 			expCode: 200,
-			expBody: "",
+			expBody: []string{},
 		},
 
-		"An empty room name should error.": {
+		"An empty room name should error and return the form with the errors.": {
 			request: func() *http.Request {
 				form := url.Values{}
 				form.Add("roomName", "      ")
@@ -71,7 +72,11 @@ func TestHandlerActionCreateRoom(t *testing.T) {
 				"Content-Type": {"text/html; charset=utf-8"},
 			},
 			expCode: 200,
-			expBody: "",
+			expBody: []string{
+				`<div id="createRoomFormSection">`,                                                    // HTMX swap Target.
+				`<input type="text" name="roomName" id="roomName" placeholder="Room name" required/>`, // Check The form has the important correct fields.
+				`Room name can't be empty`,                                                            // We have the error message on the form.
+			},
 		},
 	}
 
@@ -102,8 +107,7 @@ func TestHandlerActionCreateRoom(t *testing.T) {
 
 			assert.Equal(test.expCode, w.Code)
 			assert.Equal(test.expHeaders, w.Header())
-			// TODO(slok).
-			//assert.Equal(test.expBody, w.Body.String())
+			assertContainsHTTPResponseBody(t, test.expBody, w)
 		})
 	}
 }

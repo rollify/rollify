@@ -10,12 +10,12 @@ import (
 	"github.com/rollify/rollify/internal/user"
 )
 
-type tplDataLogin struct {
-	Users    []model.User
-	RoomName string
-}
-
 func (u ui) handlerFullLogin() http.HandlerFunc {
+	type tplData struct {
+		Users    []model.User
+		RoomName string
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		roomID := chi.URLParam(r, urlParamRoomID)
 
@@ -33,7 +33,7 @@ func (u ui) handlerFullLogin() http.HandlerFunc {
 			return
 		}
 
-		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "login", tplDataLogin{
+		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "login", tplData{
 			Users:    mresp.Users,
 			RoomName: room.Room.Name,
 		})

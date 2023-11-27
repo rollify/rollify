@@ -35,7 +35,7 @@ func (u ui) handlerSnippetDiceRollHistoryMoreItems() http.HandlerFunc {
 			return
 		}
 
-		u.tplRender(w, "dice_roll_history_rows", tplDatadiceRollHistoryMoreItems{
+		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "dice_roll_history_rows", tplDatadiceRollHistoryMoreItems{
 			Results: u.formatDiceHistory(*res, roomID),
 		})
 	})

@@ -1,11 +1,9 @@
 package ui
 
 import (
-	"embed"
 	"fmt"
 	"io/fs"
 	"net/http"
-	"text/template"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -16,13 +14,6 @@ import (
 	"github.com/rollify/rollify/internal/log"
 	"github.com/rollify/rollify/internal/room"
 	"github.com/rollify/rollify/internal/user"
-)
-
-var (
-	//go:embed all:static
-	staticFS embed.FS
-	//go:embed all:templates
-	templatesFS embed.FS
 )
 
 // Config is the configuration to serve the API.
@@ -84,10 +75,10 @@ type ui struct {
 	router            chi.Router
 	servePrefix       string
 	logger            log.Logger
-	templates         *template.Template
 	staticFS          fs.FS
 	metricsMiddleware gohttmetrics.Middleware
 	sseServer         *sse.Server
+	tplRenderer       *tplRenderer
 	timeNow           func() time.Time
 }
 
@@ -98,15 +89,16 @@ func New(cfg Config) (http.Handler, error) {
 		return nil, fmt.Errorf("wrong configuration: %w", err)
 	}
 
-	templates, err := template.ParseFS(templatesFS, "templates/*.html")
-	if err != nil {
-		return nil, fmt.Errorf("could not parse templates: %w", err)
-	}
-
 	sanitizedStaticFS, err := fs.Sub(staticFS, "static")
 	if err != nil {
 		return nil, fmt.Errorf("could not sanitize static FS: %w", err)
 	}
+
+	tplRenderer, err := NewTplRenderer(cfg.Logger)
+	if err != nil {
+		return nil, fmt.Errorf("could not create template renderer: %w", err)
+	}
+	tplRenderer = tplRenderer.WithURLPrefix(cfg.ServerPrefix)
 
 	a := ui{
 		diceAppSvc:  cfg.DiceAppService,
@@ -114,15 +106,15 @@ func New(cfg Config) (http.Handler, error) {
 		userAppSvc:  cfg.UserAppService,
 		router:      chi.NewRouter(),
 		servePrefix: cfg.ServerPrefix,
-		templates:   templates,
 		staticFS:    sanitizedStaticFS,
 		logger:      cfg.Logger,
 		metricsMiddleware: gohttmetrics.New(gohttmetrics.Config{
 			Recorder: cfg.MetricsRecorder,
 			Service:  "ui",
 		}),
-		sseServer: cfg.SSEServer,
-		timeNow:   cfg.TimeNow,
+		sseServer:   cfg.SSEServer,
+		tplRenderer: tplRenderer,
+		timeNow:     cfg.TimeNow,
 	}
 
 	a.registerRoutes()

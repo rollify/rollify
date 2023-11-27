@@ -10,13 +10,14 @@
     <main class="container">
         {{template "_errors" .}}
 
+        <div class="centeredSingleFormWrapper">
         <article>
-            <h1>Log in room "{{.RoomName}}" </h1>
+            <h1>Log in room "{{.Data.RoomName}}" </h1>
             <section class="grid">
                 {{template "login_form" .}}
             </section>
         </article>
-
+        </div>
     </main>
 
     {{template "_footer" .}}

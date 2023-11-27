@@ -1,15 +1,15 @@
 {{define "login_form"}}
-<div id="loginFormSection">
+<div id="loginFormSection" >
     <form id="LoginForm"
-        hx-post="{{ .URLPrefix }}/login/{{ .RoomID}}/manage-user"
+        hx-post="{{ .Common.URLPrefix }}/login/{{ .Common.RoomID}}/manage-user"
         hx-swap="outerHTML">
 
-        {{if .Users }}
+        {{if .Data.Users }}
         <div class="grid">
             <h4>Existing user</h4>
             <select id="userID" name="userID">
                 <option value="" disabled selected>Select</option>
-                {{range .Users}}
+                {{range .Data.Users}}
                 <option value="{{.ID}}">{{.Name}}</option>
                 {{end}}
             </select>

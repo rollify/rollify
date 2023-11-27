@@ -17,7 +17,6 @@ type diceResult struct {
 }
 
 type tplDataNewDiceRoll struct {
-	tplDataCommon
 	DiceResult []diceResult
 }
 
@@ -81,11 +80,9 @@ func (u ui) handlerSnippetNewDiceRoll() http.HandlerFunc {
 			{Dice: dieD20, Results: groupedResults[dieD20.ID()]},
 		}
 
-		d := tplDataNewDiceRoll{
-			tplDataCommon: tplDataCommon{URLPrefix: u.servePrefix},
-			DiceResult:    drs,
-		}
-		u.tplRender(w, "dice_roll_result", d)
+		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "dice_roll_result", tplDataNewDiceRoll{
+			DiceResult: drs,
+		})
 	})
 }
 

@@ -3,7 +3,7 @@
 <figure>
     <table role="grid"
         hx-ext="sse"
-        sse-connect="{{.SSEURL}}"
+        sse-connect="{{.Data.SSEURL}}"
         sse-swap="new_dice_roll"
         hx-target="#dice-roll-rows"
         hx-swap="afterbegin">
@@ -11,7 +11,7 @@
             <tr>
                 <th>Username</th>
                 <th>When</th>
-                {{range .Dice}}
+                {{range .Data.Dice}}
                 <th scope="col">
                     <svg xmlns="http://www.w3.org/2000/svg" width="100px" viewBox="0 0 100 125" x="0px" y="0px">
                         <title>{{.DieType.Name}}</title>

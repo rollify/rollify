@@ -39,10 +39,9 @@ func (u ui) handlerActionManageUser() http.HandlerFunc {
 		m, errs := uiToModelManageUser(r)
 		if errs != nil {
 			d := tplDataCreateRoom{
-				tplDataCommon: tplDataCommon{URLPrefix: u.servePrefix},
-				FormErrors:    errs,
+				FormErrors: errs,
 			}
-			u.tplRender(w, "create_room_form", d)
+			u.tplRenderer.RenderResponse(r.Context(), w, "create_room_form", d)
 			return
 		}
 
@@ -53,7 +52,7 @@ func (u ui) handlerActionManageUser() http.HandlerFunc {
 				RoomID: m.RoomID,
 			})
 			if err != nil {
-				u.handleError(w, fmt.Errorf("could not create room: %w", err))
+				u.handleError(w, fmt.Errorf("could not create user: %w", err))
 				return
 			}
 			m.UserID = r.User.ID

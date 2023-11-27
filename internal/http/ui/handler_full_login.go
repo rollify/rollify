@@ -11,9 +11,7 @@ import (
 )
 
 type tplDataLogin struct {
-	tplDataCommon
 	Users    []model.User
-	RoomID   string
 	RoomName string
 }
 
@@ -35,12 +33,9 @@ func (u ui) handlerFullLogin() http.HandlerFunc {
 			return
 		}
 
-		d := tplDataLogin{
-			tplDataCommon: u.tplCommonData(),
-			Users:         mresp.Users,
-			RoomID:        roomID,
-			RoomName:      room.Room.Name,
-		}
-		u.tplRender(w, "login", d)
+		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "login", tplDataLogin{
+			Users:    mresp.Users,
+			RoomName: room.Room.Name,
+		})
 	})
 }

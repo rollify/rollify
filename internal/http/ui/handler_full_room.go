@@ -10,9 +10,7 @@ import (
 )
 
 type tplDataRoom struct {
-	tplDataCommon
 	RoomName       string
-	RoomID         string
 	Dice           []die
 	DiceHistoryURL string
 	IsDiceHistory  bool
@@ -36,12 +34,8 @@ func (u ui) handlerFullRoom() http.HandlerFunc {
 			return
 		}
 
-		u.tplRender(w, "room", tplDataRoom{
-			tplDataCommon: tplDataCommon{
-				URLPrefix: u.servePrefix,
-			},
+		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "room", tplDataRoom{
 			RoomName:       room.Room.Name,
-			RoomID:         room.Room.ID,
 			DiceHistoryURL: u.servePrefix + "/room/" + room.Room.ID + "/dice-roll-history",
 			Dice: []die{
 				dieD4,

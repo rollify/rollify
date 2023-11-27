@@ -3,10 +3,7 @@
 <tr id="history-dice-roll-row"
   hx-trigger="revealed"
   hx-get="{{.NextItemsURL}}"
-  hx-swap="afterend"
->
-{{ else if .IsPushUpdate }}
-<tr id="history-dice-roll-row-push">
+  hx-swap="afterend">
 {{ else }}
 <tr id="history-dice-roll-row">
 {{ end }}

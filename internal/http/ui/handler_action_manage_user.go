@@ -1,12 +1,14 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/user"
 )
 
@@ -21,7 +23,7 @@ type reqManageUser struct {
 	RoomID   string
 }
 
-func uiToModelManageUser(r *http.Request) (m *reqManageUser, errMsgs []string) {
+func uiToModelManageUser(r *http.Request) *reqManageUser {
 	username := r.FormValue(formFieldManageUserUsername)
 	userID := r.FormValue(formFieldManageUserID)
 	roomID := chi.URLParam(r, urlParamRoomID)
@@ -30,20 +32,13 @@ func uiToModelManageUser(r *http.Request) (m *reqManageUser, errMsgs []string) {
 		Username: strings.TrimSpace(username),
 		UserID:   strings.TrimSpace(userID),
 		RoomID:   strings.TrimSpace(roomID),
-	}, nil
+	}
 }
 
 func (u ui) handlerActionManageUser() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Parse form info and return validation errors if any.
-		m, errs := uiToModelManageUser(r)
-		if errs != nil {
-			d := tplDataCreateRoom{
-				FormErrors: errs,
-			}
-			u.tplRenderer.RenderResponse(r.Context(), w, "create_room_form", d)
-			return
-		}
+		m := uiToModelManageUser(r)
 
 		// If we have a username then create a user.
 		if m.Username != "" {
@@ -52,9 +47,15 @@ func (u ui) handlerActionManageUser() http.HandlerFunc {
 				RoomID: m.RoomID,
 			})
 			if err != nil {
-				u.handleError(w, fmt.Errorf("could not create user: %w", err))
-				return
+				if !errors.Is(err, internalerrors.ErrAlreadyExists) {
+					u.handleError(w, fmt.Errorf("could not create user: %w", err))
+					return
+				} else {
+					// TODO(slok): Remove this error and Get user model (with ID) using the username.
+					u.handleError(w, fmt.Errorf("Not implemented"))
+				}
 			}
+
 			m.UserID = r.User.ID
 		}
 

@@ -29,7 +29,7 @@ func TestHanderFullLogin(t *testing.T) {
 	tests := map[string]struct {
 		request    func() *http.Request
 		mock       func(m mocks)
-		expBody    string
+		expBody    []string
 		expHeaders http.Header
 		expCode    int
 	}{
@@ -51,7 +51,13 @@ func TestHanderFullLogin(t *testing.T) {
 				"Content-Type": {"text/html; charset=utf-8"},
 			},
 			expCode: 200,
-			expBody: "",
+			expBody: []string{
+				`<h1>Log in room "test1" </h1>`, // Make sure we are on the login page and the correct room.
+				`<form id="LoginForm" hx-post="/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b/manage-user" hx-swap="outerHTML"`, // Check HTMX call is in place.
+				`<input type="text" name="username" id="username" placeholder="Username"/>`,                                    // Check The form has the important correct fields.
+				`<nav class="container-fluid">`,    // We have a nav bar.
+				`<footer class="container-fluid">`, // We have a footer.
+			},
 		},
 
 		"Calling the login room with already logged users should return the login template with the current users loaded.": {
@@ -76,7 +82,15 @@ func TestHanderFullLogin(t *testing.T) {
 				"Content-Type": {"text/html; charset=utf-8"},
 			},
 			expCode: 200,
-			expBody: "",
+			expBody: []string{
+				`<h1>Log in room "test1" </h1>`, // Make sure we are on the login page and the correct room.
+				`<form id="LoginForm" hx-post="/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b/manage-user" hx-swap="outerHTML"`, // Check HTMX call is in place.
+				`<input type="text" name="username" id="username" placeholder="Username"/>`,                                    // Check The form has the important correct fields.
+				`<nav class="container-fluid">`,    // We have a nav bar.
+				`<footer class="container-fluid">`, // We have a footer.
+				`<h4>Existing user</h4>`,           // We have existing users form part.
+				`<select id="userID" name="userID"> <option value="" disabled selected>Select</option> <option value="user1">User 1</option> <option value="user2">User 2</option> <option value="user3">User 3</option> </select>`, // Existing users are selectable.
+			},
 		},
 	}
 
@@ -107,8 +121,7 @@ func TestHanderFullLogin(t *testing.T) {
 
 			assert.Equal(test.expCode, w.Code)
 			assert.Equal(test.expHeaders, w.Header())
-			// TODO(slok).
-			//assert.Equal(test.expBody, w.Body.String())
+			assertContainsHTTPResponseBody(t, test.expBody, w)
 		})
 	}
 }

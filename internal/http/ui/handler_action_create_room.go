@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rollify/rollify/internal/http/ui/htmx"
 	"github.com/rollify/rollify/internal/room"
 )
 
@@ -38,6 +37,6 @@ func (u ui) handlerActionCreateRoom() http.HandlerFunc {
 		}
 
 		// Room created, redirect to the room login.
-		htmx.NewResponse().WithRedirect(u.servePrefix + "/login/" + resp.Room.ID).SetHeaders(w)
+		u.redirectToURL(w, r, u.servePrefix+"/login/"+resp.Room.ID)
 	})
 }

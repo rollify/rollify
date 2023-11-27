@@ -32,7 +32,7 @@ func TestHandlerActionManageUser(t *testing.T) {
 	tests := map[string]struct {
 		request    func() *http.Request
 		mock       func(m mocks)
-		expBody    string
+		expBody    []string
 		expHeaders http.Header
 		expCode    int
 	}{
@@ -57,7 +57,7 @@ func TestHandlerActionManageUser(t *testing.T) {
 				"Set-Cookie":  {"_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b=u1; Path=/; Expires=Sat, 04 Feb 2023 11:05:45 GMT"},
 			},
 			expCode: 200,
-			expBody: "",
+			expBody: []string{},
 		},
 
 		"Using an existing user should select a the user and redirect the to the room.": {
@@ -75,7 +75,7 @@ func TestHandlerActionManageUser(t *testing.T) {
 				"Set-Cookie":  {"_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b=12345; Path=/; Expires=Sat, 04 Feb 2023 11:05:45 GMT"},
 			},
 			expCode: 200,
-			expBody: "",
+			expBody: []string{},
 		},
 	}
 
@@ -107,8 +107,7 @@ func TestHandlerActionManageUser(t *testing.T) {
 
 			assert.Equal(test.expCode, w.Code)
 			assert.Equal(test.expHeaders, w.Header())
-			// TODO(slok).
-			//assert.Equal(test.expBody, w.Body.String())
+			assertContainsHTTPResponseBody(t, test.expBody, w)
 		})
 	}
 }

@@ -30,7 +30,7 @@ func TestHanderFullRoom(t *testing.T) {
 	tests := map[string]struct {
 		request    func() *http.Request
 		mock       func(m mocks)
-		expBody    string
+		expBody    []string
 		expHeaders http.Header
 		expCode    int
 	}{
@@ -53,7 +53,20 @@ func TestHanderFullRoom(t *testing.T) {
 				"Content-Type": {"text/html; charset=utf-8"},
 			},
 			expCode: 200,
-			expBody: "",
+			expBody: []string{
+				`<form id="diceRollerForm" hx-post="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/new-dice-roll" hx-swap="innerHTML" hx-target="#diceRollResult">`, // Check HTMX call is in place.
+				`<select id="d4" name="d4" class="diceRollerSelector">`,                                        // We have a d4 on a the dice roller.
+				`<select id="d6" name="d6" class="diceRollerSelector">`,                                        // We have a d6 on a the dice roller.
+				`<select id="d8" name="d8" class="diceRollerSelector">`,                                        // We have a d8 on a the dice roller.
+				`<select id="d10" name="d10" class="diceRollerSelector">`,                                      // We have a d10 on a the dice roller.
+				`<select id="d12" name="d12" class="diceRollerSelector">`,                                      // We have a d12 on a the dice roller.
+				`<select id="d20" name="d20" class="diceRollerSelector">`,                                      // We have a d20 on a the dice roller.
+				`<a onclick="cleanDiceSelectors()" href="#" role="button" class="secondary">Clear</a> </div> `, // We have the clear button.
+				`<button type="submit">Roll</button>`,                                                          // We have the submit button.
+				`<footer id="diceRollResult"> <!-- will be replaced by HTMX on dice rolls--> </footer>`,        // We have the empty result of the dice roll.
+				`<nav class="container-fluid">`,                                                                // We have a nav bar.
+				`<footer class="container-fluid">`,                                                             // We have a footer.
+			},
 		},
 	}
 
@@ -85,8 +98,7 @@ func TestHanderFullRoom(t *testing.T) {
 
 			assert.Equal(test.expCode, w.Code)
 			assert.Equal(test.expHeaders, w.Header())
-			// TODO(slok).
-			//assert.Equal(test.expBody, w.Body.String())
+			assertContainsHTTPResponseBody(t, test.expBody, w)
 		})
 	}
 }

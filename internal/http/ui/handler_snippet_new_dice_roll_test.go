@@ -32,7 +32,7 @@ func TestHandlerSnippetNewDiceRoll(t *testing.T) {
 	tests := map[string]struct {
 		request    func() *http.Request
 		mock       func(m mocks)
-		expBody    string
+		expBody    []string
 		expHeaders http.Header
 		expCode    int
 	}{
@@ -56,8 +56,8 @@ func TestHandlerSnippetNewDiceRoll(t *testing.T) {
 				m.md.On("CreateDiceRoll", mock.Anything, r).Once().Return(&dice.CreateDiceRollResponse{DiceRoll: model.DiceRoll{
 					ID: "test1",
 					Dice: []model.DieRoll{
+						{ID: "2", Type: model.DieTypeD4, Side: 2}, // Force unsorted to check sorted render HTML.
 						{ID: "1", Type: model.DieTypeD4, Side: 1},
-						{ID: "2", Type: model.DieTypeD4, Side: 2},
 						{ID: "3", Type: model.DieTypeD20, Side: 3},
 					},
 				}}, nil)
@@ -66,7 +66,12 @@ func TestHandlerSnippetNewDiceRoll(t *testing.T) {
 				"Content-Type": {"text/plain; charset=utf-8"},
 			},
 			expCode: 200,
-			expBody: "",
+			expBody: []string{
+				`<figure id="dice-roll-result">`, // We have the dice roll result.
+				`<title>D4</title>`,              // We have d4 table header title.
+				`<title>D20</title>`,             // We have d20 table header title.
+				`<tr> <td> <kbd>1</kbd> <kbd>2</kbd> </td> <td> <kbd>3</kbd> </td> </tr>`, // We have all dice roll results (sorted) as a table row.
+			},
 		},
 	}
 
@@ -98,8 +103,7 @@ func TestHandlerSnippetNewDiceRoll(t *testing.T) {
 
 			assert.Equal(test.expCode, w.Code)
 			assert.Equal(test.expHeaders, w.Header())
-			// TODO(slok).
-			//assert.Equal(test.expBody, w.Body.String())
+			assertContainsHTTPResponseBody(t, test.expBody, w)
 		})
 	}
 }

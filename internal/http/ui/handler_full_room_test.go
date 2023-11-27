@@ -54,7 +54,8 @@ func TestHanderFullRoom(t *testing.T) {
 			},
 			expCode: 200,
 			expBody: []string{
-				`<form id="diceRollerForm" hx-post="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/new-dice-roll" hx-swap="innerHTML" hx-target="#diceRollResult">`, // Check HTMX call is in place.
+				`<a role="button" class="contrast" href="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history" hx-ext="sse" sse-connect="/u/subscribe/room/dice-roll-history?stream=notification-e02b402d-c23b-45b2-a5ea-583a566a9a6b" sse-swap="new_dice_roll" hx-swap="none"> Dice roll history <span id="notification-badge">0</span> </a>`, // We have the dice history button and bubble notification SSE connection with HTMX.
+				`<form id="diceRollerForm" hx-post="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/new-dice-roll" hx-swap="innerHTML" hx-target="#diceRollResult">`,                                                                                                                                                                                        // Check HTMX call is in place.
 				`<select id="d4" name="d4" class="diceRollerSelector">`,                                        // We have a d4 on a the dice roller.
 				`<select id="d6" name="d6" class="diceRollerSelector">`,                                        // We have a d6 on a the dice roller.
 				`<select id="d8" name="d8" class="diceRollerSelector">`,                                        // We have a d8 on a the dice roller.

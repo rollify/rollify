@@ -10,6 +10,7 @@ import (
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/room"
+	"github.com/rollify/rollify/internal/user"
 )
 
 const maxDiceResults = 10
@@ -50,12 +51,17 @@ func (u ui) handlerFullDiceRollHistory() http.HandlerFunc {
 		}
 
 		res, err := u.diceAppSvc.ListDiceRolls(r.Context(), dice.ListDiceRollsRequest{
-			UserID:   userID,
 			RoomID:   roomID,
 			PageOpts: model.PaginationOpts{Size: maxDiceResults},
 		})
 		if err != nil {
 			u.handleError(w, fmt.Errorf("could list dice rolls: %w", err))
+			return
+		}
+
+		roomUsers, err := u.userAppSvc.ListUsers(r.Context(), user.ListUsersRequest{RoomID: roomID})
+		if err != nil {
+			u.handleError(w, fmt.Errorf("could list room users: %w", err))
 			return
 		}
 
@@ -65,16 +71,20 @@ func (u ui) handlerFullDiceRollHistory() http.HandlerFunc {
 			NewDiceRollURL: u.servePrefix + "/room/" + room.Room.ID,
 			IsDiceHistory:  true,
 			Dice:           []die{dieD4, dieD6, dieD8, dieD10, dieD12, dieD20},
-			Results:        u.formatDiceHistory(*res, roomID),
+			Results:        u.formatDiceHistory(*res, roomUsers.Users, roomID),
 			SSEURL:         fmt.Sprintf("%s/subscribe/room/dice-roll-history?%s=%s%s", u.servePrefix, queryParamSSEStream, sseStreamPrefixHTML, roomID),
 		})
 	})
 }
 
-func (u ui) formatDiceHistory(m dice.ListDiceRollsResponse, roomID string) []userDiceRoll {
+func (u ui) formatDiceHistory(m dice.ListDiceRollsResponse, users []model.User, roomID string) []userDiceRoll {
+	us := map[string]model.User{}
+	for _, u := range users {
+		us[u.ID] = u
+	}
 	res := []userDiceRoll{}
 	for _, d := range m.DiceRolls {
-		res = append(res, u.mapDiceRollToTplModel(d, false))
+		res = append(res, u.mapDiceRollToTplModel(d, us[d.UserID], false))
 	}
 
 	// On last one add pagination.
@@ -86,7 +96,7 @@ func (u ui) formatDiceHistory(m dice.ListDiceRollsResponse, roomID string) []use
 	return res
 }
 
-func (u ui) mapDiceRollToTplModel(d model.DiceRoll, isPush bool) userDiceRoll {
+func (u ui) mapDiceRollToTplModel(d model.DiceRoll, user model.User, isPush bool) userDiceRoll {
 	groupedResults := map[string][]uint{}
 	for _, r := range d.Dice {
 		groupedResults[r.Type.ID()] = append(groupedResults[r.Type.ID()], r.Side)
@@ -97,7 +107,7 @@ func (u ui) mapDiceRollToTplModel(d model.DiceRoll, isPush bool) userDiceRoll {
 	}
 
 	return userDiceRoll{
-		Username: d.UserID,
+		Username: user.Name,
 		TS:       fmt.Sprintf("%v", time.Since(d.CreatedAt).Round(time.Second)),
 		DiceResults: []diceResult{
 			{Dice: dieD4, Results: groupedResults[dieD4.ID()]},

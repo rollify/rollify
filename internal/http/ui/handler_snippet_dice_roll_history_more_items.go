@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/user"
 )
 
 func (u ui) handlerSnippetDiceRollHistoryMoreItems() http.HandlerFunc {
@@ -35,8 +36,14 @@ func (u ui) handlerSnippetDiceRollHistoryMoreItems() http.HandlerFunc {
 			return
 		}
 
+		roomUsers, err := u.userAppSvc.ListUsers(r.Context(), user.ListUsersRequest{RoomID: roomID})
+		if err != nil {
+			u.handleError(w, fmt.Errorf("could list  room users: %w", err))
+			return
+		}
+
 		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "dice_roll_history_rows", tplData{
-			Results: u.formatDiceHistory(*res, roomID),
+			Results: u.formatDiceHistory(*res, roomUsers.Users, roomID),
 		})
 	})
 }

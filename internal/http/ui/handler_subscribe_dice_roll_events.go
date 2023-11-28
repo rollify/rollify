@@ -61,7 +61,7 @@ func (u ui) handlerSubscribeDiceRollEvents() http.Handler {
 			RoomID: roomID,
 			EventHandler: func(ctx context.Context, e model.EventDiceRollCreated) error {
 
-				rendered, err := u.tplRenderer.withRoom(roomID).Render(ctx, "dice_roll_history_row_push", u.mapDiceRollToTplModel(e.DiceRoll, true))
+				rendered, err := u.tplRenderer.withRoom(roomID).Render(ctx, "dice_roll_history_row_push", u.mapDiceRollToTplModel(e.DiceRoll, model.User{Name: "unknown"}, true))
 				if err != nil {
 					u.logger.Errorf("error rendering HTML: %s", err)
 				}

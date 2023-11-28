@@ -30,11 +30,11 @@ func TestHandlerSnippetDiceRollHistoryMoreItems(t *testing.T) {
 	tests := map[string]struct {
 		request    func() *http.Request
 		mock       func(m mocks)
-		expBody    string
+		expBody    []string
 		expHeaders http.Header
 		expCode    int
 	}{
-		"Asking for more dice roll history items should return the HTML HTMX snippet.": {
+		"Asking for more dice roll history items should return the HTML HTMX snippet and have pagination in place when there is a cursor.": {
 			request: func() *http.Request {
 				req := httptest.NewRequest(http.MethodGet, "/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history/more-items?cursor=12345", nil)
 				req.AddCookie(&http.Cookie{Name: "_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b", Value: "user1", MaxAge: 999999999999})
@@ -48,14 +48,40 @@ func TestHandlerSnippetDiceRollHistoryMoreItems(t *testing.T) {
 					PageOpts: model.PaginationOpts{Cursor: "12345", Size: 10},
 				}
 				m.md.On("ListDiceRolls", mock.Anything, r).Once().Return(&dice.ListDiceRollsResponse{
-					DiceRolls: []model.DiceRoll{},
+					Cursors: model.PaginationCursors{
+						HasNext:    true,
+						LastCursor: "cursor12345",
+					},
+					DiceRolls: []model.DiceRoll{
+						{
+							UserID:    "user-id1",
+							CreatedAt: time.Now().Add(-5 * time.Second),
+							Dice: []model.DieRoll{
+								{ID: "1", Type: model.DieTypeD4, Side: 1},
+								{ID: "2", Type: model.DieTypeD4, Side: 2},
+								{ID: "3", Type: model.DieTypeD20, Side: 3},
+							},
+						},
+						{
+							UserID:    "user-id2",
+							CreatedAt: time.Now().Add(-5 * time.Second),
+							Dice: []model.DieRoll{
+								{ID: "4", Type: model.DieTypeD6, Side: 4},
+								{ID: "5", Type: model.DieTypeD10, Side: 8},
+								{ID: "6", Type: model.DieTypeD12, Side: 11},
+							},
+						},
+					},
 				}, nil)
 			},
 			expHeaders: http.Header{
 				"Content-Type": {"text/plain; charset=utf-8"},
 			},
 			expCode: 200,
-			expBody: "",
+			expBody: []string{
+				`<tr id="history-dice-roll-row"><td>user-id1</td> <td>5s</td> <td> <kbd>1</kbd> <kbd>2</kbd> </td> <td> </td> <td> </td> <td> </td> <td> </td> <td> <kbd>3</kbd> </td> </tr>`,                                                                                                                                                 // We have the results of 1st Dice roll.
+				`<tr id="history-dice-roll-row" hx-trigger="revealed" hx-get="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history/more-items?cursor=cursor12345" hx-swap="afterend"><td>user-id2</td> <td>5s</td> <td> </td> <td> <kbd>4</kbd> </td> <td> </td> <td> <kbd>8</kbd> </td> <td> <kbd>11</kbd> </td> <td> </td> </tr>`, // We have the results of 2nd Dice roll with the cursor and HTMX parts.
+			},
 		},
 	}
 
@@ -87,8 +113,7 @@ func TestHandlerSnippetDiceRollHistoryMoreItems(t *testing.T) {
 
 			assert.Equal(test.expCode, w.Code)
 			assert.Equal(test.expHeaders, w.Header())
-			// TODO(slok).
-			//assert.Equal(test.expBody, w.Body.String())
+			assertContainsHTTPResponseBody(t, test.expBody, w)
 		})
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/rollify/rollify/internal/room"
 )
 
-func (u ui) handlerFullRoom() http.HandlerFunc {
+func (u ui) handlerFullDiceRoller() http.HandlerFunc {
 	type tplData struct {
 		RoomName       string
 		Dice           []die
@@ -34,7 +34,7 @@ func (u ui) handlerFullRoom() http.HandlerFunc {
 			return
 		}
 
-		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "room", tplData{
+		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "room_dice_roller", tplData{
 			RoomName:       room.Room.Name,
 			DiceHistoryURL: u.servePrefix + "/room/" + room.Room.ID + "/dice-roll-history",
 			Dice: []die{

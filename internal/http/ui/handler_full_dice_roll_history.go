@@ -22,17 +22,17 @@ type userDiceRoll struct {
 	IsPushUpdate bool
 }
 
-type tplDatadiceRollHistory struct {
-	RoomName       string
-	RoomID         string
-	NewDiceRollURL string
-	IsDiceHistory  bool
-	SSEURL         string
-	Dice           []die
-	Results        []userDiceRoll
-}
-
 func (u ui) handlerFullDiceRollHistory() http.HandlerFunc {
+	type tplData struct {
+		RoomName       string
+		RoomID         string
+		NewDiceRollURL string
+		IsDiceHistory  bool
+		SSEURL         string
+		Dice           []die
+		Results        []userDiceRoll
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		roomID := chi.URLParam(r, urlParamRoomID)
 		userID := cookies.GetUserID(r, roomID)
@@ -59,7 +59,7 @@ func (u ui) handlerFullDiceRollHistory() http.HandlerFunc {
 			return
 		}
 
-		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "room_dice_roll_history", tplDatadiceRollHistory{
+		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "room_dice_roll_history", tplData{
 			RoomName:       room.Room.Name,
 			RoomID:         room.Room.Name,
 			NewDiceRollURL: u.servePrefix + "/room/" + room.Room.ID,

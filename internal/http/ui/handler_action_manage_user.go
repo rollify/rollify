@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -17,34 +16,18 @@ const (
 	formFieldManageUserID       = "userID"
 )
 
-type reqManageUser struct {
-	Username string
-	UserID   string
-	RoomID   string
-}
-
-func uiToModelManageUser(r *http.Request) *reqManageUser {
-	username := r.FormValue(formFieldManageUserUsername)
-	userID := r.FormValue(formFieldManageUserID)
-	roomID := chi.URLParam(r, urlParamRoomID)
-
-	return &reqManageUser{
-		Username: strings.TrimSpace(username),
-		UserID:   strings.TrimSpace(userID),
-		RoomID:   strings.TrimSpace(roomID),
-	}
-}
-
 func (u ui) handlerActionManageUser() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Parse form info and return validation errors if any.
-		m := uiToModelManageUser(r)
+		username := r.FormValue(formFieldManageUserUsername)
+		userID := r.FormValue(formFieldManageUserID)
+		roomID := chi.URLParam(r, urlParamRoomID)
 
 		// If we have a username then create a user.
-		if m.Username != "" {
+		if username != "" {
 			r, err := u.userAppSvc.CreateUser(r.Context(), user.CreateUserRequest{
-				Name:   m.Username,
-				RoomID: m.RoomID,
+				Name:   username,
+				RoomID: roomID,
 			})
 			if err != nil {
 				if !errors.Is(err, internalerrors.ErrAlreadyExists) {
@@ -56,10 +39,10 @@ func (u ui) handlerActionManageUser() http.HandlerFunc {
 				}
 			}
 
-			m.UserID = r.User.ID
+			userID = r.User.ID
 		}
 
-		if m.UserID == "" {
+		if userID == "" {
 			u.handleError(w, fmt.Errorf("user ID missing"))
 			return
 		}
@@ -67,9 +50,9 @@ func (u ui) handlerActionManageUser() http.HandlerFunc {
 		// TODO(slok): Check user ID exists.
 
 		// Set user Id on cookie.
-		cookies.SetUserID(w, m.RoomID, m.UserID, u.timeNow().Add(14*24*time.Hour))
+		cookies.SetUserID(w, roomID, userID, u.timeNow().Add(14*24*time.Hour))
 
 		// Redirect to the room.
-		u.redirectToURL(w, r, u.servePrefix+"/room/"+m.RoomID)
+		u.redirectToURL(w, r, u.servePrefix+"/room/"+roomID)
 	})
 }

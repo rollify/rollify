@@ -16,11 +16,11 @@ type diceResult struct {
 	Results []uint
 }
 
-type tplDataNewDiceRoll struct {
-	DiceResult []diceResult
-}
-
 func (u ui) handlerSnippetNewDiceRoll() http.HandlerFunc {
+	type tplData struct {
+		DiceResult []diceResult
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		roomID := chi.URLParam(r, urlParamRoomID)
 		userID := cookies.GetUserID(r, roomID)
@@ -80,7 +80,7 @@ func (u ui) handlerSnippetNewDiceRoll() http.HandlerFunc {
 			{Dice: dieD20, Results: groupedResults[dieD20.ID()]},
 		}
 
-		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "dice_roll_result", tplDataNewDiceRoll{
+		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "dice_roll_result", tplData{
 			DiceResult: drs,
 		})
 	})

@@ -9,11 +9,11 @@ import (
 	"github.com/rollify/rollify/internal/model"
 )
 
-type tplDatadiceRollHistoryMoreItems struct {
-	Results []userDiceRoll
-}
-
 func (u ui) handlerSnippetDiceRollHistoryMoreItems() http.HandlerFunc {
+	type tplData struct {
+		Results []userDiceRoll
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cursor := r.URL.Query().Get(queryParamCursor)
 		roomID := chi.URLParam(r, urlParamRoomID)
@@ -35,7 +35,7 @@ func (u ui) handlerSnippetDiceRollHistoryMoreItems() http.HandlerFunc {
 			return
 		}
 
-		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "dice_roll_history_rows", tplDatadiceRollHistoryMoreItems{
+		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "dice_roll_history_rows", tplData{
 			Results: u.formatDiceHistory(*res, roomID),
 		})
 	})

@@ -16,6 +16,7 @@ import (
 	"github.com/rollify/rollify/internal/http/ui"
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/room/roommock"
+	"github.com/rollify/rollify/internal/user"
 	"github.com/rollify/rollify/internal/user/usermock"
 )
 
@@ -73,14 +74,22 @@ func TestHandlerSnippetDiceRollHistoryMoreItems(t *testing.T) {
 						},
 					},
 				}, nil)
+
+				r2 := user.ListUsersRequest{RoomID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
+				m.mu.On("ListUsers", mock.Anything, r2).Once().Return(&user.ListUsersResponse{
+					Users: []model.User{
+						{ID: "user-id1", Name: "user1"},
+						{ID: "user-id2", Name: "user2"},
+					},
+				}, nil)
 			},
 			expHeaders: http.Header{
 				"Content-Type": {"text/plain; charset=utf-8"},
 			},
 			expCode: 200,
 			expBody: []string{
-				`<tr id="history-dice-roll-row"><td>user-id1</td> <td>5s</td> <td> <kbd>1</kbd> <kbd>2</kbd> </td> <td> </td> <td> </td> <td> </td> <td> </td> <td> <kbd>3</kbd> </td> </tr>`,                                                                                                                                                 // We have the results of 1st Dice roll.
-				`<tr id="history-dice-roll-row" hx-trigger="revealed" hx-get="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history/more-items?cursor=cursor12345" hx-swap="afterend"><td>user-id2</td> <td>5s</td> <td> </td> <td> <kbd>4</kbd> </td> <td> </td> <td> <kbd>8</kbd> </td> <td> <kbd>11</kbd> </td> <td> </td> </tr>`, // We have the results of 2nd Dice roll with the cursor and HTMX parts.
+				`<tr id="history-dice-roll-row"><td>user1</td> <td>5s</td> <td> <kbd>1</kbd> <kbd>2</kbd> </td> <td> </td> <td> </td> <td> </td> <td> </td> <td> <kbd>3</kbd> </td> </tr>`,                                                                                                                                                 // We have the results of 1st Dice roll.
+				`<tr id="history-dice-roll-row" hx-trigger="revealed" hx-get="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history/more-items?cursor=cursor12345" hx-swap="afterend"><td>user2</td> <td>5s</td> <td> </td> <td> <kbd>4</kbd> </td> <td> </td> <td> <kbd>8</kbd> </td> <td> <kbd>11</kbd> </td> <td> </td> </tr>`, // We have the results of 2nd Dice roll with the cursor and HTMX parts.
 			},
 		},
 	}

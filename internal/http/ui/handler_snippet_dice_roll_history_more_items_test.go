@@ -67,8 +67,8 @@ func TestHandlerSnippetDiceRollHistoryMoreItems(t *testing.T) {
 							CreatedAt: time.Now().Add(-5 * time.Second),
 							Dice: []model.DieRoll{
 								{ID: "4", Type: model.DieTypeD6, Side: 4},
-								{ID: "5", Type: model.DieTypeD10, Side: 8},
-								{ID: "6", Type: model.DieTypeD12, Side: 11},
+								{ID: "5", Type: model.DieTypeD12, Side: 11}, // Force sort.
+								{ID: "6", Type: model.DieTypeD10, Side: 8},
 							},
 						},
 					},

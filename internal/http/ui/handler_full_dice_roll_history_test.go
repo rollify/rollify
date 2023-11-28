@@ -84,7 +84,7 @@ func TestHandlerFullDiceRollHistory(t *testing.T) {
 							CreatedAt: time.Now().Add(-40 * time.Second),
 							Dice: []model.DieRoll{
 								{ID: "7", Type: model.DieTypeD8, Side: 6},
-								{ID: "8", Type: model.DieTypeD20, Side: 20},
+								{ID: "8", Type: model.DieTypeD20, Side: 20}, // Force sort.
 								{ID: "9", Type: model.DieTypeD20, Side: 1},
 							},
 						},
@@ -106,9 +106,9 @@ func TestHandlerFullDiceRollHistory(t *testing.T) {
 				`<title>D10</title>`, // We have d10 header on dice roll history table.
 				`<title>D12</title>`, // We have d12 header on dice roll history table.
 				`<title>D20</title>`, // We have d20 header on dice roll history table.
-				`<tr id="history-dice-roll-row"><td>user-id1</td> <td>5s</td> <td> <kbd>1</kbd> <kbd>2</kbd> </td> <td> </td> <td> </td> <td> </td> <td> </td> <td> <kbd>3</kbd> </td> </tr>`,                                                                                                                                                  // We have the results of 1st Dice roll.
-				`<tr id="history-dice-roll-row"><td>user-id2</td> <td>5s</td> <td> </td> <td> <kbd>4</kbd> </td> <td> </td> <td> <kbd>8</kbd> </td> <td> <kbd>11</kbd> </td> <td> </td> </tr>`,                                                                                                                                                 // We have the results of 2nd Dice roll.
-				`<tr id="history-dice-roll-row" hx-trigger="revealed" hx-get="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history/more-items?cursor=cursor12345" hx-swap="afterend"><td>user-id3</td> <td>40s</td> <td> </td> <td> </td> <td> <kbd>6</kbd> </td> <td> </td> <td> </td> <td> <kbd>20</kbd> <kbd>1</kbd> </td> </tr>`, // We have the results of last Dice roll ans has HTMX infinite scroll calls.
+				`<tr id="history-dice-roll-row"><td>user-id1</td> <td>5s</td> <td> <kbd>1</kbd> <kbd>2</kbd> </td> <td> </td> <td> </td> <td> </td> <td> </td> <td> <kbd>3</kbd> </td> </tr>`,                                                                                                                                                 // We have the results of 1st Dice roll.
+				`<tr id="history-dice-roll-row"><td>user-id2</td> <td>5s</td> <td> </td> <td> <kbd>4</kbd> </td> <td> </td> <td> <kbd>8</kbd> </td> <td> <kbd>11</kbd> </td> <td> </td> </tr>`,                                                                                                                                                // We have the results of 2nd Dice roll.
+				`<tr id="history-dice-roll-row" hx-trigger="revealed" hx-get="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history/more-items?cursor=cursor12345" hx-swap="afterend"><td>user-id3</td> <td>40s</td> <td> </td> <td> </td> <td> <kbd>6</kbd> </td> <td> </td> <td> </td> <td> <kbd>1</kbd> <kbd>20</kbd> </td> </tr`, // We have the results of last Dice roll ans has HTMX infinite scroll calls.
 				`<nav class="container-fluid">`,    // We have a nav bar.
 				`<footer class="container-fluid">`, // We have a footer.
 			},

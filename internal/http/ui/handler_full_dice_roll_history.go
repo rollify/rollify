@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -91,7 +92,10 @@ func (u ui) mapDiceRollToTplModel(d model.DiceRoll, isPush bool) userDiceRoll {
 		groupedResults[r.Type.ID()] = append(groupedResults[r.Type.ID()], r.Side)
 	}
 
-	// TODO(slok): Sort.
+	for _, v := range groupedResults {
+		slices.Sort(v)
+	}
+
 	return userDiceRoll{
 		Username: d.UserID,
 		TS:       fmt.Sprintf("%v", time.Since(d.CreatedAt).Round(time.Second)),

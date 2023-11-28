@@ -22,7 +22,7 @@ func (u ui) registerRoutes() {
 	u.wrapPost("/create-room", u.handlerActionCreateRoom())
 	u.wrapGet(fmt.Sprintf("/login/{%s:%s}", urlParamRoomID, uuidRegex), u.handlerFullLogin())
 	u.wrapPost(fmt.Sprintf("/login/{%s:%s}/manage-user", urlParamRoomID, uuidRegex), u.handlerActionManageUser())
-	u.wrapGet(fmt.Sprintf("/room/{%s:%s}", urlParamRoomID, uuidRegex), u.handlerFullRoom())
+	u.wrapGet(fmt.Sprintf("/room/{%s:%s}", urlParamRoomID, uuidRegex), u.handlerFullDiceRoller())
 	u.wrapPost(fmt.Sprintf("/room/{%s:%s}/new-dice-roll", urlParamRoomID, uuidRegex), u.handlerSnippetNewDiceRoll())
 	u.wrapGet(fmt.Sprintf("/room/{%s:%s}/dice-roll-history", urlParamRoomID, uuidRegex), u.handlerFullDiceRollHistory())
 	u.wrapGet(fmt.Sprintf("/room/{%s:%s}/dice-roll-history/more-items", urlParamRoomID, uuidRegex), u.handlerSnippetDiceRollHistoryMoreItems())

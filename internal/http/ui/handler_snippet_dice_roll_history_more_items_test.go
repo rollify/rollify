@@ -56,7 +56,7 @@ func TestHandlerSnippetDiceRollHistoryMoreItems(t *testing.T) {
 					DiceRolls: []model.DiceRoll{
 						{
 							UserID:    "user-id1",
-							CreatedAt: time.Now().Add(-5 * time.Second),
+							CreatedAt: t0.Add(-5 * time.Second),
 							Dice: []model.DieRoll{
 								{ID: "1", Type: model.DieTypeD4, Side: 1},
 								{ID: "2", Type: model.DieTypeD4, Side: 2},
@@ -65,7 +65,7 @@ func TestHandlerSnippetDiceRollHistoryMoreItems(t *testing.T) {
 						},
 						{
 							UserID:    "user-id2",
-							CreatedAt: time.Now().Add(-5 * time.Second),
+							CreatedAt: t0.Add(-10 * time.Second),
 							Dice: []model.DieRoll{
 								{ID: "4", Type: model.DieTypeD6, Side: 4},
 								{ID: "5", Type: model.DieTypeD12, Side: 11}, // Force sort.
@@ -88,8 +88,8 @@ func TestHandlerSnippetDiceRollHistoryMoreItems(t *testing.T) {
 			},
 			expCode: 200,
 			expBody: []string{
-				`<tr id="history-dice-roll-row"><td>user1</td> <td>5s</td> <td> <kbd>1</kbd> <kbd>2</kbd> </td> <td> </td> <td> </td> <td> </td> <td> </td> <td> <kbd>3</kbd> </td> </tr>`,                                                                                                                                                 // We have the results of 1st Dice roll.
-				`<tr id="history-dice-roll-row" hx-trigger="revealed" hx-get="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history/more-items?cursor=cursor12345" hx-swap="afterend"><td>user2</td> <td>5s</td> <td> </td> <td> <kbd>4</kbd> </td> <td> </td> <td> <kbd>8</kbd> </td> <td> <kbd>11</kbd> </td> <td> </td> </tr>`, // We have the results of 2nd Dice roll with the cursor and HTMX parts.
+				`<tr id="history-dice-roll-row"><td> <div> <strong>user1</strong> </div> <div> <small class="timestamp-ago" unix-ts="1674299140"></small> </div> </td> <td> <kbd>1</kbd> <kbd>2</kbd> </td> <td> </td> <td> </td> <td> </td> <td> </td> <td> <kbd>3</kbd> </td> </tr>`,                                                                                                                                                 // We have the results of 1st Dice roll with the cursor and HTMX parts.                                                                                                                                                // We have the results of 1st Dice roll.
+				`<tr id="history-dice-roll-row" hx-trigger="revealed" hx-get="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history/more-items?cursor=cursor12345" hx-swap="afterend"><td> <div> <strong>user2</strong> </div> <div> <small class="timestamp-ago" unix-ts="1674299135"></small> </div> </td> <td> </td> <td> <kbd>4</kbd> </td> <td> </td> <td> <kbd>8</kbd> </td> <td> <kbd>11</kbd> </td> <td> </td> </tr>`, // We have the results of 2nd Dice roll with the cursor and HTMX parts.
 			},
 		},
 	}

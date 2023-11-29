@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rollify/rollify/internal/dice"
@@ -17,7 +16,8 @@ const maxDiceResults = 10
 
 type userDiceRoll struct {
 	Username     string
-	TS           string
+	UnixTS       int64
+	PrettyTS     string
 	DiceResults  []diceResult
 	NextItemsURL string
 	IsPushUpdate bool
@@ -108,7 +108,7 @@ func (u ui) mapDiceRollToTplModel(d model.DiceRoll, user model.User, isPush bool
 
 	return userDiceRoll{
 		Username: user.Name,
-		TS:       fmt.Sprintf("%v", time.Since(d.CreatedAt).Round(time.Second)),
+		UnixTS:   d.CreatedAt.UTC().Unix(),
 		DiceResults: []diceResult{
 			{Dice: dieD4, Results: groupedResults[dieD4.ID()]},
 			{Dice: dieD6, Results: groupedResults[dieD6.ID()]},

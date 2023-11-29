@@ -7,8 +7,15 @@
 {{ else }}
 <tr id="history-dice-roll-row">
 {{ end }}
-    <td>{{.Username}}</td>
-    <td>{{.TS}}</td>
+    <td>
+      <div>
+        <strong>{{.Username}}</strong>
+      </div>
+      <div>
+        <small class="timestamp-ago" unix-ts="{{.UnixTS}}"></small>
+      </div>
+    </td>
+
     {{range .DiceResults}}
     <td>
         {{range .Results}}

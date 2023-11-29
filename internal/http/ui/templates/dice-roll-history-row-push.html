@@ -1,7 +1,13 @@
 {{define "dice_roll_history_row_push"}}
 <tr id="history-dice-roll-row-push">
-    <td>{{.Data.Username}}</td>
-    <td>{{.Data.TS}}</td>
+    <td>
+        <div>
+            <strong>{{.Data.Username}}</strong>
+        </div>
+        <div>
+            <small class="timestamp-ago" unix-ts="{{.Data.UnixTS}}">now</small>
+        </div>
+    </td>
     {{range .Data.DiceResults}}
     <td>
         {{range .Results}}

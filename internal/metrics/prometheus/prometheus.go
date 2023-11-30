@@ -23,7 +23,7 @@ const prefix = "rollify"
 // Types used to avoid collisions with the same interface naming.
 type httpRecorder gohttpmetrics.Recorder
 
-// Recorder satisfiies multiple interfaces related with metrics measuring
+// Recorder satisfies multiple interfaces related with metrics measuring
 // it will implement Prometheus based metrics backend.
 type Recorder struct {
 	httpRecorder

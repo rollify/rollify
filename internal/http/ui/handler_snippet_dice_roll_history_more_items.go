@@ -12,7 +12,8 @@ import (
 
 func (u ui) handlerSnippetDiceRollHistoryMoreItems() http.HandlerFunc {
 	type tplData struct {
-		Results []userDiceRoll
+		Results      []userDiceRoll
+		NextItemsURL string
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -38,12 +39,18 @@ func (u ui) handlerSnippetDiceRollHistoryMoreItems() http.HandlerFunc {
 
 		roomUsers, err := u.userAppSvc.ListUsers(r.Context(), user.ListUsersRequest{RoomID: roomID})
 		if err != nil {
-			u.handleError(w, fmt.Errorf("could list  room users: %w", err))
+			u.handleError(w, fmt.Errorf("could list room users: %w", err))
 			return
 		}
 
+		nextItemsURL := ""
+		if res.Cursors.HasNext {
+			nextItemsURL = fmt.Sprintf("%s/room/%s/dice-roll-history/more-items?%s=%s", u.servePrefix, roomID, queryParamCursor, res.Cursors.LastCursor)
+		}
+
 		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "dice_roll_history_rows", tplData{
-			Results: u.formatDiceHistory(*res, roomUsers.Users, roomID),
+			Results:      u.formatDiceHistory(*res, roomUsers.Users),
+			NextItemsURL: nextItemsURL,
 		})
 	})
 }

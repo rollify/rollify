@@ -19,7 +19,6 @@ type userDiceRoll struct {
 	UnixTS       int64
 	PrettyTS     string
 	DiceResults  []diceResult
-	NextItemsURL string
 	IsPushUpdate bool
 }
 
@@ -32,6 +31,7 @@ func (u ui) handlerFullDiceRollHistory() http.HandlerFunc {
 		SSEURL         string
 		Dice           []die
 		Results        []userDiceRoll
+		NextItemsURL   string
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -65,19 +65,25 @@ func (u ui) handlerFullDiceRollHistory() http.HandlerFunc {
 			return
 		}
 
+		nextItemsURL := ""
+		if res.Cursors.HasNext {
+			nextItemsURL = fmt.Sprintf("%s/room/%s/dice-roll-history/more-items?%s=%s", u.servePrefix, roomID, queryParamCursor, res.Cursors.LastCursor)
+		}
+
 		u.tplRenderer.withRoom(roomID).RenderResponse(r.Context(), w, "room_dice_roll_history", tplData{
 			RoomName:       room.Room.Name,
 			RoomID:         room.Room.Name,
 			NewDiceRollURL: u.servePrefix + "/room/" + room.Room.ID,
 			IsDiceHistory:  true,
 			Dice:           []die{dieD4, dieD6, dieD8, dieD10, dieD12, dieD20},
-			Results:        u.formatDiceHistory(*res, roomUsers.Users, roomID),
+			Results:        u.formatDiceHistory(*res, roomUsers.Users),
 			SSEURL:         fmt.Sprintf("%s/subscribe/room/dice-roll-history?%s=%s%s", u.servePrefix, queryParamSSEStream, sseStreamPrefixHTML, roomID),
+			NextItemsURL:   nextItemsURL,
 		})
 	})
 }
 
-func (u ui) formatDiceHistory(m dice.ListDiceRollsResponse, users []model.User, roomID string) []userDiceRoll {
+func (u ui) formatDiceHistory(m dice.ListDiceRollsResponse, users []model.User) []userDiceRoll {
 	us := map[string]model.User{}
 	for _, u := range users {
 		us[u.ID] = u
@@ -85,12 +91,6 @@ func (u ui) formatDiceHistory(m dice.ListDiceRollsResponse, users []model.User, 
 	res := []userDiceRoll{}
 	for _, d := range m.DiceRolls {
 		res = append(res, u.mapDiceRollToTplModel(d, us[d.UserID], false))
-	}
-
-	// On last one add pagination.
-	if m.Cursors.HasNext {
-		url := fmt.Sprintf("%s/room/%s/dice-roll-history/more-items?%s=%s", u.servePrefix, roomID, queryParamCursor, m.Cursors.LastCursor)
-		res[len(res)-1].NextItemsURL = url
 	}
 
 	return res

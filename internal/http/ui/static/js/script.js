@@ -42,7 +42,7 @@ setInterval(renderAgoUnixTimestamp, 60000);
 
 // Every time we update the table with infinite scroll dice rolls using HTMX, update Ago Timestamps. 
 document.body.addEventListener('htmx:afterSwap', function (evt) {
-  if (evt.detail.elt.id === "dice-roll-rows") {
+  if (evt.detail.elt.id === "history-dice-roll-row") {
       renderAgoUnixTimestamp()
   }
 });

@@ -1,5 +1,40 @@
 {{define "dice_roll_history_rows"}}
 {{range .Data.Results}}
-{{template "dice_roll_history_row" .}}
+<tr id="history-dice-roll-row">
+    <td>
+        <div>
+            <strong>{{.Username}}</strong>
+        </div>
+        <div>
+            <small class="timestamp-ago" unix-ts="{{.UnixTS}}"></small>
+        </div>
+    </td>
+
+    {{range .DiceResults}}
+    <td>
+        {{range .Results}}
+        <kbd>{{.}}</kbd>
+        {{end}}
+    </td>
+    {{end}}
+</tr>
+{{end}}
+
+{{if .Data.NextItemsURL}}
+<tr id="history-dice-roll-more-button">
+    <td></td>
+    <td></td>
+    <td></td>
+    <td>
+        <a hx-get="{{.Data.NextItemsURL}}"
+            hx-target="#history-dice-roll-more-button"
+            hx-swap="outerHTML">
+            <strong>Load more...</strong>
+        </a>
+    </td>
+    <td></td>
+    <td></td>
+    <td></td>
+</tr>
 {{end}}
 {{end}}

@@ -18,17 +18,21 @@
     <ul>
         <li>
             {{if .Data.IsDiceHistory}}
-            <a href="{{.Data.NewDiceRollURL}}" role="button">Roll dice!</a>
+            <a href="{{.Data.NewDiceRollURL}}" role="button">Roll dice</a>
             {{else}}
-            <a role="button" class="contrast" href="{{.Data.DiceHistoryURL}}"
-                hx-ext="sse"
-                sse-connect="{{.Data.SSEURL}}"
-                sse-swap="new_dice_roll"
-                hx-swap="none">
-                Dice roll history
+            <div class="notification-badge-container">
                 <span id="notification-badge">0</span>
-            </a>
+                <a role="button" class="contrast" href="{{.Data.DiceHistoryURL}}" hx-ext="sse" sse-connect="{{.Data.SSEURL}}"
+                    sse-swap="new_dice_roll" hx-swap="none">
+                    History
+                </a>
+            </div>
             {{end}}
+        </li>
+        <li>
+            <a href="{{ .Common.URLPrefix }}/logout/{{ .Common.RoomID}}" role="button" class="secondary outline">
+                Logout
+            </a>
         </li>
     </ul>
 </nav>

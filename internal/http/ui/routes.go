@@ -26,6 +26,7 @@ func (u ui) registerRoutes() {
 	u.wrapPost(fmt.Sprintf("/room/{%s:%s}/new-dice-roll", urlParamRoomID, uuidRegex), u.handlerSnippetNewDiceRoll())
 	u.wrapGet(fmt.Sprintf("/room/{%s:%s}/dice-roll-history", urlParamRoomID, uuidRegex), u.handlerFullDiceRollHistory())
 	u.wrapGet(fmt.Sprintf("/room/{%s:%s}/dice-roll-history/more-items", urlParamRoomID, uuidRegex), u.handlerSnippetDiceRollHistoryMoreItems())
+	u.wrapGet(fmt.Sprintf("/logout/{%s:%s}", urlParamRoomID, uuidRegex), u.handlerActionLogout())
 	u.router.Mount("/subscribe/room/dice-roll-history", u.handlerSubscribeDiceRollEvents())
 }
 

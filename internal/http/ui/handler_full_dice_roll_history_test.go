@@ -107,6 +107,7 @@ func TestHandlerFullDiceRollHistory(t *testing.T) {
 			expBody: []string{
 				`<a href="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b" role="button">Roll dice!</a>`,                                                                                                                           // We have the roll dice button on the nav var.
 				`<table role="grid" hx-ext="sse" sse-connect="/u/subscribe/room/dice-roll-history?stream=html-e02b402d-c23b-45b2-a5ea-583a566a9a6b" sse-swap="new_dice_roll" hx-target="#dice-roll-rows" hx-swap="afterbegin">`, // We have push updates using SSE notifications to update the table with the latest dice rolls.
+				`<a href="/u/logout/e02b402d-c23b-45b2-a5ea-583a566a9a6b" role="button" class="secondary outline"> Logout </a>`,                                                                                                 // We have the logout button.
 				`<th></th>`,          // We have metadata header on dice roll history table.
 				`<title>D4</title>`,  // We have d4 header on dice roll history table.
 				`<title>D6</title>`,  // We have d6 header on dice roll history table.

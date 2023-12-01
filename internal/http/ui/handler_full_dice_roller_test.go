@@ -55,18 +55,19 @@ func TestHanderFullDiceRoller(t *testing.T) {
 			expCode: 200,
 			expBody: []string{
 				`<a role="button" class="contrast" href="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/dice-roll-history" hx-ext="sse" sse-connect="/u/subscribe/room/dice-roll-history?stream=notification-e02b402d-c23b-45b2-a5ea-583a566a9a6b" sse-swap="new_dice_roll" hx-swap="none"> Dice roll history <span id="notification-badge">0</span> </a>`, // We have the dice history button and bubble notification SSE connection with HTMX.
-				`<form id="diceRollerForm" hx-post="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/new-dice-roll" hx-swap="innerHTML" hx-target="#diceRollResult">`,                                                                                                                                                                                        // Check HTMX call is in place.
-				`<select id="d4" name="d4" class="diceRollerSelector">`,                                        // We have a d4 on a the dice roller.
-				`<select id="d6" name="d6" class="diceRollerSelector">`,                                        // We have a d6 on a the dice roller.
-				`<select id="d8" name="d8" class="diceRollerSelector">`,                                        // We have a d8 on a the dice roller.
-				`<select id="d10" name="d10" class="diceRollerSelector">`,                                      // We have a d10 on a the dice roller.
-				`<select id="d12" name="d12" class="diceRollerSelector">`,                                      // We have a d12 on a the dice roller.
-				`<select id="d20" name="d20" class="diceRollerSelector">`,                                      // We have a d20 on a the dice roller.
-				`<a onclick="cleanDiceSelectors()" href="#" role="button" class="secondary">Clear</a> </div> `, // We have the clear button.
-				`<button type="submit">Roll</button>`,                                                          // We have the submit button.
-				`<footer id="diceRollResult"> <!-- will be replaced by HTMX on dice rolls--> </footer>`,        // We have the empty result of the dice roll.
-				`<nav class="container-fluid">`,                                                                // We have a nav bar.
-				`<footer class="container-fluid">`,                                                             // We have a footer.
+				`<a href="/u/logout/e02b402d-c23b-45b2-a5ea-583a566a9a6b" role="button" class="secondary outline"> Logout </a>`,                                   // We have the logout button.
+				`<form id="diceRollerForm" hx-post="/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b/new-dice-roll" hx-swap="innerHTML" hx-target="#diceRollResult">`, // Check HTMX call is in place.
+				`<select id="d4" name="d4" class="diceRollerSelector">`,                                                                                           // We have a d4 on a the dice roller.
+				`<select id="d6" name="d6" class="diceRollerSelector">`,                                                                                           // We have a d6 on a the dice roller.
+				`<select id="d8" name="d8" class="diceRollerSelector">`,                                                                                           // We have a d8 on a the dice roller.
+				`<select id="d10" name="d10" class="diceRollerSelector">`,                                                                                         // We have a d10 on a the dice roller.
+				`<select id="d12" name="d12" class="diceRollerSelector">`,                                                                                         // We have a d12 on a the dice roller.
+				`<select id="d20" name="d20" class="diceRollerSelector">`,                                                                                         // We have a d20 on a the dice roller.
+				`<a onclick="cleanDiceSelectors()" href="#" role="button" class="secondary">Clear</a> </div> `,                                                    // We have the clear button.
+				`<button type="submit">Roll</button>`,                                                                                                             // We have the submit button.
+				`<footer id="diceRollResult"> <!-- will be replaced by HTMX on dice rolls--> </footer>`,                                                           // We have the empty result of the dice roll.
+				`<nav class="container-fluid">`,                                                                                                                   // We have a nav bar.
+				`<footer class="container-fluid">`,                                                                                                                // We have a footer.
 			},
 		},
 	}

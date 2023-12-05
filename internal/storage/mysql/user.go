@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -113,6 +114,31 @@ func (r *UserRepository) ListRoomUsers(ctx context.Context, roomID string) (*sto
 	return &storage.UserList{
 		Items: users,
 	}, nil
+}
+
+// UserExists storage.UserRepository interface.
+func (r *UserRepository) GetUserByID(ctx context.Context, userID string) (*model.User, error) {
+	// Create query.
+	sb := userSQLBuilder.SelectFrom(r.table)
+	sb.Where(sb.Equal("id", userID))
+	query, args := sb.Build()
+
+	// Get from database.
+	row := r.db.QueryRowContext(ctx, query, args...)
+	su := &sqlUser{}
+	err := row.Scan(userSQLBuilder.Addr(su)...)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("missing user: %w: %w", internalerrors.ErrMissing, err)
+		}
+
+		return nil, fmt.Errorf("could not get user: %w", err)
+	}
+
+	// Map.
+	user := sqlToModelUser(su)
+
+	return &user, nil
 }
 
 // UserExists storage.UserRepository interface.

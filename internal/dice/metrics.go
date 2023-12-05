@@ -13,7 +13,7 @@ type RollerMetricsRecorder interface {
 	MeasureDieRollResult(ctx context.Context, rollerType string, dieRoll *model.DieRoll)
 }
 
-//go:generate mockery -case underscore -output dicemock -outpkg dicemock -name RollerMetricsRecorder
+//go:generate mockery --case underscore --output dicemock --outpkg dicemock --name RollerMetricsRecorder
 
 type measuredRoller struct {
 	rType string
@@ -46,7 +46,7 @@ type ServiceMetricsRecorder interface {
 	MeasureDiceServiceOpDuration(ctx context.Context, op string, success bool, t time.Duration)
 }
 
-//go:generate mockery -case underscore -output dicemock -outpkg dicemock -name ServiceMetricsRecorder
+//go:generate mockery --case underscore --output dicemock --outpkg dicemock --name ServiceMetricsRecorder
 
 type measuredService struct {
 	rec  ServiceMetricsRecorder

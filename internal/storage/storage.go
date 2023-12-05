@@ -30,7 +30,7 @@ type DiceRollRepository interface {
 	ListDiceRolls(ctx context.Context, pageOpts model.PaginationOpts, filterOpts ListDiceRollsOpts) (*DiceRollList, error)
 }
 
-//go:generate mockery -case underscore -output storagemock -outpkg storagemock -name DiceRollRepository
+//go:generate mockery --case underscore --output storagemock --outpkg storagemock --name DiceRollRepository
 
 // RoomRepository is the repository interface that implementations need to
 // implement to manage rooms in storage.
@@ -46,7 +46,7 @@ type RoomRepository interface {
 	RoomExists(ctx context.Context, id string) (exists bool, err error)
 }
 
-//go:generate mockery -case underscore -output storagemock -outpkg storagemock -name RoomRepository
+//go:generate mockery --case underscore --output storagemock --outpkg storagemock --name RoomRepository
 
 // UserList is a list of users.
 type UserList struct {
@@ -62,6 +62,8 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, u model.User) error
 	// ListRoomUsers returns the user list of a room.
 	ListRoomUsers(ctx context.Context, roomID string) (*UserList, error)
+	// GetUserByID returns the user using it's ID.
+	GetUserByID(ctx context.Context, userID string) (*model.User, error)
 	// UserExists returns true if the ID of the user exists.
 	UserExists(ctx context.Context, userID string) (exists bool, err error)
 	// UserExistsByNameInsensitive checks if a user exists in a room using the username
@@ -69,4 +71,4 @@ type UserRepository interface {
 	UserExistsByNameInsensitive(ctx context.Context, roomID, username string) (exists bool, err error)
 }
 
-//go:generate mockery -case underscore -output storagemock -outpkg storagemock -name UserRepository
+//go:generate mockery --case underscore --output storagemock --outpkg storagemock --name UserRepository

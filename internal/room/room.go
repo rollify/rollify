@@ -19,7 +19,7 @@ type Service interface {
 	GetRoom(ctx context.Context, r GetRoomRequest) (*GetRoomResponse, error)
 }
 
-//go:generate mockery -case underscore -output roommock -outpkg roommock -name Service
+//go:generate mockery --case underscore --output roommock --outpkg roommock --name Service
 
 // ServiceConfig is the service configuration.
 type ServiceConfig struct {

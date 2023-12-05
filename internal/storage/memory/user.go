@@ -80,6 +80,16 @@ func (r *UserRepository) ListRoomUsers(ctx context.Context, roomID string) (*sto
 }
 
 // UserExists storage.UserRepository interface.
+func (r *UserRepository) GetUserByID(ctx context.Context, userID string) (*model.User, error) {
+	u, ok := r.UsersByID[userID]
+	if !ok {
+		return nil, fmt.Errorf("user doesn't exists: %w", internalerrors.ErrMissing)
+	}
+
+	return u, nil
+}
+
+// UserExists storage.UserRepository interface.
 func (r *UserRepository) UserExists(ctx context.Context, userID string) (bool, error) {
 	_, ok := r.UsersByID[userID]
 	return ok, nil

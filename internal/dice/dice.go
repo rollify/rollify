@@ -26,7 +26,7 @@ type Service interface {
 	SubscribeDiceRollCreated(ctx context.Context, r SubscribeDiceRollCreatedRequest) (*SubscribeDiceRollCreatedResponse, error)
 }
 
-//go:generate mockery -case underscore -output dicemock -outpkg dicemock -name Service
+//go:generate mockery --case underscore --output dicemock --outpkg dicemock --name Service
 
 // ServiceConfig is the service configuration.
 type ServiceConfig struct {

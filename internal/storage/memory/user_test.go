@@ -202,6 +202,54 @@ func TestUserRepositoryListRoomUsers(t *testing.T) {
 	}
 }
 
+func TestUserRepositoryGetUserByID(t *testing.T) {
+	tests := map[string]struct {
+		repo    func() *memory.UserRepository
+		userID  string
+		expUser model.User
+		expErr  error
+	}{
+		"Having a user that does not exit, should return an error.": {
+			repo: func() *memory.UserRepository {
+				r := memory.NewUserRepository()
+				r.UsersByID = map[string]*model.User{
+					"user1-id": {},
+				}
+				return r
+			},
+			userID: "user2-id",
+			expErr: internalerrors.ErrMissing,
+		},
+
+		"Having a user that exists in a room, should return the user.": {
+			repo: func() *memory.UserRepository {
+				r := memory.NewUserRepository()
+				r.UsersByID = map[string]*model.User{
+					"user1-id": {ID: "user1-id"},
+				}
+				return r
+			},
+			userID:  "user1-id",
+			expUser: model.User{ID: "user1-id"},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			r := test.repo()
+			gotUser, err := r.GetUserByID(context.TODO(), test.userID)
+
+			if test.expErr != nil && assert.Error(err) {
+				assert.True(errors.Is(err, test.expErr))
+			} else if assert.NoError(err) {
+				assert.Equal(test.expUser, *gotUser)
+			}
+		})
+	}
+}
+
 func TestUserRepositoryUserExists(t *testing.T) {
 	tests := map[string]struct {
 		repo      func() *memory.UserRepository

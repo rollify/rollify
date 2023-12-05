@@ -20,9 +20,11 @@ type Service interface {
 	CreateUser(ctx context.Context, r CreateUserRequest) (*CreateUserResponse, error)
 	// Lists users for a specific room.
 	ListUsers(ctx context.Context, r ListUsersRequest) (*ListUsersResponse, error)
+	// Get an user by its ID.
+	GetUser(ctx context.Context, r GetUserRequest) (*GetUserResponse, error)
 }
 
-//go:generate mockery -case underscore -output usermock -outpkg usermock -name Service
+//go:generate mockery --case underscore --output usermock --outpkg usermock --name Service
 
 // ServiceConfig is the service configuration.
 type ServiceConfig struct {
@@ -195,5 +197,40 @@ func (s service) ListUsers(ctx context.Context, r ListUsersRequest) (*ListUsersR
 
 	return &ListUsersResponse{
 		Users: us.Items,
+	}, nil
+}
+
+// GetUserRequest is the request to GetUser.
+type GetUserRequest struct {
+	UserID string
+}
+
+func (r GetUserRequest) validate() error {
+	if r.UserID == "" {
+		return fmt.Errorf("userID is required")
+	}
+
+	return nil
+}
+
+// GetUserResponse is the response to the GetUser request.
+type GetUserResponse struct {
+	User model.User
+}
+
+func (s service) GetUser(ctx context.Context, r GetUserRequest) (*GetUserResponse, error) {
+	err := r.validate()
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", internalerrors.ErrNotValid, err)
+	}
+
+	// Get the User.
+	user, err := s.userRepo.GetUserByID(ctx, r.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get the user: %w", err)
+	}
+
+	return &GetUserResponse{
+		User: *user,
 	}, nil
 }

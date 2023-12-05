@@ -15,7 +15,7 @@ type DBClient interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 }
 
-//go:generate mockery -case underscore -output mysqlmock -outpkg mysqlmock -name DBClient
+//go:generate mockery --case underscore --output mysqlmock --outpkg mysqlmock --name DBClient
 
 func isDuplicateKeyError(err error) bool {
 	const mysqlErrCode = 1062 // `ER_DUP_ENTRY`

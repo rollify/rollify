@@ -264,3 +264,86 @@ func TestServiceListUsers(t *testing.T) {
 		})
 	}
 }
+
+func TestServiceGetUser(t *testing.T) {
+	t0 := time.Now().UTC()
+
+	tests := map[string]struct {
+		config  user.ServiceConfig
+		mock    func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository)
+		req     func() user.GetUserRequest
+		expResp func() *user.GetUserResponse
+		expErr  bool
+	}{
+		"A missing user id should fail.": {
+			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
+			},
+			req: func() user.GetUserRequest {
+				return user.GetUserRequest{UserID: ""}
+			},
+			expErr: true,
+		},
+
+		"Getting the user should get the user correctly.": {
+			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
+				ru.On("GetUserByID", mock.Anything, "user-id").Return(&model.User{
+					ID:        "user-id",
+					Name:      "User0",
+					RoomID:    "room0",
+					CreatedAt: t0,
+				}, nil)
+			},
+			req: func() user.GetUserRequest {
+				return user.GetUserRequest{UserID: "user-id"}
+			},
+			expResp: func() *user.GetUserResponse {
+				return &user.GetUserResponse{
+					User: model.User{
+						ID:        "user-id",
+						Name:      "User0",
+						RoomID:    "room0",
+						CreatedAt: t0,
+					},
+				}
+			},
+		},
+
+		"Having an error while getting the user, should fail.": {
+			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
+				ru.On("GetUserByID", mock.Anything, mock.Anything).Return(nil, errors.New("wanted error"))
+			},
+			req: func() user.GetUserRequest {
+				return user.GetUserRequest{UserID: "user-id"}
+			},
+			expErr: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			// Mocks
+			mr := &storagemock.RoomRepository{}
+			mu := &storagemock.UserRepository{}
+			test.mock(mu, mr)
+
+			test.config.RoomRepository = mr
+			test.config.UserRepository = mu
+			test.config.IDGenerator = func() string { return "test" }
+			test.config.TimeNowFunc = func() time.Time { return t0 }
+
+			svc, err := user.NewService(test.config)
+			require.NoError(err)
+
+			gotResp, err := svc.GetUser(context.TODO(), test.req())
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expResp(), gotResp)
+			}
+		})
+	}
+}

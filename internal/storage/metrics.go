@@ -12,7 +12,7 @@ type DiceRollRepositoryMetricsRecorder interface {
 	MeasureDiceRollRepoOpDuration(ctx context.Context, storageType, op string, success bool, t time.Duration)
 }
 
-//go:generate mockery -case underscore -output storagemock -outpkg storagemock -name DiceRollRepositoryMetricsRecorder
+//go:generate mockery --case underscore --output storagemock --outpkg storagemock --name DiceRollRepositoryMetricsRecorder
 
 type measuredDiceRollRepository struct {
 	storageType string
@@ -50,7 +50,7 @@ type RoomRepositoryMetricsRecorder interface {
 	MeasureRoomRepoOpDuration(ctx context.Context, storageType, op string, success bool, t time.Duration)
 }
 
-//go:generate mockery -case underscore -output storagemock -outpkg storagemock -name RoomRepositoryMetricsRecorder
+//go:generate mockery --case underscore --output storagemock --outpkg storagemock --name RoomRepositoryMetricsRecorder
 
 type measuredRoomRepository struct {
 	storageType string
@@ -96,7 +96,7 @@ type UserRepositoryMetricsRecorder interface {
 	MeasureUserRepoOpDuration(ctx context.Context, storageType, op string, success bool, t time.Duration)
 }
 
-//go:generate mockery -case underscore -output storagemock -outpkg storagemock -name UserRepositoryMetricsRecorder
+//go:generate mockery --case underscore --output storagemock --outpkg storagemock --name UserRepositoryMetricsRecorder
 
 type measuredUserRepository struct {
 	storageType string
@@ -127,6 +127,14 @@ func (m measuredUserRepository) ListRoomUsers(ctx context.Context, roomID string
 	}(time.Now())
 
 	return m.next.ListRoomUsers(ctx, roomID)
+}
+
+func (m measuredUserRepository) GetUserByID(ctx context.Context, userID string) (u *model.User, err error) {
+	defer func(t0 time.Time) {
+		m.rec.MeasureUserRepoOpDuration(ctx, m.storageType, "GetUserByID", err == nil, time.Since(t0))
+	}(time.Now())
+
+	return m.next.GetUserByID(ctx, userID)
 }
 
 func (m measuredUserRepository) UserExists(ctx context.Context, userID string) (ex bool, err error) {

@@ -10,7 +10,7 @@ type ServiceMetricsRecorder interface {
 	MeasureUserServiceOpDuration(ctx context.Context, op string, success bool, t time.Duration)
 }
 
-//go:generate mockery -case underscore -output usermock -outpkg usermock -name ServiceMetricsRecorder
+//go:generate mockery --case underscore --output usermock --outpkg usermock --name ServiceMetricsRecorder
 
 type measuredService struct {
 	rec  ServiceMetricsRecorder
@@ -39,4 +39,12 @@ func (m measuredService) ListUsers(ctx context.Context, req ListUsersRequest) (r
 	}(time.Now())
 
 	return m.next.ListUsers(ctx, req)
+}
+
+func (m measuredService) GetUser(ctx context.Context, req GetUserRequest) (resp *GetUserResponse, err error) {
+	defer func(t0 time.Time) {
+		m.rec.MeasureUserServiceOpDuration(ctx, "GetUser", err == nil, time.Since(t0))
+	}(time.Now())
+
+	return m.next.GetUser(ctx, req)
 }

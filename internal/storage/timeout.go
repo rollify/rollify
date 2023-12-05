@@ -88,6 +88,12 @@ func (t timeoutUserRepository) ListRoomUsers(ctx context.Context, roomID string)
 	return t.next.ListRoomUsers(ctx, roomID)
 }
 
+func (t timeoutUserRepository) GetUserByID(ctx context.Context, userID string) (*model.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, t.timeout)
+	defer cancel()
+	return t.next.GetUserByID(ctx, userID)
+}
+
 func (t timeoutUserRepository) UserExists(ctx context.Context, userID string) (ex bool, err error) {
 	ctx, cancel := context.WithTimeout(ctx, t.timeout)
 	defer cancel()

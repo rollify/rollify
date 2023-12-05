@@ -14,7 +14,7 @@ type Roller interface {
 	Roll(ctx context.Context, d *model.DiceRoll) error
 }
 
-//go:generate mockery -case underscore -output dicemock -outpkg dicemock -name Roller
+//go:generate mockery --case underscore --output dicemock --outpkg dicemock --name Roller
 
 // RollerFunc is a helper type to create rollers from funcs.
 type RollerFunc func(ctx context.Context, d *model.DiceRoll) error

@@ -10,7 +10,7 @@ type ServiceMetricsRecorder interface {
 	MeasureRoomServiceOpDuration(ctx context.Context, op string, success bool, t time.Duration)
 }
 
-//go:generate mockery -case underscore -output roommock -outpkg roommock -name ServiceMetricsRecorder
+//go:generate mockery --case underscore --output roommock --outpkg roommock --name ServiceMetricsRecorder
 
 type measuredService struct {
 	rec  ServiceMetricsRecorder

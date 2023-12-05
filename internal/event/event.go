@@ -11,7 +11,7 @@ type Notifier interface {
 	NotifyDiceRollCreated(ctx context.Context, e model.EventDiceRollCreated) error
 }
 
-//go:generate mockery -case underscore -output eventmock -outpkg eventmock -name Notifier
+//go:generate mockery --case underscore --output eventmock --outpkg eventmock --name Notifier
 
 // Subscriber knows how to subscribe to events.
 type Subscriber interface {
@@ -19,4 +19,4 @@ type Subscriber interface {
 	UnsubscribeDiceRollCreated(ctx context.Context, subscribeID, roomID string) error
 }
 
-//go:generate mockery -case underscore -output eventmock -outpkg eventmock -name Subscriber
+//go:generate mockery --case underscore --output eventmock --outpkg eventmock --name Subscriber

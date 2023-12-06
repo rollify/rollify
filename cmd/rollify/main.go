@@ -231,6 +231,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		sseServer := sse.New()
 		sseServer.AutoReplay = false
 
+		uiPrefix := "/u"
 		uiHandler, err := ui.New(httpui.Config{
 			DiceAppService:  diceAppService,
 			RoomAppService:  roomAppService,
@@ -238,6 +239,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 			MetricsRecorder: metricsRecorder,
 			SSEServer:       sseServer,
 			Logger:          logger,
+			ServerPrefix:    uiPrefix,
 		})
 		if err != nil {
 			return fmt.Errorf("could not create ui handler: %w", err)
@@ -246,7 +248,8 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		// Server.
 		mux := http.NewServeMux()
 		mux.Handle("/api/v1/", apiv1Handler)
-		mux.Handle("/u/", uiHandler)
+		mux.Handle(uiPrefix+"/", uiHandler)
+		mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, uiPrefix, http.StatusSeeOther) }))
 
 		// Create server.
 		server := &http.Server{

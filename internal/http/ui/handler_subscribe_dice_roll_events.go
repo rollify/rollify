@@ -2,12 +2,14 @@ package ui
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/r3labs/sse/v2"
 	"github.com/rollify/rollify/internal/dice"
 	"github.com/rollify/rollify/internal/model"
+	"github.com/rollify/rollify/internal/user"
 )
 
 const (
@@ -60,10 +62,14 @@ func (u ui) handlerSubscribeDiceRollEvents() http.Handler {
 		modelReq := dice.SubscribeDiceRollCreatedRequest{
 			RoomID: roomID,
 			EventHandler: func(ctx context.Context, e model.EventDiceRollCreated) error {
-
-				rendered, err := u.tplRenderer.withRoom(roomID).Render(ctx, "dice_roll_history_row_push", u.mapDiceRollToTplModel(e.DiceRoll, model.User{Name: "unknown"}, true))
+				user, err := u.userAppSvc.GetUser(ctx, user.GetUserRequest{UserID: e.DiceRoll.UserID})
 				if err != nil {
-					u.logger.Errorf("error rendering HTML: %s", err)
+					return fmt.Errorf("error getting user: %w", err)
+				}
+
+				rendered, err := u.tplRenderer.withRoom(roomID).Render(ctx, "dice_roll_history_row_push", u.mapDiceRollToTplModel(e.DiceRoll, model.User{Name: user.User.Name}, true))
+				if err != nil {
+					return fmt.Errorf("error rendering HTML: %w", err)
 				}
 				rendered = strings.ReplaceAll(rendered, "\n", "") // https://github.com/r3labs/sse/issues/62.
 

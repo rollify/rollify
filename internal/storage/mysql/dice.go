@@ -142,7 +142,7 @@ func (d DiceRollRepository) ListDiceRolls(ctx context.Context, pageOpts model.Pa
 
 	// In case we need to filter also by user.
 	if filterOpts.UserID != "" {
-		joinSb.Where(joinSb.Equal("drs.user_id", filterOpts.UserID))
+		joinSb.Where(joinSb.Equal("user_id", filterOpts.UserID))
 	}
 
 	// Add order.

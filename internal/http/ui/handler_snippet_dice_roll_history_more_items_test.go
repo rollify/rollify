@@ -44,7 +44,6 @@ func TestHandlerSnippetDiceRollHistoryMoreItems(t *testing.T) {
 			},
 			mock: func(m mocks) {
 				r := dice.ListDiceRollsRequest{
-					UserID:   "user1",
 					RoomID:   "e02b402d-c23b-45b2-a5ea-583a566a9a6b",
 					PageOpts: model.PaginationOpts{Cursor: "12345", Size: 10},
 				}

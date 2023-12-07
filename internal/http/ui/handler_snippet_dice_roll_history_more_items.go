@@ -28,12 +28,11 @@ func (u ui) handlerSnippetDiceRollHistoryMoreItems() http.HandlerFunc {
 		}
 
 		res, err := u.diceAppSvc.ListDiceRolls(r.Context(), dice.ListDiceRollsRequest{
-			UserID:   userID,
 			RoomID:   roomID,
 			PageOpts: model.PaginationOpts{Cursor: cursor, Size: maxDiceResults},
 		})
 		if err != nil {
-			u.handleError(w, fmt.Errorf("could list dice rolls: %w", err))
+			u.handleError(w, fmt.Errorf("could not list dice rolls: %w", err))
 			return
 		}
 

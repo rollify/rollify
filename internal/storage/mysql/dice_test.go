@@ -246,7 +246,7 @@ func TestDiceRollRepositoryListUsers(t *testing.T) {
 			mock: func(m *mysqlmock.DBClient) {
 				// Expected dice roll.
 				rows := sqlmockRowsToStdRows(sqlmock.NewRows([]string{"drs.id", "drs.created_at", "drs.room_id", "drs.user_id", "drs.serial", "dr.id", "dr.die_type_id", "dr.side"}))
-				expQuery := "SELECT drs.id, drs.created_at, drs.room_id, drs.user_id, drs.serial, dr.id, dr.die_type_id, dr.side FROM die_roll dr JOIN (SELECT id, created_at, room_id, user_id, serial FROM dice_roll WHERE room_id = ? AND drs.user_id = ? ORDER BY serial DESC) AS drs ON dr.dice_roll_id = drs.id ORDER BY serial DESC"
+				expQuery := "SELECT drs.id, drs.created_at, drs.room_id, drs.user_id, drs.serial, dr.id, dr.die_type_id, dr.side FROM die_roll dr JOIN (SELECT id, created_at, room_id, user_id, serial FROM dice_roll WHERE room_id = ? AND user_id = ? ORDER BY serial DESC) AS drs ON dr.dice_roll_id = drs.id ORDER BY serial DESC"
 				m.On("QueryContext", mock.Anything, expQuery, "room-1", "user-1").Once().Return(rows, nil)
 			},
 			expDiceRollList: &storage.DiceRollList{

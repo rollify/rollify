@@ -55,7 +55,7 @@ func (u ui) handlerFullDiceRollHistory() http.HandlerFunc {
 			PageOpts: model.PaginationOpts{Size: maxDiceResults},
 		})
 		if err != nil {
-			u.handleError(w, fmt.Errorf("could list dice rolls: %w", err))
+			u.handleError(w, fmt.Errorf("could not list dice rolls: %w", err))
 			return
 		}
 

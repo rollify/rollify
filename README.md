@@ -22,28 +22,13 @@ It exposes a REST API for this. Main features:
 
 ## App
 
-This is the rollify backend, it has all the logic, it exposes a REST API that the frontends and CLIs can use to manage dice rolls, rooms...
+This is the rollify backend and frontend (A monolith), it has all the logic, it exposes a REST API to integrate with and also a very simple and clean frontend using [HTMX](https://htmx.org/) and [PicoCSS](https://picocss.com/).
 
-## Why this?
+### API
 
-During the 2020 COVID19 pandemic, some friends and I started playing tabletop role games ([Shadowrun]) online, the current dice apps for multiple connected users at the same time are not the best..., so I decided to make this app for multiple reasons:
+You can chek the API docs [here](https://rollify.app/api/v1/apidocs.json). You can use the [Swagger editor online](https://editor-next.swagger.io/) and import that URL to have readable docs.
 
-- Play with my friends to tabletop role games online using a proper dice rolling app.
-- Improve the online tabletop role playing experience for other people.
-- Learn a little bit of fronted (I'm more of black screens :P).
-
-Apart from this, some people reach me in the past that they don't know where to start to create a production ready application in Go, well, there you go! :) If you check the source code you will find:
-
-- Decouple and clean source code.
-- Simple and flexible implementation.
-- Easy to understand structure.
-- Metrics.
-- Tests.
-- SQL storage usage.
-- Alternative implementation for fast development.
-- And more! ...
-
-## Where is running https://rollify.app
+## Where is running Rollify
 
 Is running on my personal Kubernetes tiny cluster, depending on the usage of the app, I'll find a bigger home for Rollify.
 
@@ -108,9 +93,4 @@ You can use:
 - `make check`: Checks the source code.
 - `make gen`: Generates everything required by the app (e.g mocks).
 
-## Deploy on Kubernetes
-
-TODO.
-
-[shadowrun]: https://en.wikipedia.org/wiki/Shadowrun
 [db-schema]: schema

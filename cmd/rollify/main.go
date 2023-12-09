@@ -121,7 +121,13 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		return fmt.Errorf("storage type '%s' unknown", cmdCfg.StorageType)
 	}
 
-	// Wrap repositories.
+	// Wrap repos with cache.
+	roomRepo, err = storage.NewCachedRoomRepository(roomRepo)
+	if err != nil {
+		return fmt.Errorf("could not add cache to repository: %w", err)
+	}
+
+	// Wrap repos with metrics.
 	diceRollRepo = storage.NewMeasuredDiceRollRepository(cmdCfg.StorageType, metricsRecorder,
 		storage.NewTimeoutDiceRollRepository(cmdCfg.MySQL.OpTimeout, diceRollRepo))
 	roomRepo = storage.NewMeasuredRoomRepository(cmdCfg.StorageType, metricsRecorder,

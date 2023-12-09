@@ -124,7 +124,12 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	// Wrap repos with cache.
 	roomRepo, err = storage.NewCachedRoomRepository(roomRepo)
 	if err != nil {
-		return fmt.Errorf("could not add cache to repository: %w", err)
+		return fmt.Errorf("could not add room cache to repository: %w", err)
+	}
+
+	userRepo, err = storage.NewCachedUserRepository(userRepo)
+	if err != nil {
+		return fmt.Errorf("could not add user cache to repository: %w", err)
 	}
 
 	// Wrap repos with metrics.

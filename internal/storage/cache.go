@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 
@@ -53,4 +54,77 @@ func (c cachedRoomRepository) RoomExists(ctx context.Context, id string) (exists
 	}
 
 	return c.RoomRepository.RoomExists(ctx, id)
+}
+
+type cachedUserRepository struct {
+	userIDCache         *lru.Cache[string, *model.User]
+	userNameExistsCache *lru.Cache[string, bool]
+	UserRepository
+}
+
+// NewCachedUserRepository wraps a UserRepository and caches the users information in memory
+// is not a cache to try to optimize the query to the original repository but try caching the
+// information of the rooms that are asked frequently and save most of the room info accesses.
+func NewCachedUserRepository(next UserRepository) (UserRepository, error) {
+	cui, err := lru.New[string, *model.User](500)
+	if err != nil {
+		return nil, fmt.Errorf("could not initialize cache")
+	}
+	cun, err := lru.New[string, bool](500)
+	if err != nil {
+		return nil, fmt.Errorf("could not initialize cache")
+	}
+
+	return &cachedUserRepository{
+		userIDCache:         cui,
+		userNameExistsCache: cun,
+		UserRepository:      next,
+	}, nil
+}
+
+func (c cachedUserRepository) GetUserByID(ctx context.Context, userID string) (u *model.User, err error) {
+	user, ok := c.userIDCache.Get(userID)
+	if ok {
+		return user, nil
+	}
+
+	user, err = c.UserRepository.GetUserByID(ctx, userID)
+	if err != nil {
+		return user, err
+	}
+
+	// Save in cache.
+	_ = c.userIDCache.Add(userID, user)
+
+	return user, err
+}
+
+func (c cachedUserRepository) UserExists(ctx context.Context, userID string) (ex bool, err error) {
+	// Try a best effort.
+	_, ok := c.userIDCache.Get(userID)
+	if ok {
+		return true, nil
+	}
+
+	return c.UserRepository.UserExists(ctx, userID)
+}
+
+func (c cachedUserRepository) UserExistsByNameInsensitive(ctx context.Context, roomID, username string) (ex bool, err error) {
+	username = strings.ToLower(username)
+	k := roomID + username
+
+	_, ok := c.userNameExistsCache.Get(k)
+	if ok {
+		return true, nil
+	}
+
+	ex, err = c.UserRepository.UserExistsByNameInsensitive(ctx, roomID, username)
+	if !ex || err != nil {
+		return ex, err
+	}
+
+	// Save in cache.
+	_ = c.userNameExistsCache.Add(k, true)
+
+	return ex, err
 }

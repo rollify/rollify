@@ -373,3 +373,81 @@ func TestUserRepositoryUserExistsByNameInsensitive(t *testing.T) {
 		})
 	}
 }
+
+func TestUserRepositoryGetUserByNameInsensitive(t *testing.T) {
+	tests := map[string]struct {
+		repo     func() *memory.UserRepository
+		roomID   string
+		username string
+		expUser  model.User
+		expErr   error
+	}{
+		"Having a user that is not in the room, should fail.": {
+			repo: func() *memory.UserRepository {
+				r := memory.NewUserRepository()
+				r.UsersByRoom = map[string]map[string]*model.User{
+					"room1-id": {
+						"user1-id": &model.User{
+							Name: "test1",
+						},
+					},
+				}
+				return r
+			},
+			roomID:   "room2-id",
+			username: "test1",
+			expErr:   internalerrors.ErrMissing,
+		},
+
+		"Having a user user that matches exactly, should return the user.": {
+			repo: func() *memory.UserRepository {
+				r := memory.NewUserRepository()
+				r.UsersByRoom = map[string]map[string]*model.User{
+					"room1-id": {
+						"user1-id": &model.User{
+							ID:   "user1-id",
+							Name: "test1",
+						},
+					},
+				}
+				return r
+			},
+			roomID:   "room1-id",
+			username: "test1",
+			expUser:  model.User{ID: "user1-id", Name: "test1"},
+		},
+
+		"Having a user that matches case insensitive, should return the user.": {
+			repo: func() *memory.UserRepository {
+				r := memory.NewUserRepository()
+				r.UsersByRoom = map[string]map[string]*model.User{
+					"room1-id": {
+						"user1-id": &model.User{
+							ID:   "user1-id",
+							Name: "TeSt1",
+						},
+					},
+				}
+				return r
+			},
+			roomID:   "room1-id",
+			username: "tEsT1",
+			expUser:  model.User{ID: "user1-id", Name: "TeSt1"},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			r := test.repo()
+			gotUser, err := r.GetUserByNameInsensitive(context.TODO(), test.roomID, test.username)
+
+			if test.expErr != nil && assert.Error(err) {
+				assert.True(errors.Is(err, test.expErr))
+			} else if assert.NoError(err) {
+				assert.Equal(test.expUser, *gotUser)
+			}
+		})
+	}
+}

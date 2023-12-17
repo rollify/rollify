@@ -36,7 +36,45 @@ func TestHandlerActionManageUser(t *testing.T) {
 		expHeaders http.Header
 		expCode    int
 	}{
+		"Creating a new user without data, should fail.": {
+			request: func() *http.Request {
+				form := url.Values{}
+				req := httptest.NewRequest(http.MethodPost, "/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b/manage-user", strings.NewReader(form.Encode()))
+				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+				req.Header.Add("HX-Request", "true")
+				return req
+			},
+			mock:       func(m mocks) {},
+			expHeaders: http.Header{},
+			expCode:    500,
+			expBody:    []string{},
+		},
+
 		"Creating a new user should create a new user and redirect the to the room.": {
+			request: func() *http.Request {
+				form := url.Values{}
+				form.Add("username", "user1")
+				req := httptest.NewRequest(http.MethodPost, "/u/login/e02b402d-c23b-45b2-a5ea-583a566a9a6b/manage-user", strings.NewReader(form.Encode()))
+				req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+				req.Header.Add("HX-Request", "true")
+				return req
+			},
+			mock: func(m mocks) {
+				r := user.CreateUserRequest{Name: "user1", RoomID: "e02b402d-c23b-45b2-a5ea-583a566a9a6b"}
+				m.mu.On("CreateUser", mock.Anything, r).Once().Return(&user.CreateUserResponse{User: model.User{
+					ID:   "u1",
+					Name: "user1",
+				}}, nil)
+			},
+			expHeaders: http.Header{
+				"Hx-Redirect": {"/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
+				"Set-Cookie":  {"_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b=u1; Path=/; Expires=Sat, 04 Feb 2023 11:05:45 GMT"},
+			},
+			expCode: 200,
+			expBody: []string{},
+		},
+
+		"Creating a new user that already exists should not fail and use the existing user instead.": {
 			request: func() *http.Request {
 				form := url.Values{}
 				form.Add("username", "user1")
@@ -69,7 +107,13 @@ func TestHandlerActionManageUser(t *testing.T) {
 				req.Header.Add("HX-Request", "true")
 				return req
 			},
-			mock: func(m mocks) {},
+			mock: func(m mocks) {
+				r := user.GetUserRequest{UserID: "12345"}
+				m.mu.On("GetUser", mock.Anything, r).Once().Return(&user.GetUserResponse{User: model.User{
+					ID:   "12345",
+					Name: "user1",
+				}}, nil)
+			},
 			expHeaders: http.Header{
 				"Hx-Redirect": {"/u/room/e02b402d-c23b-45b2-a5ea-583a566a9a6b"},
 				"Set-Cookie":  {"_room_user_id_e02b402d-c23b-45b2-a5ea-583a566a9a6b=12345; Path=/; Expires=Sat, 04 Feb 2023 11:05:45 GMT"},

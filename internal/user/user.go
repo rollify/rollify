@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -129,13 +130,14 @@ func (s service) CreateUser(ctx context.Context, r CreateUserRequest) (*CreateUs
 	}
 
 	// Check user exists by room and being case insensitive.
-	exists, err = s.userRepo.UserExistsByNameInsensitive(ctx, r.RoomID, r.Name)
-	if err != nil {
-		return nil, fmt.Errorf("could not check user exists: %w", err)
-	}
-
-	if exists {
-		return nil, fmt.Errorf("user already exists: %w", internalerrors.ErrAlreadyExists)
+	storedUser, err := s.userRepo.GetUserByNameInsensitive(ctx, r.RoomID, r.Name)
+	switch {
+	case err != nil && !errors.Is(err, internalerrors.ErrMissing):
+		return nil, fmt.Errorf("could check user already exists: %w", err)
+	case err == nil:
+		return &CreateUserResponse{
+			User: *storedUser,
+		}, nil
 	}
 
 	// Create a new user.
@@ -145,8 +147,6 @@ func (s service) CreateUser(ctx context.Context, r CreateUserRequest) (*CreateUs
 		RoomID:    r.RoomID,
 		Name:      r.Name,
 	}
-
-	// Store user.
 	err = s.userRepo.CreateUser(ctx, user)
 	if err != nil {
 		return nil, fmt.Errorf("could not store user: %w", err)

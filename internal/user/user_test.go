@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/rollify/rollify/internal/internalerrors"
 	"github.com/rollify/rollify/internal/model"
 	"github.com/rollify/rollify/internal/storage"
 	"github.com/rollify/rollify/internal/storage/storagemock"
@@ -71,21 +72,35 @@ func TestServiceCreateUser(t *testing.T) {
 			expErr: true,
 		},
 
-		"Having a creation request with an user that already exists, should error.": {
+		"Having a creation request with an user that already exists, should return the user.": {
 			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
 				rr.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
-				ru.On("UserExistsByNameInsensitive", mock.Anything, "room-id", "us-e_r.n'ame 42").Once().Return(true, nil)
+				ru.On("GetUserByNameInsensitive", mock.Anything, "room-id", "us-e_r.n'ame 42").Once().Return(&model.User{
+					ID:        "test",
+					Name:      "us-e_r.n'ame 42",
+					RoomID:    "room-id",
+					CreatedAt: t0,
+				}, nil)
 			},
 			req: func() user.CreateUserRequest {
 				return user.CreateUserRequest{Name: "us-e_r.n'ame 42", RoomID: "room-id"}
 			},
-			expErr: true,
+			expResp: func() *user.CreateUserResponse {
+				return &user.CreateUserResponse{
+					User: model.User{
+						ID:        "test",
+						Name:      "us-e_r.n'ame 42",
+						RoomID:    "room-id",
+						CreatedAt: t0,
+					},
+				}
+			},
 		},
 
 		"Having a creation request with an error while checking the user that already exists, should error.": {
 			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
 				rr.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
-				ru.On("UserExistsByNameInsensitive", mock.Anything, mock.Anything, mock.Anything).Once().Return(false, errors.New("wanted error"))
+				ru.On("GetUserByNameInsensitive", mock.Anything, mock.Anything, mock.Anything).Once().Return(nil, fmt.Errorf("something"))
 			},
 			req: func() user.CreateUserRequest {
 				return user.CreateUserRequest{Name: "us-e_r.n'ame 42", RoomID: "room-id"}
@@ -96,7 +111,7 @@ func TestServiceCreateUser(t *testing.T) {
 		"Having a creation request with an user, should create the user.": {
 			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
 				rr.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
-				ru.On("UserExistsByNameInsensitive", mock.Anything, mock.Anything, mock.Anything).Once().Return(false, nil)
+				ru.On("GetUserByNameInsensitive", mock.Anything, mock.Anything, mock.Anything).Once().Return(nil, internalerrors.ErrMissing)
 				expUser := model.User{
 					ID:        "test",
 					Name:      "us-e_r.n'ame 42",
@@ -120,10 +135,10 @@ func TestServiceCreateUser(t *testing.T) {
 			},
 		},
 
-		"Having a creation request with an erroo while storing the user, should create the user.": {
+		"Having a creation request with an error while storing the user, should fail.": {
 			mock: func(ru *storagemock.UserRepository, rr *storagemock.RoomRepository) {
 				rr.On("RoomExists", mock.Anything, mock.Anything).Once().Return(true, nil)
-				ru.On("UserExistsByNameInsensitive", mock.Anything, mock.Anything, mock.Anything).Once().Return(false, nil)
+				ru.On("GetUserByNameInsensitive", mock.Anything, "room-id", "us-e_r.n'ame 42").Once().Return(nil, internalerrors.ErrMissing)
 				ru.On("CreateUser", mock.Anything, mock.Anything).Once().Return(fmt.Errorf("wanted error"))
 			},
 			req: func() user.CreateUserRequest {

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS  `user`
     PRIMARY KEY(`id`),
 
     INDEX `idx_user_name_room_id` (`name`, `room_id`)
+    INDEX `idx_user_room_id` (`room_id`)
 
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 

@@ -105,3 +105,9 @@ func (t timeoutUserRepository) UserExistsByNameInsensitive(ctx context.Context, 
 	defer cancel()
 	return t.next.UserExistsByNameInsensitive(ctx, roomID, username)
 }
+
+func (t timeoutUserRepository) GetUserByNameInsensitive(ctx context.Context, roomID, username string) (*model.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, t.timeout)
+	defer cancel()
+	return t.next.GetUserByNameInsensitive(ctx, roomID, username)
+}

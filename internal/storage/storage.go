@@ -69,6 +69,8 @@ type UserRepository interface {
 	// UserExistsByNameInsensitive checks if a user exists in a room using the username
 	// in case insensitive mode.
 	UserExistsByNameInsensitive(ctx context.Context, roomID, username string) (exists bool, err error)
+	// GetUserByNameInsensitive returns the user using user ID being insensitive.
+	GetUserByNameInsensitive(ctx context.Context, roomID, username string) (*model.User, error)
 }
 
 //go:generate mockery --case underscore --output storagemock --outpkg storagemock --name UserRepository

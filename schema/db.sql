@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS  `user`
     `name` VARCHAR(255) NOT NULL COLLATE utf8mb4_0900_ai_ci,
     `room_id` VARCHAR(255) NOT NULL,
 
-    PRIMARY KEY(`id`)
+    PRIMARY KEY(`id`),
+
+    INDEX `idx_user_name_room_id` (`name`, `room_id`)
 
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 

@@ -109,5 +109,19 @@ func (r *UserRepository) UserExistsByNameInsensitive(ctx context.Context, roomID
 	return false, nil
 }
 
+// GetUserByNameInsensitive storage.UserRepository interface.
+func (r *UserRepository) GetUserByNameInsensitive(ctx context.Context, roomID, username string) (*model.User, error) {
+	us := r.UsersByRoom[roomID]
+
+	nameNoCase := strings.ToLower(username)
+	for _, u := range us {
+		if strings.ToLower(u.Name) == nameNoCase {
+			return u, nil
+		}
+	}
+
+	return nil, internalerrors.ErrMissing
+}
+
 // Implementation assertions.
 var _ storage.UserRepository = &UserRepository{}

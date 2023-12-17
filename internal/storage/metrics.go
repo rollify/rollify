@@ -152,3 +152,11 @@ func (m measuredUserRepository) UserExistsByNameInsensitive(ctx context.Context,
 
 	return m.next.UserExistsByNameInsensitive(ctx, roomID, username)
 }
+
+func (m measuredUserRepository) GetUserByNameInsensitive(ctx context.Context, roomID, username string) (u *model.User, err error) {
+	defer func(t0 time.Time) {
+		m.rec.MeasureUserRepoOpDuration(ctx, m.storageType, "GetUserByNameInsensitive", err == nil, time.Since(t0))
+	}(time.Now())
+
+	return m.next.GetUserByNameInsensitive(ctx, roomID, username)
+}

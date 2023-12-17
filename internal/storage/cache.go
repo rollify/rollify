@@ -59,6 +59,7 @@ func (c cachedRoomRepository) RoomExists(ctx context.Context, id string) (exists
 type cachedUserRepository struct {
 	userIDCache         *lru.Cache[string, *model.User]
 	userNameExistsCache *lru.Cache[string, bool]
+	userNameCache       *lru.Cache[string, *model.User]
 	UserRepository
 }
 
@@ -75,9 +76,15 @@ func NewCachedUserRepository(next UserRepository) (UserRepository, error) {
 		return nil, fmt.Errorf("could not initialize cache")
 	}
 
+	cu, err := lru.New[string, *model.User](500)
+	if err != nil {
+		return nil, fmt.Errorf("could not initialize cache")
+	}
+
 	return &cachedUserRepository{
 		userIDCache:         cui,
 		userNameExistsCache: cun,
+		userNameCache:       cu,
 		UserRepository:      next,
 	}, nil
 }
@@ -127,4 +134,25 @@ func (c cachedUserRepository) UserExistsByNameInsensitive(ctx context.Context, r
 	_ = c.userNameExistsCache.Add(k, true)
 
 	return ex, err
+}
+
+// GetUserByNameInsensitive returns the user using user ID being insensitive.
+func (c cachedUserRepository) GetUserByNameInsensitive(ctx context.Context, roomID, username string) (*model.User, error) {
+	username = strings.ToLower(username)
+	k := roomID + username
+
+	u, ok := c.userNameCache.Get(k)
+	if ok {
+		return u, nil
+	}
+
+	us, err := c.UserRepository.GetUserByNameInsensitive(ctx, roomID, username)
+	if err != nil {
+		return us, err
+	}
+
+	// Save in cache.
+	_ = c.userNameCache.Add(k, us)
+
+	return us, err
 }

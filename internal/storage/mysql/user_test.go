@@ -430,3 +430,86 @@ func TestUserRepositoryUserExistsByNameInsensitive(t *testing.T) {
 		})
 	}
 }
+
+func TestUserRepositoryGetUserByNameInsensitive(t *testing.T) {
+	t0, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:03Z")
+	wantedErr := fmt.Errorf("wanted error")
+
+	tests := map[string]struct {
+		config   mysql.UserRepositoryConfig
+		mock     func(*mysqlmock.DBClient)
+		roomID   string
+		username string
+		expUser  model.User
+		expErr   error
+	}{
+		"Having an error while retrieving the user should fail.": {
+			config: mysql.UserRepositoryConfig{},
+			mock: func(m *mysqlmock.DBClient) {
+				row := sqlRowErr(wantedErr)
+				m.On("QueryRowContext", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Once().Return(row)
+			},
+			roomID:   "room1",
+			username: "user1",
+			expErr:   wantedErr,
+		},
+
+		"Retrieving a existing user using should return the user.": {
+			config: mysql.UserRepositoryConfig{},
+			mock: func(m *mysqlmock.DBClient) {
+				expQuery := "SELECT user.id, user.name, user.room_id, user.created_at FROM user WHERE room_id = ? AND name = ?"
+				row := sqlmockRowsToStdRow(sqlmock.NewRows([]string{"id", "name", "room_id", "created_at"}).
+					AddRow("test0-id", "test0", "room0", t0))
+
+				m.On("QueryRowContext", mock.Anything, expQuery, "room1", "user1").Once().Return(row)
+			},
+			roomID:   "room1",
+			username: "user1",
+			expUser: model.User{
+				ID:        "test0-id",
+				Name:      "test0",
+				RoomID:    "room0",
+				CreatedAt: t0,
+			},
+		},
+
+		"Retrieving a non existing user from a custom table should fail.": {
+			config: mysql.UserRepositoryConfig{
+				Table: "custom-table",
+			},
+			mock: func(m *mysqlmock.DBClient) {
+				expQuery := "SELECT custom-table.id, custom-table.name, custom-table.room_id, custom-table.created_at FROM custom-table WHERE room_id = ? AND name = ?"
+				row := sqlRowErr(sql.ErrNoRows)
+				m.On("QueryRowContext", mock.Anything, expQuery, "room1", "user1").Once().Return(row)
+			},
+			roomID:   "room1",
+			username: "user1",
+			expErr:   internalerrors.ErrMissing,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			// Mocks.
+			mdb := &mysqlmock.DBClient{}
+			test.mock(mdb)
+
+			// Execute.
+			test.config.DBClient = mdb
+			r, err := mysql.NewUserRepository(test.config)
+			require.NoError(err)
+			gotUser, err := r.GetUserByNameInsensitive(context.TODO(), test.roomID, test.username)
+
+			// Check.
+			if test.expErr != nil && assert.Error(err) {
+				assert.True(errors.Is(err, test.expErr))
+			} else if assert.NoError(err) {
+				mdb.AssertExpectations(t)
+				assert.Equal(test.expUser, *gotUser)
+			}
+		})
+	}
+}

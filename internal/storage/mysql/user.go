@@ -191,6 +191,35 @@ func (r *UserRepository) UserExistsByNameInsensitive(ctx context.Context, roomID
 	return exists, nil
 }
 
+// UserExists storage.UserRepository interface.
+func (r *UserRepository) GetUserByNameInsensitive(ctx context.Context, roomID, username string) (*model.User, error) {
+	// Create query.
+	sb := userSQLBuilder.SelectFrom(r.table)
+	sb.Where(
+		sb.Equal("room_id", roomID),
+		sb.Equal("name", username),
+	)
+
+	query, args := sb.Build()
+
+	// Get from database.
+	row := r.db.QueryRowContext(ctx, query, args...)
+	su := &sqlUser{}
+	err := row.Scan(userSQLBuilder.Addr(su)...)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("missing user: %w: %w", internalerrors.ErrMissing, err)
+		}
+
+		return nil, fmt.Errorf("could not get user: %w", err)
+	}
+
+	// Map.
+	user := sqlToModelUser(su)
+
+	return &user, nil
+}
+
 type sqlUser struct {
 	ID        string    `db:"id"`
 	Name      string    `db:"name"`

@@ -9,7 +9,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.11.3
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/huandu/go-sqlbuilder v1.25.0
 	github.com/nats-io/nats.go v1.31.0
